@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>MiNeChaYt</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;}
+body{background:#0e1621;color:#fff;height:100vh;overflow:hidden;}
+#app{height:100vh;display:flex;flex-direction:column;max-width:500px;margin:0 auto;}
+#auth{flex:1;display:flex;align-items:center;padding:30px;background:linear-gradient(135deg,#17212b,#0e1621);}
+.auth-box{width:100%;text-align:center;}
+.logo{width:90px;height:90px;margin:0 auto 20px;background:linear-gradient(135deg,#2AABEE,#229ED9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;}
+h2{font-size:24px;margin-bottom:6px;}
+.sub{font-size:13px;color:#8b9aab;margin-bottom:24px;}
+.inp{width:100%;padding:14px;margin-bottom:10px;border:none;border-radius:10px;background:#242f3d;color:#fff;font-size:15px;outline:none;}
+.btn{width:100%;padding:14px;margin-top:8px;border:none;border-radius:10px;background:#2AABEE;color:#fff;font-size:15px;font-weight:600;}
+.lnk{display:block;margin-top:16px;color:#2AABEE;font-size:13px;}
+#main{display:none;flex-direction:column;height:100vh;}
+.hdr{padding:14px;background:#17212b;display:flex;gap:10px;align-items:center;}
+.hdr .title{flex:1;font-weight:600;font-size:17px;}
+.dot{width:9px;height:9px;border-radius:50%;background:#4caf50;}
+.hb{background:none;border:none;color:#8b9aab;font-size:22px;padding:6px 10px;}
+.srch-wrap{padding:0 14px 10px;background:#17212b;}
+.srch{width:100%;padding:10px;border-radius:20px;border:none;background:#242f3d;color:#fff;font-size:14px;}
+.lst{flex:1;overflow-y:auto;padding:6px;}
+.it{padding:11px;margin-bottom:2px;border-radius:9px;display:flex;align-items:center;gap:12px;}
+.av{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;color:#fff;}
+.nm{font-size:15px;font-weight:600;}
+.pv{font-size:13px;color:#8b9aab;}
+#chat{display:none;flex-direction:column;height:100vh;}
+.ch{padding:11px 14px;background:#17212b;display:flex;align-items:center;gap:12px;}
+.bk{background:none;border:none;color:#2AABEE;font-size:26px;}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;}
+.m{max-width:80%;padding:9px 13px;border-radius:14px;font-size:15px;}
+.m .t{font-size:10px;opacity:.6;float:right;margin-left:8px;}
+.mi{align-self:flex-start;background:#182533;}
+.mo{align-self:flex-end;background:#2AABEE;color:#fff;}
+#inp{padding:10px;background:#17212b;display:flex;gap:6px;}
+#mi{flex:1;padding:12px;border-radius:22px;border:none;background:#242f3d;color:#fff;}
+.sb{background:#2AABEE;border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;}
+#callScreen{display:none;position:fixed;inset:0;background:#0e1621;z-index:1000;flex-direction:column;align-items:center;justify-content:center;gap:20px;}
+.cb{width:64px;height:64px;border-radius:50%;border:none;font-size:26px;color:#fff;}
+.cb-end{background:#e74c3c;}
+.cb-mute{background:#3a3a3a;}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="auth"><div class="auth-box">
+<div class="logo">✈</div><h2>MiNeChaYt</h2><div class="sub">Войдите</div>
+<input class="inp" id="au" placeholder="Имя">
+<input class="inp" id="ap" type="password" placeholder="Пароль">
+<button class="btn" onclick="doLogin()">Войти</button>
+<span class="lnk" onclick="switchMode()">Регистрация</span>
+</div></div>
+<div id="main">
+<div class="hdr"><div class="title">MiNeChaYt</div><div class="dot" id="wsDot"></div><button class="hb" onclick="logout()">🚪</button></div>
+<div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск" oninput="renderContacts(this.value)"></div>
+<div class="lst" id="cl"></div>
+</div>
+<div id="chat">
+<div class="ch"><button class="bk" onclick="backToMain()">←</button><div class="av" id="ha">?</div><div style="flex:1"><div class="nm" id="hn">-</div><div class="pv" id="hs">офлайн</div></div><button class="hb" onclick="startCall()">📞</button></div>
+<div id="msgs"></div>
+<div id="inp"><input id="mi" placeholder="Сообщение..." onkeypress="if(event.key==='Enter')sendMessage()"><button class="sb" onclick="sendMessage()">➤</button></div>
+</div>
+<div id="callScreen"><div id="callName">-</div><div id="callSt">Вызов...</div><div style="display:flex;gap:20px;margin-top:20px"><button class="cb cb-mute" id="muteBtn" onclick="toggleMute()">🎤</button><button class="cb cb-end" onclick="endCall()">📵</button></div></div>
+</div>
+<script>
+var SERVER_URL="ВАШ-АДРЕС",ws=null,cu=null,cc=null,USERS={},ONLINE=[],HISTORY={},isReg=false;
+var pc=null,localStream=null,callTarget=null,isCaller=false,callTimer=null;
+function connect(){var proto=SERVER_URL.indexOf("localhost")>=0||SERVER_URL.indexOf("192.168")>=0?"ws":"wss";ws=new WebSocket(proto+"://"+SERVER_URL+"/ws/"+encodeURIComponent(cu));ws.onopen=function(){document.getElementById('wsDot').style.background='#4caf50';ws.send(JSON.stringify({action:'login',password:document.getElementById('ap').value}));};ws.onmessage=function(e){handleMessage(JSON.parse(e.data));};ws.onclose=function(){document.getElementById('wsDot').style.background='#e74c3c';};}
+function send(d){if(ws&&ws.readyState===1)ws.send(JSON.stringify(d));}
+function handleMessage(m){switch(m.action){
+case 'login_ok':USERS={};m.users.forEach(function(u){USERS[u]={color:getColor(u)};});document.getElementById('auth').style.display='none';document.getElementById('main').style.display='flex';renderContacts();break;
+case 'login_fail':alert(m.reason);if(ws)ws.close();break;
+case 'register_ok':alert('OK!');send({action:'login',password:document.getElementById('ap').value});break;
+case 'register_fail':alert(m.reason);break;
+case 'online':ONLINE=m.users;renderContacts();updateStatus();break;
+case 'new_message':var k1=chatKey(cu,m.from);HISTORY[k1]=HISTORY[k1]||[];HISTORY[k1].push(m);if(cc===m.from)renderMessage(m,false);renderContacts();break;
+case 'sent':var k2=chatKey(cu,m.to);HISTORY[k2]=HISTORY[k2]||[];HISTORY[k2].push({from:cu,text:m.text,time:m.time});if(cc===m.to)renderMessage({from:cu,text:m.text,time:m.time},true);renderContacts();break;
+case 'history':HISTORY[chatKey(cu,m.with)]=m.messages;if(cc===m.with)loadHistory(m.with);break;
+case 'incoming_call':showIncomingCall(m.from);break;
+case 'call_accepted':document.getElementById('callSt').innerText='Разговор';startCallTimer();if(isCaller)createOffer();break;
+case 'call_declined':alert('Отклонён');endCall(true);break;
+case 'call_ended':endCall(true);break;
+case 'webrtc':handleWebRTC(m.from,m.data);break;}}
+function switchMode(){isReg=!isReg;event.target.innerText=isReg?'Уже есть? Войти':'Регистрация';}
+function doLogin(){var u=document.getElementById('au').value.trim(),p=document.getElementById('ap').value;if(!u||!p){alert('Заполните');return;}cu=u.charAt(0).toUpperCase()+u.slice(1).toLowerCase();if(isReg){var proto=SERVER_URL.indexOf("localhost")>=0||SERVER_URL.indexOf("192.168")>=0?"ws":"wss";var tmp=new WebSocket(proto+"://"+SERVER_URL+"/ws/"+encodeURIComponent(cu));tmp.onopen=function(){tmp.send(JSON.stringify({action:'register',password:p}));};tmp.onmessage=function(e){var d=JSON.parse(e.data);if(d.action==='register_ok'){tmp.close();connect();}else{alert(d.reason);tmp.close();}};}else connect();}
+function logout(){if(!confirm('Выйти?'))return;if(ws)ws.close();cu=null;cc=null;USERS={};ONLINE=[];HISTORY={};document.getElementById('main').style.display='none';document.getElementById('chat').style.display='none';document.getElementById('auth').style.display='flex';isReg=false;}
+function getColor(n){var c={'Мама':'#e91e63','Глеб':'#2196f3','Даня':'#ff9800','Папа':'#4caf50'};return c[n]||'#9c27b0';}
+function chatKey(a,b){return[a,b].sort().join('_');}
+function renderContacts(filter){filter=(filter||'').toLowerCase();var list=document.getElementById('cl');list.innerHTML='';Object.keys(USERS).forEach(function(u){if(u===cu)return;if(filter&&u.toLowerCase().indexOf(filter)<0)return;var isOn=ONLINE.indexOf(u)>=0;var last=getLast(u);var item=document.createElement('div');item.className='it';item.innerHTML='<div class="av" style="background:'+USERS[u].color+'">'+u.charAt(0)+'</div><div style="flex:1"><div class="nm">'+u+'</div><div class="pv">'+(last||(isOn?'онлайн':'офлайн'))+'</div></div>';item.onclick=function(){openChat(u);};list.appendChild(item);});}
+function getLast(u){var k=chatKey(cu,u);if(HISTORY[k]&&HISTORY[k].length){var l=HISTORY[k][HISTORY[k].length-1];return(l.from===cu?'Вы: ':'')+l.text;}return'';}
+function openChat(u){cc=u;document.getElementById('hn').innerText=u;document.getElementById('ha').style.background=USERS[u].color;document.getElementById('ha').innerText=u.charAt(0);updateStatus();document.getElementById('main').style.display='none';document.getElementById('chat').style.display='flex';send({action:'history',to:u});loadHistory(u);}
+function updateStatus(){if(!cc)return;var on=ONLINE.indexOf(cc)>=0;document.getElementById('hs').innerText=on?'онлайн':'офлайн';document.getElementById('hs').style.color=on?'#4caf50':'#8b9aab';}
+function backToMain(){document.getElementById('chat').style.display='none';document.getElementById('main').style.display='flex';renderContacts();}
+function loadHistory(u){var c=document.getElementById('msgs');c.innerHTML='';var k=chatKey(cu,u);if(HISTORY[k]&&HISTORY[k].length){HISTORY[k].forEach(function(m){renderMessage(m,m.from===cu);});}else addSystem('Начните общение с '+u);}
+function renderMessage(m,mine){var c=document.getElementById('msgs');var d=document.createElement('div');d.className='m '+(mine?'mo':'mi');if(mine)d.innerHTML=escapeHtml(m.text)+'<span class="t">'+m.time+'</span>';else d.innerHTML='<span style="font-weight:600;font-size:12px;color:#2AABEE">'+m.from+'</span>'+escapeHtml(m.text)+'<span class="t">'+m.time+'</span>';c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function addSystem(t){var c=document.getElementById('msgs');var d=document.createElement('div');d.className='m mi';d.style.alignSelf='center';d.style.background='transparent';d.innerText=t;c.appendChild(d);c.scrollTop=c.scrollHeight;}
+function escapeHtml(s){var d=document.createElement('div');d.innerText=s;return d.innerHTML;}
+function sendMessage(){var i=document.getElementById('mi'),t=i.value.trim();if(!t)return;if(!cc){alert('Выберите чат');return;}send({action:'message',to:cc,text:t});i.value='';}
+function startCall(){if(!cc)return;isCaller=true;callTarget=cc;showCallScreen(cc,'Вызов...');send({action:'call_offer',to:cc});}
+function showCallScreen(name,status){document.getElementById('callScreen').style.display='flex';document.getElementById('callName').innerText=name;document.getElementById('callSt').innerText=status;}
+function showIncomingCall(from){if(!confirm('📞 Звонок от '+from)){send({action:'call_decline',to:from});return;}isCaller=false;callTarget=from;showCallScreen(from,'Соединение...');send({action:'call_answer',to:from});startWebRTC(true);}
+function startCallTimer(){var sec=0;callTimer=setInterval(function(){sec++;document.getElementById('callSt').innerText='🔊 '+Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');},1000);}
+async function startWebRTC(){try{localStream=await navigator.mediaDevices.getUserMedia({audio:true});}catch(e){alert('Нет микрофона');endCall(true);return;}pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});localStream.getTracks().forEach(function(t){pc.addTrack(t,localStream);});pc.onicecandidate=function(e){if(e.candidate)send({action:'webrtc',to:callTarget,data:{type:'candidate',candidate:e.candidate}});};pc.ontrack=function(e){var a=new Audio();a.srcObject=e.streams[0];a.play();};}
+async function createOffer(){if(!pc)await startWebRTC();var offer=await pc.createOffer();await pc.setLocalDescription(offer);send({action:'webrtc',to:callTarget,data:{type:'offer',sdp:offer}});}
+async function handleWebRTC(from,data){if(!pc)await startWebRTC();if(data.type==='offer'){await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));var ans=await pc.createAnswer();await pc.setLocalDescription(ans);send({action:'webrtc',to:from,data:{type:'answer',sdp:ans}});document.getElementById('callSt').innerText='Разговор';startCallTimer();}else if(data.type==='answer'){await pc.setRemoteDescription(new RTCSessionDescription(data.sdp));document.getElementById('callSt').innerText='Разговор';startCallTimer();}else if(data.type==='candidate'){try{await pc.addIceCandidate(new RTCIceCandidate(data.candidate));}catch(e){}}}
+function toggleMute(){if(!localStream)return;var a=localStream.getAudioTracks()[0];a.enabled=!a.enabled;document.getElementById('muteBtn').classList.toggle('on');}
+function endCall(silent){if(!silent&&callTarget)send({action:'call_end',to:callTarget});if(pc){pc.close();pc=null;}if(localStream){localStream.getTracks().forEach(function(t){t.stop();});localStream=null;}if(callTimer){clearInterval(callTimer);callTimer=null;}callTarget=null;document.getElementById('callScreen').style.display='none';}
+console.log('MiNeChaYt загружен');
+</script>
+</body>
+</html>
