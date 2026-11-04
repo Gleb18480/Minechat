@@ -1,28 +1,17 @@
-name: Build APK
+name: Build
 on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
-      - name: SDK
-        uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-34 build-tools;34.0.0'
-      - name: Gradle
-        uses: gradle/actions/setup-gradle@v3
-      - name: Build
-        run: |
+      - uses: actions/setup-java@v4
+        with: { distribution: 'zulu', java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v3
+      - run: |
           cd android-app
           gradle wrapper
           ./gradlew assembleDebug
-      - name: APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: MineChat-APK
-          path: android-app/app/build/outputs/apk/debug/app-debug.apk
+          cp app/build/outputs/apk/debug/app-debug.apk ..
+      - uses: actions/upload-artifact@v4
+        with: { name: APK, path: app-debug.apk }
