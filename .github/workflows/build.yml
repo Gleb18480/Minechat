@@ -1,33 +1,27 @@
-name: Build Android APK
+name: Build APK
 on: [push, workflow_dispatch]
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Set up JDK 17
+      - name: Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          
-      - name: Install Android SDK packages
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "build-tools;34.0.0"
-          
-      - name: Setup Gradle
+      - name: SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0'
+      - name: Gradle
         uses: gradle/actions/setup-gradle@v3
-          
-      - name: Build with Gradle
+      - name: Build
         run: |
           cd android-app
           gradle wrapper
-          ./gradlew assembleDebug --stacktrace
-          
-      - name: Upload APK
+          ./gradlew assembleDebug
+      - name: APK
         uses: actions/upload-artifact@v4
         with:
           name: MineChat-APK
