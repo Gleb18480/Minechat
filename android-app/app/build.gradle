@@ -1,11 +1,8 @@
-plugins {
-    id 'com.android.application'
-}
+apply plugin: 'com.android.application'
 
 android {
     namespace 'com.gleb.minechat'
     compileSdk 34
-
     defaultConfig {
         applicationId "com.gleb.minechat"
         minSdk 24
@@ -13,7 +10,6 @@ android {
         versionCode 1
         versionName "1.0"
     }
-    
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
