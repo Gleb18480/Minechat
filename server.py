@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, json, hashlib, time, subprocess, threading, re, urllib.request
+import os, json, hashlib, time
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -9,7 +9,7 @@ app = FastAPI()
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE, "minechat_data.json")
 INDEX_FILE = os.path.join(BASE, "index.html")
-BOT_NAME = "Minechat Бот" # <-- Изменено
+BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
 
 USERS, CHATS, MESSAGES, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE = {}, {}, {}, [0], [], {}, {}, {}, {}, {}
@@ -475,36 +475,8 @@ async def broadcast_online():
         try: await w.send_text(json.dumps({"action": "online", "users": online, "last_seen": last_seen}))
         except: pass
 
-# ===== АВТОЗАПУСК CLOUDPUB =====
-def _start_cloudpub():
-    print("🌐 Настраиваю CloudPub туннель...")
-    try:
-        if not os.path.exists("./clo"):
-            print("⬇️ Скачиваю clo...")
-            urllib.request.urlretrieve("https://cloudpub.ru/downloads/clo-linux-amd64", "clo")
-            os.chmod("clo", 0o755)
-        
-        token = "hOp6-vDhNIE2UuLX7g9e9Xx2HVX-awG3PGOJRyDB9yQ@cloudpub.ru"
-        subprocess.run(["./clo", "set", "token", token], check=True, capture_output=True)
-        
-        print("🚀 Запускаю публикацию на CloudPub...")
-        proc = subprocess.Popen(
-            ["./clo", "publish", "-n", "minechat-gleb", "http", "11460"],
-            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
-        )
-        
-        printed = False
-        for line in proc.stdout:
-            m = re.search(r'https://[a-z0-9-]+\.cloudpub\.ru', line)
-            if m and not printed:
-                printed = True
-                print("\n" + "=" * 60 + f"\n✅ ТВОЙ ПОСТОЯННЫЙ АДРЕС:\n   {m.group(0)}\n" + "=" * 60 + "\n")
-    except Exception as e:
-        print("❌ Ошибка CloudPub:", e)
-
-threading.Thread(target=_start_cloudpub, daemon=True).start()
-# ===== КОНЕЦ БЛОКА =====
-
 if __name__ == "__main__":
+    # Netrun автоматически подставляет нужный порт через переменную окружения PORT
     port = int(os.environ.get("PORT", 11460))
+    print(f"🚀 Запуск Minechat (Russia) на порту {port}")
     uvicorn.run(app, host="0.0.0.0", port=port)
