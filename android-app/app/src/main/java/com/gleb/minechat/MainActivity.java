@@ -32,7 +32,9 @@ public class MainActivity extends Activity {
         webSettings.setAllowContentAccess(true);
 
         webView.setWebViewClient(new WebViewClient());
-        webView.loadUrl("https://minechat.freesrv.com");
+        
+        // ⚠️ ТВОЙ НОВЫЙ АДРЕС ОТ NETRUN
+        webView.loadUrl("https://minechat.de2.netrun.io/");
 
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
