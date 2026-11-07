@@ -80,15 +80,18 @@ h2{font-size:24px;margin-bottom:6px;}
 .m .reply{background:rgba(0,0,0,.25);border-left:3px solid var(--blue);padding:4px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;opacity:.85;}
 .m .reactions{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
 .m .reactions span{background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:12px;cursor:pointer;}
+
 .voice-msg{display:flex;align-items:center;gap:10px;min-width:180px;}
 .voice-play{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:14px;cursor:pointer;flex-shrink:0;}
 .mo .voice-play{background:#fff;color:var(--blue);}
 .voice-wave{flex:1;height:22px;display:flex;align-items:center;gap:2px;}
 .voice-wave span{display:block;width:2px;background:currentColor;border-radius:1px;opacity:.5;}
 .voice-dur{font-size:12px;opacity:.8;}
+
 .msg-actions{position:absolute;top:-34px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
 .msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;}
 .m.show-actions .msg-actions{display:flex;}
+
 .poll{min-width:220px;}
 .poll .q{font-size:15px;font-weight:600;display:block;margin-bottom:8px;}
 .poll .opt{padding:8px 10px;margin:4px 0;background:rgba(255,255,255,.1);border-radius:8px;cursor:pointer;position:relative;overflow:hidden;}
@@ -132,6 +135,8 @@ h2{font-size:24px;margin-bottom:6px;}
 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--blue); }
 input:checked + .slider:before { transform: translateX(22px); }
+.phone-btn{display:inline;padding:1px 4px;background:rgba(42,171,238,0.15);border-radius:4px;color:var(--blue);text-decoration:underline;cursor:pointer;font-weight:600;}
+.email-btn{display:inline;padding:1px 4px;background:rgba(233,30,99,0.15);border-radius:4px;color:#e91e63;text-decoration:underline;cursor:pointer;font-weight:600;}
 </style>
 </head>
 <body>
@@ -199,6 +204,7 @@ input:checked + .slider:before { transform: translateX(22px); }
       <div class="st" id="hs">офлайн</div>
     </div>
     <button class="hb" id="chatSettingsBtn" style="display:none" onclick="openChatSettings()" title="Настройки">⚙️</button>
+    <button class="hb" onclick="openStickerPicker()" title="Стикеры">😀</button>
     <button class="hb" onclick="startCall(true)">📹</button>
     <button class="hb" onclick="startCall(false)">📞</button>
   </div>
@@ -392,6 +398,12 @@ function handleMessage(m) {
     case 'call_ended': endCall(true); break;
     case 'call_declined': alert('Звонок отклонен'); endCall(true); break;
     case 'webrtc': handleWebRTC(m.from, m.data); break;
+    case 'admin_update': BANNED = m.banned || []; MUTED = m.muted || {}; renderAdminList(); break;
+    case 'verify_update':
+      (m.verified_users || []).forEach(x => { VERIFIED[x] = true; if (USERS[x]) USERS[x].verified = true; });
+      renderAdminList(); renderVerifyRequests(); renderChats(); break;
+    case 'sticker_pack_data': showPackStickers(m.pack, m.stickers); break;
+    case 'history_cleared': if (m.chat_id === cc) { MESSAGES[cc] = []; renderMessages(); } break;
   }
 }
 
@@ -628,4 +640,4 @@ var lastUser = localStorage.getItem('mc_last_user');
 if(lastUser) { document.getElementById('au').value = lastUser; }
 </script>
 </body>
-                                                                              </html>
+</html>
