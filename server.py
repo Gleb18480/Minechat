@@ -1,643 +1,481 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Minechat (Russia)</title>
-<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
-<style>
-/* ===== ПЕРЕМЕННЫЕ ДЛЯ ТЕМ ===== */
-:root {
-  --bg: #0e1621; --panel: #17212b; --text: #ffffff; --text-muted: #8b9aab;
-  --blue: #2AABEE; --border: #0e1621; --input-bg: #242f3d;
-}
-body.light-theme {
-  --bg: #f4f4f5; --panel: #ffffff; --text: #000000; --text-muted: #707579;
-  --blue: #2AABEE; --border: #e1e1e1; --input-bg: #efefef;
-}
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;}
-html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position:fixed;overflow:hidden;overscroll-behavior:none; transition: background 0.3s, color 0.3s;}
-input,textarea,button{font-family:inherit;}
-#app{height:100vh;height:100dvh;display:flex;flex-direction:column;width:100%;max-width:900px;margin:0 auto;position:relative;background:var(--bg);}
+# -*- coding: utf-8 -*-
+import os, json, hashlib, time
+from datetime import datetime
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import HTMLResponse
+import uvicorn
 
-/* ===== АВТОРИЗАЦИЯ ===== */
-#auth{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;background:linear-gradient(135deg,var(--panel),var(--bg));overflow-y:auto;}
-.auth-box{width:100%;max-width:400px;text-align:center;}
-.logo{width:90px;height:90px;margin:0 auto 20px;background:linear-gradient(135deg,#2AABEE,#229ED9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;}
-h2{font-size:24px;margin-bottom:6px;}
-.sub{font-size:13px;color:var(--text-muted);margin-bottom:24px;}
-.inp{width:100%;padding:14px;margin-bottom:10px;border:none;border-radius:10px;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;}
-.btn{width:100%;padding:14px;margin-top:8px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:600;cursor:pointer;text-transform:uppercase;}
-.btn.gray{background:#3a4a5a; color:#fff;}
-.btn.red{background:#e74c3c; color:#fff;}
-.btn.purple{background:#9c27b0; color:#fff;}
-.lnk{display:block;margin-top:16px;color:var(--blue);font-size:13px;cursor:pointer;}
+app = FastAPI()
+BASE = os.path.dirname(os.path.abspath(__file__))
+DATA_FILE = os.path.join(BASE, "minechat_data.json")
+INDEX_FILE = os.path.join(BASE, "index.html")
+BOT_NAME = "Minechat Бот"
+MAIN_ID = "main_channel"
 
-/* ===== ГЛАВНЫЙ ЭКРАН ===== */
-#main{display:none;flex-direction:column;height:100%;}
-.hdr{padding:12px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);}
-.hdr .title{flex:1;font-weight:600;font-size:17px;}
-.dot{width:9px;height:9px;border-radius:50%;background:#4caf50;}
-.dot.off{background:#e74c3c;}
-.hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
+USERS, CHATS, MESSAGES, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE = {}, {}, {}, [0], [], {}, {}, {}, {}, {}
 
-#content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
-.view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.view.active { display: block; }
+def new_id(p="c"):
+    COUNTER[0] += 1
+    return p + str(COUNTER[0])
 
-.srch-wrap{padding:10px 14px;background:var(--panel);}
-.srch{width:100%;padding:10px 16px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);font-size:15px;outline:none;}
-.lst{padding:6px;}
-.it{padding:11px;margin-bottom:2px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:12px;}
-.it:active{background:var(--input-bg);}
-.av{width:50px;height:50px;min-width:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;color:#fff;position:relative;overflow:visible;}
-.av-inner{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
-.av .on{position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#4caf50;border:2px solid var(--panel);z-index:2;}
-.av .unread{position:absolute;top:-2px;right:-2px;background:#e74c3c;color:#fff;font-size:11px;font-weight:700;border-radius:10px;padding:1px 6px;min-width:18px;text-align:center;z-index:3;box-shadow:0 0 0 2px var(--panel);}
-.nm{font-size:15px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.pv{font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+def private_id(a, b): 
+    return "p_" + "_".join(sorted([a, b]))
 
-/* ===== НИЖНЕЕ МЕНЮ ===== */
-#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; color: var(--text-muted); cursor: pointer; font-size: 12px; transition: 0.2s; }
-.nav-item.active { color: var(--blue); font-weight: 600; }
-.nav-icon { font-size: 24px; margin-bottom: 4px; }
+def save_data():
+    try:
+        with open(DATA_FILE, 'w', encoding='utf-8') as f:
+            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "stickers": STICKERS, "unread": UNREAD}, f, ensure_ascii=False)
+    except Exception as e: print("Save error:", e)
 
-/* ===== ЧАТ ===== */
-#chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
-.ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.bk{background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer;padding:4px 10px;}
-#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch;}
-.m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;word-wrap:break-word;position:relative;}
-.m .t{font-size:10px;opacity:.6;float:right;margin-left:8px;margin-top:4px;}
-.mi{align-self:flex-start;background:var(--input-bg);border-top-left-radius:4px;}
-.mi .nm2{font-weight:600;font-size:12px;color:var(--blue);display:block;margin-bottom:2px;}
-.mo{align-self:flex-end;background:var(--blue);border-top-right-radius:4px;color:#fff;}
-.m img,.m video{max-width:100%;border-radius:10px;margin-top:4px;display:block;}
-.m .sticker-img{width:128px;height:128px;object-fit:contain;background:transparent;}
-.m .file{display:flex;align-items:center;gap:8px;padding:8px;background:rgba(0,0,0,.2);border-radius:8px;margin-top:4px;font-size:13px;}
-.m .reply{background:rgba(0,0,0,.25);border-left:3px solid var(--blue);padding:4px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;opacity:.85;}
-.m .reactions{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
-.m .reactions span{background:rgba(255,255,255,.15);padding:2px 8px;border-radius:10px;font-size:12px;cursor:pointer;}
+def load_data():
+    if not os.path.exists(DATA_FILE): return False
+    try:
+        with open(DATA_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        USERS.clear(); USERS.update(data.get("users", {}))
+        CHATS.clear(); CHATS.update(data.get("chats", {}))
+        MESSAGES.clear(); MESSAGES.update(data.get("messages", {}))
+        COUNTER[0] = data.get("counter", 0)
+        BANNED.clear(); BANNED.extend(data.get("banned", []))
+        MUTED.clear(); MUTED.update(data.get("muted", {}))
+        STICKERS.clear(); STICKERS.update(data.get("stickers", {}))
+        UNREAD.clear(); UNREAD.update(data.get("unread", {}))
+        return True
+    except Exception as e: return False
 
-.voice-msg{display:flex;align-items:center;gap:10px;min-width:180px;}
-.voice-play{width:36px;height:36px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:14px;cursor:pointer;flex-shrink:0;}
-.mo .voice-play{background:#fff;color:var(--blue);}
-.voice-wave{flex:1;height:22px;display:flex;align-items:center;gap:2px;}
-.voice-wave span{display:block;width:2px;background:currentColor;border-radius:1px;opacity:.5;}
-.voice-dur{font-size:12px;opacity:.8;}
+def init_default():
+    USERS.clear()
+    USERS.update({
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+    })
+    CHATS.clear()
+    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал Minechat (Russia) 🎉", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
+    MESSAGES.clear()
+    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать в Minechat (Russia)! 🎉", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}]
+    for uname in list(USERS.keys()):
+        if uname == BOT_NAME: continue
+        cid_bot = private_id(uname, BOT_NAME)
+        CHATS[cid_bot] = {"type": "private", "name": "", "members": [uname, BOT_NAME], "owner": "", "banned": []}
+        MESSAGES[cid_bot] = [{"id": "m_bot_hello_" + uname, "from": BOT_NAME, "type": "text", "text": "Привет! /help — команды", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}]
+    save_data()
 
-.msg-actions{position:absolute;top:-34px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
-.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;}
-.m.show-actions .msg-actions{display:flex;}
+if not load_data(): init_default()
+else: print("✅ Данные загружены.")
 
-.poll{min-width:220px;}
-.poll .q{font-size:15px;font-weight:600;display:block;margin-bottom:8px;}
-.poll .opt{padding:8px 10px;margin:4px 0;background:rgba(255,255,255,.1);border-radius:8px;cursor:pointer;position:relative;overflow:hidden;}
-.poll .opt .bar{position:absolute;top:0;left:0;bottom:0;background:rgba(42,171,238,.4);}
-.poll .opt .row{position:relative;display:flex;justify-content:space-between;font-size:14px;}
-.poll .total{font-size:11px;opacity:.6;margin-top:4px;}
+def ensure_private(a, b):
+    cid = private_id(a, b)
+    if cid not in CHATS:
+        CHATS[cid] = {"type": "private", "name": "", "members": [a, b], "owner": "", "banned": []}
+        MESSAGES[cid] = []
+        save_data()
+    return cid
 
-#inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:calc(10px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
-#mi{flex:1;padding:12px 16px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;min-width:0;}
-.ib{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px;flex-shrink:0;}
-.sb{background:var(--blue);border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-#recBar { display:none; padding:12px; background:#2c1a1a; align-items:center; gap:10px; border-top:1px solid #e74c3c; color:#fff; }
+def user_chats(u): return [{"id": cid, **ch} for cid, ch in CHATS.items() if u in ch["members"]]
+def normalize_name(raw): return " ".join(w.capitalize() for w in raw.strip().split())
 
-/* ===== МОДАЛКИ И МЕНЮ ===== */
-.menu{position:fixed;background:var(--panel);border-radius:12px;padding:6px;z-index:2000;box-shadow:0 10px 30px rgba(0,0,0,.7);min-width:220px; color:var(--text);}
-.menu div{padding:12px 18px;font-size:14px;cursor:pointer;border-radius:8px;}
-.menu div:active{background:var(--input-bg);}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;color:var(--text);}
-.modal-box h3{font-size:20px;margin-bottom:14px;}
-.modal-box .row{display:flex;gap:8px;margin-top:14px;}
-.big-av{width:100px;height:100px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:600;color:#fff;overflow:hidden;}
-.big-av img{width:100%;height:100%;object-fit:cover;}
-.admin-item{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--border);}
-.admin-item .info{flex:1;min-width:0;}
-.admin-item .actions{display:flex;gap:4px;flex-wrap:wrap;}
-.admin-item button{padding:6px 10px;border:none;border-radius:6px;font-size:12px;cursor:pointer;color:#fff;font-weight:600;}
-.admin-item .ban-btn{background:#e74c3c;}.admin-item .unban-btn{background:#4caf50;}.admin-item .mute-btn{background:#f39c12;}.admin-item .unmute-btn{background:#2AABEE;}.admin-item .promote-btn{background:#9c27b0;}.admin-item .demote-btn{background:#607d8b;}.admin-item .kick-btn{background:#e74c3c;}
-.section-title{font-size:13px;color:var(--text-muted);margin:14px 0 6px;text-transform:uppercase;}
-.sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-height:50vh;overflow-y:auto;}
-.sticker-grid img{width:100%;cursor:pointer;border-radius:8px;background:rgba(255,255,255,.05);}
-.pack-select{width:100%;padding:10px;margin-bottom:12px;background:var(--input-bg);color:var(--text);border:none;border-radius:8px;font-size:14px;}
-.badge-verified{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:var(--blue);border-radius:50%;color:#fff;font-size:10px;font-weight:700;flex-shrink:0;}
-.badge-wrench{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#f39c12;border-radius:50%;color:#fff;font-size:10px;flex-shrink:0;}
-.badge-bot{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;background:#9c27b0;border-radius:50%;color:#fff;font-size:10px;flex-shrink:0;}
-.settings-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 16px;}
-.settings-item:active { background: var(--input-bg); }
-.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: var(--blue); }
-input:checked + .slider:before { transform: translateX(22px); }
-.phone-btn{display:inline;padding:1px 4px;background:rgba(42,171,238,0.15);border-radius:4px;color:var(--blue);text-decoration:underline;cursor:pointer;font-weight:600;}
-.email-btn{display:inline;padding:1px 4px;background:rgba(233,30,99,0.15);border-radius:4px;color:#e91e63;text-decoration:underline;cursor:pointer;font-weight:600;}
-</style>
-</head>
-<body>
+def name_exists(name):
+    n = name.lower()
+    return any(existing.lower() == n for existing in USERS.keys()) or any(banned.lower() == n for banned in BANNED)
 
-<div id="app">
-<!-- АВТОРИЗАЦИЯ -->
-<div id="auth">
-  <div class="auth-box">
-    <div class="logo">✈</div>
-    <h2 id="authTitle">Minechat (Russia)</h2>
-    <div class="sub" id="authSub">Войдите, чтобы продолжить</div>
-    <input class="inp" id="au" placeholder="Имя" autocomplete="off">
-    <input class="inp" id="ap" type="password" placeholder="Пароль" autocomplete="off">
-    <button class="btn" id="authBtn" onclick="doLogin()">Войти</button>
-    <span class="lnk" id="switchLink" onclick="switchMode()">Нет аккаунта? Зарегистрироваться</span>
-  </div>
-</div>
+def is_muted(u):
+    if u not in MUTED: return False
+    if MUTED[u] == "forever": return True
+    if time.time() > MUTED[u]:
+        del MUTED[u]; save_data(); return False
+    return True
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
-<div id="main">
-  <div class="hdr">
-    <div class="title">Minechat (Russia)</div>
-    <div class="dot" id="wsDot"></div>
-    <button class="hb" id="adminBtn" style="display:none" onclick="openAdmin()" title="Админ">🔧</button>
-  </div>
+def is_chat_admin(cid, u):
+    if cid not in CHATS: return False
+    ch = CHATS[cid]
+    return USERS.get(u, {}).get("creator") or ch.get("owner") == u or u in ch.get("admins", {})
 
-  <div id="content-area">
-    <div id="view-chats" class="view active">
-      <div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск" oninput="renderChats(this.value)"></div>
-      <div class="lst" id="cl"></div>
-    </div>
-    <div id="view-calls" class="view">
-      <div class="lst" id="call-list"></div>
-    </div>
-    <div id="view-contacts" class="view">
-      <div class="srch-wrap"><input class="srch" id="sr-contacts" placeholder="Найти контакт" oninput="renderContacts(this.value)"></div>
-      <div class="lst" id="contacts-list"></div>
-    </div>
-    <div id="view-settings" class="view">
-      <div class="lst" style="padding:0;">
-        <div class="settings-item" onclick="openProfile()"><span>👤 Мой профиль</span><span>➔</span></div>
-        <div class="settings-item" onclick="toggleTheme()"><span>🎨 Светлая тема</span><label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
-        <div class="settings-item" onclick="checkPermissions()"><span>🔍 Проверить доступ к камере</span></div>
-        <div class="settings-item" onclick="logout()" style="color:#e74c3c;"><span>🚪 Выйти из аккаунта</span></div>
-        <div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 12px;">Minechat (Russia) v1.0<br>Сделано с душой 💙</div>
-      </div>
-    </div>
-  </div>
+def bump_unread(cid, sender):
+    for member in CHATS[cid]["members"]:
+        if member in (sender, BOT_NAME): continue
+        UNREAD.setdefault(member, {})
+        UNREAD[member][cid] = UNREAD[member].get(cid, 0) + 1
 
-  <div id="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
-    <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
-    <div class="nav-item" onclick="switchTab('contacts')" id="nav-contacts"><div class="nav-icon">👥</div><div>Контакты</div></div>
-    <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
-  </div>
-</div>
+def clear_unread(u, cid):
+    if u in UNREAD and cid in UNREAD[u]:
+        del UNREAD[u][cid]; save_data()
 
-<!-- ЭКРАН ЧАТА -->
-<div id="chat">
-  <div class="ch">
-    <button class="bk" onclick="backToMain()">←</button>
-    <div class="av" id="ha" style="cursor:pointer;" onclick="openContactProfile(otherUser())"><div class="av-inner">?</div></div>
-    <div style="flex:1;min-width:0" onclick="openContactProfile(otherUser())">
-      <div class="nm" id="hn">-</div>
-      <div class="st" id="hs">офлайн</div>
-    </div>
-    <button class="hb" id="chatSettingsBtn" style="display:none" onclick="openChatSettings()" title="Настройки">⚙️</button>
-    <button class="hb" onclick="openStickerPicker()" title="Стикеры">😀</button>
-    <button class="hb" onclick="startCall(true)">📹</button>
-    <button class="hb" onclick="startCall(false)">📞</button>
-  </div>
-  <div id="msgs"></div>
-  
-  <div id="recBar">
-    <span id="recTimer" style="color:#e74c3c;font-weight:600;">0:00</span>
-    <span style="flex:1;color:#e74c3c;font-size:13px;">🎤 Запись...</span>
-    <button onclick="cancelRecording()" style="background:#3a3a3a;color:#fff;border:none;padding:8px 16px;border-radius:8px;">Отмена</button>
-    <button onclick="stopRecording()" style="background:var(--blue);color:#fff;border:none;padding:8px 16px;border-radius:8px;">Отправить</button>
-  </div>
+def bot_reply(user, text):
+    cid = private_id(user, BOT_NAME)
+    cmd = text.strip(); low = cmd.lower(); reply = ""
+    if low.startswith("/start") or low.startswith("/help"): reply = "🤖 /newpack Имя — пак\n/addsticker — фото\n/packs — паки\n/usepack N — выбрать"
+    elif low.startswith("/newpack"):
+        name = cmd[8:].strip()
+        if not name: reply = "❌ /newpack Кошки"
+        elif name in STICKERS: reply = "❌ Уже есть"
+        else:
+            STICKERS[name] = {"owner": user, "stickers": []}
+            USERS[user]["active_pack"] = name
+            save_data(); reply = "✅ Пак «" + name + "» создан. /addsticker и фото"
+    elif low.startswith("/usepack"):
+        try:
+            n = int(cmd[8:].strip())
+            my_packs = [p for p in STICKERS if STICKERS[p]["owner"] == user]
+            if 1 <= n <= len(my_packs):
+                USERS[user]["active_pack"] = my_packs[n-1]; save_data(); reply = "✅ Активный: «" + my_packs[n-1] + "»"
+            else: reply = "❌ Нет такого номера"
+        except: reply = "❌ /usepack 1"
+    elif low.startswith("/packs"):
+        my_packs = [p for p in STICKERS if STICKERS[p]["owner"] == user]
+        if not my_packs: reply = "Нет паков. /newpack Имя"
+        else: reply = "📦 Твои паки:\n" + "\n".join(f"{i}. {p} ({len(STICKERS[p]['stickers'])})" for i, p in enumerate(my_packs, 1))
+    elif low.startswith("/addsticker"):
+        active = USERS.get(user, {}).get("active_pack")
+        if not active: reply = "❌ Сначала /newpack"
+        else: USERS[user]["await_sticker"] = True; save_data(); reply = "📷 Пришли фото"
+    elif low == "/_sticker_saved": reply = "✅ Стикер добавлен!"
+    else: reply = "🤖 /help"
+    
+    msg = {"id": new_id("m"), "from": BOT_NAME, "type": "text", "text": reply, "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}
+    MESSAGES[cid].append(msg); save_data()
+    return cid, msg
 
-  <div id="inp">
-    <button class="ib" onclick="showAttachMenu(event)">📎</button>
-    <input id="mi" placeholder="Сообщение..." enterkeyhint="send" autocomplete="off">
-    <button class="ib" id="recBtn" onclick="startVoice()">🎤</button>
-    <button class="ib" id="vidBtn" onclick="startVideoNote()">📷</button>
-    <button class="sb" onclick="sendMessage()">➤</button>
-  </div>
-</div>
+async def send_bot(user, text):
+    cid, msg = bot_reply(user, text)
+    if user in ACTIVE:
+        try: await ACTIVE[user].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
+        except: pass
 
-<!-- МОДАЛКИ -->
-<div class="modal" id="contactProfileModal"><div class="modal-box" style="text-align: center;">
-    <h3 id="cpName" style="margin-bottom: 10px;">Имя</h3>
-    <div class="big-av" id="cpAvatar" style="background:var(--blue); margin-bottom: 20px;">?</div>
-    <div style="text-align: left; background: var(--input-bg); padding: 15px; border-radius: 12px; margin-bottom: 15px;">
-      <div style="margin-bottom: 8px; font-size: 14px;"><b>Статус:</b> <span id="cpStatus"></span></div>
-      <div style="margin-bottom: 8px; font-size: 14px;"><b>Возраст:</b> <span id="cpAge"></span></div>
-      <div style="margin-bottom: 8px; font-size: 14px;"><b>Телефон:</b> <span id="cpPhone"></span></div>
-      <div style="margin-bottom: 8px; font-size: 14px;"><b>Почта:</b> <span id="cpEmail"></span></div>
-      <div style="margin-bottom: 8px; font-size: 14px;"><b>Устройство:</b> <span id="cpDevice"></span></div>
-    </div>
-    <div class="row" style="flex-direction: column;">
-      <button class="btn" onclick="startChatFromProfile()">💬 Написать</button>
-      <div style="display:flex; gap:8px;">
-        <button class="btn gray" onclick="startCall(false)">📞 Аудио</button>
-        <button class="btn gray" onclick="startCall(true)">📹 Видео</button>
-      </div>
-      <button class="btn gray" onclick="document.getElementById('contactProfileModal').style.display='none'">Закрыть</button>
-    </div>
-</div></div>
+@app.get("/")
+def root():
+    with open(INDEX_FILE, "r", encoding="utf-8") as f: return HTMLResponse(f.read())
 
-<div class="modal" id="profileModal"><div class="modal-box">
-    <h3>👤 Мой профиль</h3>
-    <div class="big-av" id="myBigAvatar" style="background:#2AABEE;">?</div>
-    <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
-    <button class="btn gray" onclick="document.getElementById('avatarInput').click()">Изменить аватар</button>
-    <button class="btn purple" onclick="setMyStatus()">💬 Установить статус</button>
-    <button class="btn" onclick="openPhoneModal()">📱 Мой номер для переводов</button>
-    <button class="btn" onclick="openEmailModal()">📧 Моя почта</button>
-    <button class="btn purple" onclick="startAgeVerification()">🔞 Проверить возраст</button>
-    <button class="btn" id="reqVerifyBtn" onclick="requestVerify()">✔ Запросить галочку</button>
-    <div style="font-size:11px;color:#8b9aab;margin-top:14px;text-align:center;" id="platformInfo"></div>
-    <div class="row"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
-</div></div>
+@app.websocket("/ws")
+async def ws(websocket: WebSocket):
+    await websocket.accept()
+    u = None
+    try:
+        while True:
+            raw = await websocket.receive_text()
+            m = json.loads(raw); a = m.get("action")
 
-<div class="modal" id="chatSettingsModal"><div class="modal-box"><h3>⚙️ Настройки чата</h3><div id="chatSettingsContent"></div><div class="row"><button class="btn gray" onclick="document.getElementById('chatSettingsModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="chatAvatarModal"><div class="modal-box"><h3>📷 Аватар чата</h3><div class="big-av" id="chatBigAvatar" style="background:var(--blue);">?</div><input type="file" id="chatAvatarInput" accept="image/*" style="display:none" onchange="uploadChatAvatar(event)"><button class="btn gray" onclick="document.getElementById('chatAvatarInput').click()">Выбрать фото</button><div class="row"><button class="btn gray" onclick="document.getElementById('chatAvatarModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="stickerPickerModal"><div class="modal-box"><h3>😀 Стикеры</h3><select id="packSelect" class="pack-select" onchange="loadStickerPack()"></select><div class="sticker-grid" id="stickerGrid"></div><div class="row"><button class="btn gray" onclick="document.getElementById('stickerPickerModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="emailModal"><div class="modal-box"><h3>📧 Моя почта</h3><input class="inp" id="myEmailInput" placeholder="example@mail.ru"><button class="btn" onclick="saveEmail()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('emailModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="payModal"><div class="modal-box"><h3>💸 Перевод</h3><div id="payPhone" style="text-align:center;font-size:20px;margin-bottom:15px;"></div><div id="bankList"></div><div class="row"><button class="btn gray" onclick="document.getElementById('payModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="phoneModal"><div class="modal-box"><h3>📱 Мой номер</h3><input class="inp" id="myPhoneInput" placeholder="+7 900 000 00 00"><button class="btn" onclick="savePhone()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('phoneModal').style.display='none'">Закрыть</button></div></div></div>
-<div class="modal" id="ageVerifyModal"><div class="modal-box"><h3>🔞 Проверка возраста</h3><video id="ageVerifyVideo" autoplay playsinline muted style="width:100%;border-radius:12px;transform:scaleX(-1);"></video><div id="ageVerifyStatus" style="text-align:center;margin:10px 0;"></div><button class="btn gray" onclick="cancelAgeVerification()">Отмена</button></div></div>
-<div class="modal" id="adminModal"><div class="modal-box"><h3>🔧 Админ-панель</h3><div id="adminList"></div><div class="section-title">Запросы на галочку</div><div id="verifyRequests"></div><div class="row"><button class="btn gray" onclick="document.getElementById('adminModal').style.display='none'">Закрыть</button></div></div></div>
+            if a == "register":
+                name = normalize_name(m.get("username", ""))
+                if name_exists(name): await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
+                else:
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#9c27b0", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}}
+                    if MAIN_ID in CHATS: CHATS[MAIN_ID]["members"].append(name)
+                    cid_bot = private_id(name, BOT_NAME)
+                    if cid_bot not in CHATS:
+                        CHATS[cid_bot] = {"type": "private", "name": "", "members": [name, BOT_NAME], "owner": "", "banned": []}
+                        MESSAGES[cid_bot] = [{"id": "m_bot_hello_" + name, "from": BOT_NAME, "type": "text", "text": "Привет! /help — команды", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}]
+                    save_data()
+                    await websocket.send_text(json.dumps({"action": "register_ok"}))
+                    await broadcast_online()
+                continue
 
-<!-- ЗВОНКИ -->
-<div id="callScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;">
-  <video id="remoteVideo" autoplay playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;"></video>
-  <video id="localVideo" autoplay playsinline muted style="position:absolute;top:20px;right:20px;width:110px;height:160px;object-fit:cover;border-radius:12px;border:2px solid var(--blue);z-index:2;background:#1a1a1a;"></video>
-  <div style="position:absolute;top:40px;left:0;right:0;text-align:center;z-index:3;">
-    <div id="callName" style="font-size:24px;font-weight:600;text-shadow:0 2px 8px rgba(0,0,0,.8);color:#fff;">-</div>
-    <div id="callSt" style="font-size:14px;color:#ddd;margin-top:4px;text-shadow:0 2px 8px rgba(0,0,0,.8);">Вызов...</div>
-  </div>
-  <div style="position:absolute;bottom:40px;left:0;right:0;display:flex;gap:24px;justify-content:center;z-index:3;">
-    <button class="cb cb-mute" id="muteBtn" onclick="toggleMute()" style="width:64px;height:64px;border-radius:50%;border:none;background:#3a3a3a;color:#fff;font-size:24px;">🎤</button>
-    <button class="cb cb-end" onclick="endCall()" style="width:64px;height:64px;border-radius:50%;border:none;background:#e74c3c;color:#fff;font-size:24px;">📵</button>
-  </div>
-</div>
+            if a == "login":
+                name = normalize_name(m.get("username", ""))
+                real_name = next((existing for existing in USERS.keys() if existing.lower() == name.lower()), None)
+                p = hashlib.md5(m["password"].encode()).hexdigest()
+                if real_name and real_name in BANNED: await websocket.send_text(json.dumps({"action": "login_fail", "reason": "🚫 Забанен"}))
+                elif real_name and USERS[real_name]["password"] == p:
+                    u = real_name; ACTIVE[u] = websocket; USERS[u]["last_seen"] = time.time(); save_data()
+                    await websocket.send_text(json.dumps({
+                        "action": "login_ok", "username": u, "color": USERS[u]["color"], "users": list(USERS.keys()), "chats": user_chats(u),
+                        "creator": USERS[u].get("creator", False), "verified_users": [n for n, d in USERS.items() if d.get("verified")],
+                        "avatars": {n: d.get("avatar", "") for n, d in USERS.items()}, "statuses": {n: d.get("status", "") for n, d in USERS.items()},
+                        "last_seen": {n: d.get("last_seen", 0) for n, d in USERS.items()}, "ages": {n: d.get("age", 0) for n, d in USERS.items()},
+                        "age_groups": {n: d.get("age_group", "") for n, d in USERS.items()}, "phones": {n: d.get("phone", "") for n, d in USERS.items()},
+                        "emails": {n: d.get("email", "") for n, d in USERS.items()}, "devices": {n: d.get("device", {}) for n, d in USERS.items()},
+                        "banned": BANNED, "muted": MUTED, "my_muted": is_muted(u),
+                        "stickers": {p: {"owner": STICKERS[p]["owner"], "count": len(STICKERS[p]["stickers"])} for p in STICKERS},
+                        "verify_req": VERIFY_REQ, "unread": UNREAD.get(u, {})
+                    }))
+                    await broadcast_online()
+                else: await websocket.send_text(json.dumps({"action": "login_fail", "reason": "Неверный пароль"}))
+                continue
 
-<div id="incomingScreen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,var(--bg),var(--panel));z-index:1500;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 20px;">
-  <div style="text-align:center;">
-    <div id="incLabel" style="font-size:14px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;">Входящий звонок</div>
-    <div class="inc-avatar" id="incAvatar" style="width:140px;height:140px;border-radius:50%;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:600;color:#fff;overflow:hidden;background:var(--blue);">?</div>
-    <div class="inc-name" id="incName" style="font-size:32px;font-weight:600;margin-bottom:8px;">-</div>
-    <div class="inc-type" id="incType" style="font-size:16px;color:var(--text-muted);">📞 Аудиозвонок</div>
-  </div>
-  <div style="display:flex;gap:60px;justify-content:center;width:100%;max-width:400px;">
-    <div style="text-align:center;"><button class="inc-btn decline" onclick="declineIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#e74c3c;color:#fff;">📵</button><div style="color:var(--text-muted);font-size:12px;margin-top:10px;">Отклонить</div></div>
-    <div style="text-align:center;"><button class="inc-btn accept" id="incAcceptBtn" onclick="acceptIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#4caf50;color:#fff;">📞</button><div style="color:var(--text-muted);font-size:12px;margin-top:10px;">Принять</div></div>
-  </div>
-</div>
+            if not u: continue
 
-</div>
+            if a == "set_device":
+                USERS[u]["device"] = m.get("device", {}); save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "device_update", "username": u, "device": USERS[u]["device"]}))
+                    except: pass
 
-<script>
-// ===== ПЕРЕМЕННЫЕ =====
-var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-var SERVER_URL = location.host;
-var ws = null, cu = null, cc = null, ctype = "private";
-var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {};
-var STICKERS_META = {}, VERIFY_REQ = {}, UNREAD = {}, STATUSES = {}, LAST_SEEN = {};
-var AGE_GROUPS = {}, PHONES = {}, DEVICES = {}, EMAILS = {};
-var BANNED = [], MUTED = {}, isCreator = false, myMuted = false;
-var isReg = false, replyTo = null;
-var localStream = null, pc = null, callTarget = null, isCaller = false, isVideoCall = false;
-var mediaRecorder = null, chunks = [], recType = "voice", recStartTime = 0, recTimerInt = null;
-var currentAudio = null, ringCtx = null, ringTimer = null, verifyCallFrom = null, permsRequested = false;
-var ageVerifyStream = null, ageVerifyLoop = null, ageStep = 'idle', currentAge = null;
-var CALL_HISTORY = JSON.parse(localStorage.getItem('mc_calls') || '[]');
+            elif a == "set_email":
+                email = (m.get("email", "") or "").strip()[:50]
+                USERS[u]["email"] = email; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "email_update", "username": u, "email": email}))
+                    except: pass
 
-var BANKS = [
-  { id: 'sberbank', name: 'Сбербанк', link: 'sberbank://', color: '#21A038' }, { id: 'tbank', name: 'Т-Банк', link: 'tbank://', color: '#FFDD2D' },
-  { id: 'vtb', name: 'ВТБ', link: 'vtb://', color: '#0A2973' }, { id: 'alfa', name: 'Альфа-Банк', link: 'alfabank://', color: '#EF3124' },
-  { id: 'raiffeisen', name: 'Райффайзен', link: 'raiffeisen://', color: '#FFEA00' }, { id: 'gazprom', name: 'Газпромбанк', link: 'gpbmobile://', color: '#0F4C9A' },
-  { id: 'universal', name: 'Скопировать номер', link: '', color: '#2AABEE' }
-];
+            elif a == "set_phone":
+                phone = (m.get("phone", "") or "").strip()[:30]
+                USERS[u]["phone"] = phone; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "phone_update", "username": u, "phone": phone}))
+                    except: pass
 
-// ===== ИНИЦИАЛИЗАЦИЯ ТЕМЫ =====
-if (localStorage.getItem('mc_theme') === 'light') {
-  document.body.classList.add('light-theme');
-  document.getElementById('themeToggle').checked = true;
-}
-function toggleTheme() {
-  document.body.classList.toggle('light-theme');
-  var isLight = document.body.classList.contains('light-theme');
-  localStorage.setItem('mc_theme', isLight ? 'light' : 'dark');
-  document.getElementById('themeToggle').checked = isLight;
-}
+            elif a == "set_age_group":
+                try: age = int(m.get("age", 0))
+                except: age = 0
+                group = m.get("group", "")
+                USERS[u]["age"] = age; USERS[u]["age_group"] = group; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "age_update", "username": u, "age": age, "age_group": group}))
+                    except: pass
 
-// ===== НАВИГАЦИЯ =====
-function switchTab(tab) {
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('view-' + tab).classList.add('active');
-  document.getElementById('nav-' + tab).classList.add('active');
-  if (tab === 'calls') renderCalls();
-  if (tab === 'contacts') renderContacts();
-}
+            elif a == "set_status":
+                USERS[u]["status"] = (m.get("status", "") or "").strip()[:100]; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "status_update", "username": u, "status": USERS[u]["status"]}))
+                    except: pass
 
-// ===== ПОДКЛЮЧЕНИЕ =====
-function connect() {
-  ws = new WebSocket(wsProto + SERVER_URL + "/ws");
-  ws.onopen = () => {
-    document.getElementById('wsDot').classList.remove('off');
-    ws.send(JSON.stringify({action:'login', username: cu, password: document.getElementById('ap').value}));
-  };
-  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-  ws.onclose = () => document.getElementById('wsDot').classList.add('off');
-}
-function send(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(d)); }
+            elif a == "clear_history":
+                cid = m.get("chat_id", "")
+                if cid in CHATS and (is_chat_admin(cid, u) or CHATS[cid]["type"] == "private"):
+                    MESSAGES[cid] = []; save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "history_cleared", "chat_id": cid}))
+                            except: pass
 
-function handleMessage(m) {
-  switch (m.action) {
-    case 'login_ok':
-      USERS = {}; VERIFIED = {};
-      (m.verified_users || []).forEach(u => VERIFIED[u] = true);
-      BANNED = m.banned || []; MUTED = m.muted || {}; isCreator = m.creator || false; myMuted = m.my_muted || false;
-      cu = m.username; localStorage.setItem('mc_last_user', cu);
-      STICKERS_META = m.stickers || {}; VERIFY_REQ = m.verify_req || {};
-      UNREAD = m.unread || {}; STATUSES = m.statuses || {}; LAST_SEEN = m.last_seen || {};
-      AGE_GROUPS = m.age_groups || {}; PHONES = m.phones || {}; DEVICES = m.devices || {}; EMAILS = m.emails || {};
-      m.users.forEach(u => { USERS[u] = {color: getColor(u), verified: !!VERIFIED[u], avatar: (m.avatars && m.avatars[u]) || ""}; });
-      CHATS = {}; (m.chats || []).forEach(c => CHATS[c.id] = c);
-      document.getElementById('auth').style.display = 'none'; document.getElementById('main').style.display = 'flex';
-      if (isCreator) document.getElementById('adminBtn').style.display = 'block';
-      renderChats(); renderContacts(); switchTab('chats');
-      break;
-    case 'new_message':
-      if (!MESSAGES[m.chat_id]) MESSAGES[m.chat_id] = [];
-      MESSAGES[m.chat_id].push(m.msg);
-      if (cc === m.chat_id) appendMessage(m.msg);
-      renderChats(); break;
-    case 'chat_opened':
-      cc = m.chat_id; ctype = m.chat.type; CHATS[cc] = m.chat; MESSAGES[cc] = m.messages || [];
-      if (m.unread) UNREAD = m.unread;
-      var title = ctype === 'private' ? getOtherUser(cc) : m.chat.name;
-      document.getElementById('hn').innerHTML = '<span>' + title + '</span>' + ((USERS[title] && USERS[title].verified) ? ' <span class="badge-verified">✔</span>' : '');
-      document.getElementById('main').style.display = 'none'; document.getElementById('chat').style.display = 'flex';
-      var canManage = (m.chat.owner === cu || isCreator || (m.chat.admins && m.chat.admins[cu]));
-      document.getElementById('chatSettingsBtn').style.display = (ctype !== 'private' && canManage) ? 'block' : 'none';
-      renderMessages(); break;
-    case 'online': ONLINE = m.users; if (m.last_seen) LAST_SEEN = m.last_seen; renderChats(); renderContacts(); break;
-    case 'status_update': STATUSES[m.username] = m.status; renderChats(); renderContacts(); break;
-    case 'age_update': AGE_GROUPS[m.username] = m.age_group; renderContacts(); break;
-    case 'phone_update': PHONES[m.username] = m.phone; break;
-    case 'email_update': EMAILS[m.username] = m.email; break;
-    case 'device_update': DEVICES[m.username] = m.device; break;
-    case 'avatar_update': if(USERS[m.username]) USERS[m.username].avatar = m.avatar; renderChats(); renderContacts(); if(cc) renderMessages(); break;
-    case 'incoming_call': showIncomingCall(m.from, m.data); break;
-    case 'call_accepted': document.getElementById('callSt').innerText = 'Разговор'; if (isCaller) createOffer(); break;
-    case 'call_ended': endCall(true); break;
-    case 'call_declined': alert('Звонок отклонен'); endCall(true); break;
-    case 'webrtc': handleWebRTC(m.from, m.data); break;
-    case 'admin_update': BANNED = m.banned || []; MUTED = m.muted || {}; renderAdminList(); break;
-    case 'verify_update':
-      (m.verified_users || []).forEach(x => { VERIFIED[x] = true; if (USERS[x]) USERS[x].verified = true; });
-      renderAdminList(); renderVerifyRequests(); renderChats(); break;
-    case 'sticker_pack_data': showPackStickers(m.pack, m.stickers); break;
-    case 'history_cleared': if (m.chat_id === cc) { MESSAGES[cc] = []; renderMessages(); } break;
-  }
-}
+            elif a == "create_poll":
+                cid = m.get("chat_id", ""); question = (m.get("question", "") or "").strip(); options = m.get("options", [])
+                if cid in CHATS and question and len(options) >= 2:
+                    msg = {"id": new_id("m"), "from": u, "type": "poll", "text": question, "data": "", "mime": "", "fname": "", "options": options, "votes": {}, "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}
+                    MESSAGES[cid].append(msg); save_data(); bump_unread(cid, u)
+                    for member in CHATS[cid]["members"]:
+                        if member == BOT_NAME: continue
+                        if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
 
-function getOtherUser(cid) { var mm = CHATS[cid] ? CHATS[cid].members : []; for (var i = 0; i < mm.length; i++) if (mm[i] !== cu) return mm[i]; return cu; }
-function getColor(n) { return {'Носов Глеб':'#2196f3','Носова Наталья':'#e91e63','Носов Даниил':'#ff9800','Носов Виталий':'#4caf50','Minechat Бот':'#9c27b0'}[n] || '#9c27b0'; }
+            elif a == "vote":
+                cid, mid = m.get("chat_id"), m.get("msg_id"); idx = m.get("option", -1)
+                for msg in MESSAGES.get(cid, []):
+                    if msg["id"] == mid and msg["type"] == "poll":
+                        votes = msg.setdefault("votes", {})
+                        for k in list(votes.keys()):
+                            if u in votes[k]: votes[k].remove(u)
+                        votes.setdefault(str(idx), []).append(u); save_data()
+                        for member in CHATS[cid]["members"]:
+                            if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "poll_update", "chat_id": cid, "msg_id": mid, "votes": votes}))
+                        break
 
-function renderChats(filter) {
-  filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
-  Object.keys(CHATS).forEach(cid => {
-    var ch = CHATS[cid]; if (filter && ch.name && ch.name.toLowerCase().indexOf(filter) < 0) return;
-    if (ch.type === 'private') return;
-    var item = document.createElement('div'); item.className = 'it';
-    item.innerHTML = '<div class="av" style="background:var(--blue);"><div class="av-inner">' + (ch.type==='channel'?'📢':'👥') + '</div></div><div style="flex:1;min-width:0"><div class="nm"><span>' + ch.name + '</span></div><div class="pv">' + (ch.type==='channel'?'канал':'группа') + '</div></div>';
-    item.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(item);
-  });
-}
+            elif a == "get_sticker_pack":
+                pname = m.get("pack", "")
+                if pname in STICKERS: await websocket.send_text(json.dumps({"action": "sticker_pack_data", "pack": pname, "stickers": STICKERS[pname]["stickers"]}))
 
-function renderContacts(filter) {
-  filter = (filter || '').toLowerCase(); var l = document.getElementById('contacts-list'); l.innerHTML = '';
-  Object.keys(USERS).forEach(u => {
-    if (u === cu || (filter && u.toLowerCase().indexOf(filter) < 0)) return;
-    var isOn = ONLINE.indexOf(u) >= 0;
-    var item = document.createElement('div'); item.className = 'it';
-    item.innerHTML = '<div class="av" style="background:' + USERS[u].color + ';"><div class="av-inner">' + (USERS[u].avatar ? '<img src="'+USERS[u].avatar+'">' : u.charAt(0)) + '</div>' + (isOn ? '<span class="on"></span>' : '') + '</div><div style="flex:1;min-width:0"><div class="nm"><span>' + u + '</span>' + (USERS[u].verified ? ' <span class="badge-verified">✔</span>' : '') + '</div><div class="pv">' + (STATUSES[u] || (isOn ? 'онлайн' : 'офлайн')) + '</div></div>';
-    item.onclick = () => openContactProfile(u); l.appendChild(item);
-  });
-}
+            elif a == "request_verify":
+                VERIFY_REQ[u] = {"from": u, "status": "pending"}; save_data()
+                admin = "Носов Глеб"
+                if admin in ACTIVE:
+                    try: await ACTIVE[admin].send_text(json.dumps({"action": "incoming_verify_call", "from": u}))
+                    except: pass
+                await websocket.send_text(json.dumps({"action": "verify_sent"}))
 
-function renderCalls() {
-  var l = document.getElementById('call-list'); l.innerHTML = '';
-  if (CALL_HISTORY.length === 0) { l.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:20px;">История звонков пуста</div>'; return; }
-  CALL_HISTORY.slice().reverse().forEach(call => {
-    var item = document.createElement('div'); item.className = 'it';
-    var icon = call.type === 'missed' ? '📵' : (call.video ? '📹' : '📞');
-    var color = call.type === 'missed' ? '#e74c3c' : 'var(--blue)';
-    item.innerHTML = '<div class="av" style="background:' + (USERS[call.name]?USERS[call.name].color:'#999') + ';"><div class="av-inner">' + (USERS[call.name]?USERS[call.name].charAt(0):'?') + '</div></div><div style="flex:1;min-width:0"><div class="nm">' + call.name + '</div><div class="pv">' + call.time + '</div></div><div style="font-size:20px; color:' + color + ';">' + icon + '</div>';
-    item.onclick = () => openContactProfile(call.name); l.appendChild(item);
-  });
-}
+            elif a == "verify_answer" and USERS.get(u, {}).get("creator"):
+                target = m.get("target", ""); ok = m.get("ok", False)
+                if target in USERS:
+                    if ok:
+                        USERS[target]["verified"] = True; save_data()
+                        if target in ACTIVE:
+                            try: await ACTIVE[target].send_text(json.dumps({"action": "you_verified"}))
+                            except: pass
+                    VERIFY_REQ.pop(target, None)
+                    for w in ACTIVE.values():
+                        try: await w.send_text(json.dumps({"action": "verify_update", "verified_users": [n for n, d in USERS.items() if d.get("verified")], "verify_req": VERIFY_REQ}))
+                        except: pass
 
-function openContactProfile(username) {
-  if (!username) return;
-  document.getElementById('cpName').innerHTML = username + (USERS[username] && USERS[username].verified ? ' <span class="badge-verified">✔</span>' : '');
-  var cpAv = document.getElementById('cpAvatar');
-  if (USERS[username] && USERS[username].avatar) cpAv.innerHTML = '<img src="' + USERS[username].avatar + '">';
-  else { cpAv.innerHTML = username.charAt(0); cpAv.style.background = getColor(username); }
-  document.getElementById('cpStatus').innerText = STATUSES[username] || 'Нет статуса';
-  document.getElementById('cpAge').innerText = AGE_GROUPS[username] ? ({'child_1_8':'🧒 1–8','teen_9_13':'👦 9–13','teen_14_17':'🧑 14–17','adult_18_plus':'👨 18+'})[AGE_GROUPS[username]] : 'Не проверен';
-  document.getElementById('cpPhone').innerText = PHONES[username] || 'Скрыт';
-  document.getElementById('cpEmail').innerText = EMAILS[username] || 'Скрыт';
-  var dev = DEVICES[username] || {};
-  document.getElementById('cpDevice').innerText = (dev.platform || 'Неизвестно') + ' • Заряд: ' + (dev.battery || '?');
-  document.getElementById('contactProfileModal').style.display = 'flex';
-  document.getElementById('contactProfileModal').dataset.user = username;
-}
+            elif a in ("ban", "unban", "mute", "unmute") and USERS.get(u, {}).get("creator"):
+                target = m.get("target", "")
+                if target not in USERS or USERS[target].get("creator"): continue
+                if a == "ban":
+                    if target not in BANNED: BANNED.append(target)
+                    if target in ACTIVE:
+                        try: await ACTIVE[target].send_text(json.dumps({"action": "you_banned"}))
+                        except: pass
+                elif a == "unban":
+                    if target in BANNED: BANNED.remove(target)
+                elif a == "mute":
+                    dur = m.get("duration", "5m")
+                    if dur == "forever": MUTED[target] = "forever"
+                    else: MUTED[target] = time.time() + {"5m": 300, "1h": 3600, "1d": 86400}.get(dur, 300)
+                    if target in ACTIVE:
+                        try: await ACTIVE[target].send_text(json.dumps({"action": "you_muted", "duration": dur}))
+                        except: pass
+                elif a == "unmute": MUTED.pop(target, None)
+                save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "admin_update", "banned": BANNED, "muted": MUTED}))
+                    except: pass
 
-function startChatFromProfile() {
-  var u = document.getElementById('contactProfileModal').dataset.user;
-  document.getElementById('contactProfileModal').style.display = 'none';
-  send({action:'open_private', with: u});
-}
+            elif a == "set_avatar":
+                USERS[u]["avatar"] = m.get("avatar", ""); save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "avatar_update", "username": u, "avatar": USERS[u]["avatar"]}))
+                    except: pass
 
-// ===== СООБЩЕНИЯ =====
-function renderMessages() {
-  var c = document.getElementById('msgs'); c.innerHTML = '';
-  (MESSAGES[cc] || []).forEach(m => appendMessage(m, true));
-}
+            elif a == "set_chat_avatar":
+                cid = m.get("chat_id", "")
+                if cid in CHATS and is_chat_admin(cid, u):
+                    CHATS[cid]["avatar"] = m.get("avatar", ""); save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
+                            except: pass
 
-function appendMessage(m, skipScroll) {
-  var c = document.getElementById('msgs'); var old = document.getElementById('msg_' + m.id); if (old) old.remove();
-  var d = document.createElement('div'); d.id = 'msg_' + m.id; var mine = m.from === cu;
-  d.className = 'm ' + (mine ? 'mo' : 'mi');
-  d.onclick = (ev) => { ev.stopPropagation(); toggleActions(d); };
-  var html = '';
-  if (!mine && ctype !== 'private') {
-    var fv = (USERS[m.from] && USERS[m.from].verified) ? ' <span class="badge-verified" style="width:12px;height:12px;font-size:8px;">✔</span>' : '';
-    var ad = (CHATS[cc] && CHATS[cc].admins && CHATS[cc].admins[m.from]) ? ' <span class="badge-admin">' + CHATS[cc].admins[m.from] + '</span>' : '';
-    html += '<span class="nm2"><span>' + m.from + '</span>' + fv + ad + '</span>';
-  }
-  if (m.reply_to) { var rmsg = (MESSAGES[cc] || []).find(x => x.id === m.reply_to); if (rmsg) html += '<div class="reply">↩ ' + rmsg.from + ': ' + esc(rmsg.text || 'медиа').slice(0, 40) + '</div>'; }
-  
-  if (m.type === 'poll') {
-    var totalVotes = 0; var votes = m.votes || {}; Object.keys(votes).forEach(k => totalVotes += votes[k].length);
-    html += '<div class="poll"><span class="q">📊 ' + esc(m.text) + '</span>';
-    (m.options || []).forEach((opt, i) => {
-      var optVotes = (votes[String(i)] || []).length; var pct = totalVotes > 0 ? Math.round(optVotes/totalVotes*100) : 0;
-      html += '<div class="opt" onclick="event.stopPropagation();votePoll(\'' + m.id + '\',' + i + ')"><div class="bar" style="width:' + pct + '%;"></div><div class="row"><span>' + esc(opt) + '</span><span>' + pct + '% (' + optVotes + ')</span></div></div>';
-    });
-    html += '<div class="total">Всего: ' + totalVotes + '</div></div>';
-  }
-  else if (m.type === 'text') html += renderTextWithLinks(m.text);
-  else if (m.type === 'image') html += '<img src="' + m.data + '">';
-  else if (m.type === 'video') html += '<video src="' + m.data + '" controls></video>';
-  else if (m.type === 'sticker') html += '<img class="sticker-img" src="' + m.data + '">';
-  else if (m.type === 'voice') html += '<div class="voice-msg"><button class="voice-play" onclick="event.stopPropagation();playVoice(this,\'' + m.id + '\')">▶</button><div class="voice-wave">' + renderWave() + '</div><span class="voice-dur">' + m.time + '</span></div>';
-  else if (m.type === 'video_note') html += '<video src="' + m.data + '" controls style="max-width:160px;border-radius:50%;"></video>';
-  else if (m.type === 'file') html += '<div class="file">📄 ' + esc(m.fname) + ' <a href="' + m.data + '" download="' + esc(m.fname) + '">скачать</a></div>';
-  
-  html += '<span class="t">' + m.time + (m.edited ? ' ✏' : '') + '</span>';
-  if (m.reactions && Object.keys(m.reactions).length) {
-    html += '<div class="reactions">';
-    Object.keys(m.reactions).forEach(e => { var users = m.reactions[e]; if (users.length) html += '<span onclick="event.stopPropagation();addReaction(\'' + m.id + '\',\'' + e + '\')">' + e + ' ' + users.length + '</span>'; });
-    html += '</div>';
-  }
-  
-  html += '<div class="msg-actions">';
-  html += '<button onclick="event.stopPropagation();reactTo(\'' + m.id + '\')">❤️</button>';
-  html += '<button onclick="event.stopPropagation();replyToMsg(\'' + m.id + '\')">↩</button>';
-  if (cc && CHATS[cc] && (CHATS[cc].owner === cu || isCreator || (CHATS[cc].admins && CHATS[cc].admins[cu]))) html += '<button onclick="event.stopPropagation();pinMessage(\'' + m.id + '\')">📌</button>';
-  if (mine || isCreator) {
-    html += '<button onclick="event.stopPropagation();editMsg(\'' + m.id + '\')">✏</button>';
-    html += '<button onclick="event.stopPropagation();deleteMsg(\'' + m.id + '\')">🗑</button>';
-  }
-  html += '</div>';
-  d.innerHTML = html; c.appendChild(d);
-  if (!skipScroll) c.scrollTop = c.scrollHeight;
-}
+            elif a == "rename_chat":
+                cid = m.get("chat_id", ""); new_name = (m.get("name", "") or "").strip()
+                if cid in CHATS and new_name and is_chat_admin(cid, u):
+                    CHATS[cid]["name"] = new_name; save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
+                            except: pass
 
-function toggleActions(el) { var wasOpen = el.classList.contains('show-actions'); document.querySelectorAll('.m').forEach(x => x.classList.remove('show-actions')); if (!wasOpen) el.classList.add('show-actions'); }
-function reactTo(id) { var e = prompt('Эмодзи:', '❤️'); if (!e) return; addReaction(id, e); }
-function addReaction(id, emoji) { send({action:'react', chat_id: cc, msg_id: id, emoji: emoji}); }
-function replyToMsg(id) { replyTo = id; document.getElementById('mi').placeholder = 'Ответ...'; }
-function editMsg(id) { var m = (MESSAGES[cc] || []).find(x => x.id === id); if (!m) return; var t = prompt('Изменить:', m.text || ''); if (t === null) return; send({action:'edit', chat_id: cc, msg_id: id, text: t}); }
-function deleteMsg(id) { if (!confirm('Удалить?')) return; send({action:'delete', chat_id: cc, msg_id: id}); }
-function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
-function renderWave() { var h = ''; for (var i = 0; i < 18; i++) h += '<span style="height:' + (4 + Math.random() * 14) + 'px"></span>'; return h; }
+            elif a == "set_chat_desc":
+                cid = m.get("chat_id", ""); desc = (m.get("desc", "") or "").strip()
+                if cid in CHATS and is_chat_admin(cid, u):
+                    CHATS[cid]["desc"] = desc; save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
+                            except: pass
 
-// ===== ВЛОЖЕНИЯ =====
-function showAttachMenu(e) {
-  e.stopPropagation(); closeMenus(); var m = document.createElement('div'); m.className = 'menu'; m.style.bottom = '70px'; m.style.left = '10px';
-  m.innerHTML = '<div onclick="closeMenus(); openCamera()">📷 Сделать фото</div><div onclick="closeMenus(); openGallery()">🖼 Фото</div><div onclick="closeMenus(); pickFile(\'video\')">🎬 Видео</div><div onclick="closeMenus(); pickFile(\'file\')">📄 Файл</div>';
-  document.body.appendChild(m); setTimeout(() => { document.addEventListener('click', closeMenus, {once:true}); }, 100);
-}
-function closeMenus() { document.querySelectorAll('.menu').forEach(m => m.remove()); }
-function openCamera() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
-function openGallery() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
-function sendPhoto(file) { if (!cc) return; if (file.size > 10 * 1024 * 1024) { alert('Фото > 10 МБ'); return; } var r = new FileReader(); r.onload = () => { send({action:'message', chat_id: cc, type:'image', data: r.result, fname: file.name, mime: file.type, reply_to: replyTo || ''}); replyTo = null; }; r.readAsDataURL(file); }
-function pickFile(type) { closeMenus(); var inp = document.createElement('input'); inp.type = 'file'; if (type === 'video') inp.accept = 'video/*'; inp.onchange = () => { var f = inp.files[0]; if (!f) return; if (f.size > 10 * 1024 * 1024) { alert('Файл > 10 МБ'); return; } var r = new FileReader(); r.onload = () => { send({action:'message', chat_id: cc, type: type, data: r.result, fname: f.name, mime: f.type, reply_to: replyTo || ''}); replyTo = null; }; r.readAsDataURL(f); }; inp.click(); }
+            elif a == "add_member":
+                cid = m.get("chat_id", ""); target = m.get("target", "")
+                if cid in CHATS and target in USERS and is_chat_admin(cid, u) and target not in CHATS[cid]["members"]:
+                    CHATS[cid]["members"].append(target)
+                    if "banned" in CHATS[cid] and target in CHATS[cid]["banned"]: CHATS[cid]["banned"].remove(target)
+                    save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
+                            except: pass
 
-// ===== ГОЛОСОВЫЕ =====
-function startVoice() { if (mediaRecorder && mediaRecorder.state === 'recording' && recType === 'voice') stopRecording(); else startRecording('voice', {audio:true}); }
-function startVideoNote() { if (mediaRecorder && mediaRecorder.state === 'recording' && recType === 'video_note') stopRecording(); else startRecording('video_note', {audio:true, video:{width:320, height:320, facingMode:'user'}}); }
-async function startRecording(type, constraints) {
-  if (!cc) { alert('Выберите чат'); return; } recType = type;
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { alert('❌ Нужен HTTPS'); return; }
-    var s = await navigator.mediaDevices.getUserMedia(constraints); mediaRecorder = new MediaRecorder(s); chunks = [];
-    mediaRecorder.ondataavailable = e => { chunks.push(e.data); }; mediaRecorder.onstop = handleRecStop; mediaRecorder.start(); recStartTime = Date.now();
-    document.getElementById('recBar').style.display = 'flex'; document.getElementById('inp').style.display = 'none';
-    recTimerInt = setInterval(() => { var s = Math.floor((Date.now() - recStartTime) / 1000); document.getElementById('recTimer').innerText = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }, 200);
-  } catch(e) { alert('Нет доступа к микрофону'); }
-}
-function stopRecording() { if (!mediaRecorder) return; mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t => t.stop()); }
-function cancelRecording() { if (!mediaRecorder) return; chunks = []; mediaRecorder.stop(); mediaRecorder.stream.getTracks().forEach(t => t.stop()); resetRecUI(); }
-function handleRecStop() { resetRecUI(); if (!chunks.length) return; var blob = new Blob(chunks, {type: recType === 'voice' ? 'audio/webm' : 'video/webm'}); var r = new FileReader(); r.onload = () => { send({action:'message', chat_id: cc, type: recType, data: r.result, reply_to: replyTo || ''}); replyTo = null; }; r.readAsDataURL(blob); }
-function resetRecUI() { document.getElementById('recBar').style.display = 'none'; document.getElementById('inp').style.display = 'flex'; document.getElementById('recTimer').innerText = '0:00'; clearInterval(recTimerInt); }
-function playVoice(btn, id) { var m = (MESSAGES[cc] || []).find(x => x.id === id); if (!m || !m.data) return; if (currentAudio) currentAudio.pause(); var a = new Audio(m.data); currentAudio = a; a.play(); btn.innerText = '⏸'; a.onended = () => { btn.innerText = '▶'; }; }
+            elif a == "kick":
+                cid = m.get("chat_id", ""); target = m.get("target", "")
+                if cid in CHATS and is_chat_admin(cid, u) and target != u and target in CHATS[cid]["members"]:
+                    CHATS[cid]["members"].remove(target); save_data()
+                    if target in ACTIVE:
+                        try: await ACTIVE[target].send_text(json.dumps({"action": "you_kicked", "chat_id": cid}))
+                        except: pass
 
-// ===== ЗВОНКИ =====
-function startCall(video) {
-  var target = document.getElementById('contactProfileModal').dataset.user || (cc ? getOtherUser(cc) : null);
-  if (!target || target === cu) return;
-  document.getElementById('contactProfileModal').style.display = 'none';
-  isVideoCall = !!video; isCaller = true; callTarget = target;
-  document.getElementById('callName').innerText = target; document.getElementById('callSt').innerText = 'Вызов...';
-  document.getElementById('callScreen').style.display = 'flex';
-  send({action:'call_offer', to: target, data: {video: isVideoCall}});
-}
-function showIncomingCall(from, data) { isVideoCall = data && data.video; callTarget = from; document.getElementById('incName').innerText = from; document.getElementById('incType').innerText = isVideoCall ? '📹 Видеозвонок' : '📞 Аудиозвонок'; document.getElementById('incomingScreen').style.display = 'flex'; }
-function acceptIncoming() { document.getElementById('incomingScreen').style.display = 'none'; isCaller = false; document.getElementById('callName').innerText = callTarget; document.getElementById('callSt').innerText = 'Соединение...'; document.getElementById('callScreen').style.display = 'flex'; send({action:'call_answer', to: callTarget}); startWebRTC(true); }
-function declineIncoming() { document.getElementById('incomingScreen').style.display = 'none'; send({action:'call_decline', to: callTarget}); logCall(callTarget, 'missed', isVideoCall); callTarget = null; }
+            elif a == "pin_message":
+                cid = m.get("chat_id", ""); mid = m.get("msg_id", "")
+                if cid in CHATS and is_chat_admin(cid, u):
+                    CHATS[cid]["pinned"] = mid; save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
+                            except: pass
 
-async function startWebRTC() {
-  try { localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: isVideoCall ? {width:640, height:480, facingMode:'user'} : false}); } catch(e) { alert('Нет доступа к камере'); endCall(); return; }
-  document.getElementById('localVideo').srcObject = localStream;
-  pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.yandex.ru'}, {urls:'stun:stun.l.google.com:19302'}]});
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  pc.onicecandidate = e => { if (e.candidate) send({action:'webrtc', to: callTarget, data:{type:'candidate', candidate:e.candidate}}); };
-  pc.ontrack = e => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
-}
-async function createOffer() { if (!pc) await startWebRTC(); var offer = await pc.createOffer(); await pc.setLocalDescription(offer); send({action:'webrtc', to: callTarget, data:{type:'offer', sdp: offer}}); logCall(callTarget, 'outgoing', isVideoCall); }
-async function handleWebRTC(from, data) {
-  if (!pc) await startWebRTC();
-  if (data.type === 'offer') { await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); var answer = await pc.createAnswer(); await pc.setLocalDescription(answer); send({action:'webrtc', to: from, data:{type:'answer', sdp: answer}}); document.getElementById('callSt').innerText = 'Разговор'; logCall(from, 'incoming', isVideoCall); }
-  else if (data.type === 'answer') { await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); document.getElementById('callSt').innerText = 'Разговор'; }
-  else if (data.type === 'candidate') { try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(e) {} }
-}
+            elif a == "open_private":
+                other = m["with"]; cid = ensure_private(u, other); clear_unread(u, cid)
+                await websocket.send_text(json.dumps({"action": "chat_opened", "chat_id": cid, "chat": CHATS[cid], "messages": MESSAGES.get(cid, []), "unread": UNREAD.get(u, {})}))
 
-function endCall() {
-  if (callTarget) send({action:'call_end', to: callTarget}); // <--- ИСПРАВЛЕНО: Теперь звонок завершается у обоих
-  if (callTarget && isCaller) logCall(callTarget, 'outgoing', isVideoCall);
-  if (pc) { pc.close(); pc = null; }
-  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
-  callTarget = null;
-  document.getElementById('callScreen').style.display = 'none';
-}
+            elif a == "create_chat":
+                cid = new_id("c")
+                CHATS[cid] = {"type": m["type"], "name": m["name"], "members": [u] + m.get("members", []), "owner": u, "verified": False, "avatar": "", "desc": "", "admins": {u: "Владелец"}, "banned": [], "pinned": ""}
+                MESSAGES[cid] = []; save_data()
+                for member in CHATS[cid]["members"]:
+                    if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "chat_created", "chat_id": cid, "chat": CHATS[cid]}))
 
-function logCall(name, type, video) { if (!name) return; var d = new Date(); var timeStr = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0'); CALL_HISTORY.push({name: name, type: type, video: video, time: 'Сегодня, ' + timeStr}); if (CALL_HISTORY.length > 50) CALL_HISTORY.shift(); localStorage.setItem('mc_calls', JSON.stringify(CALL_HISTORY)); renderCalls(); }
-function toggleMute() { if(localStream) localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled; }
+            elif a == "open_chat":
+                cid = m["chat_id"]
+                if cid in CHATS and u in CHATS[cid]["members"]:
+                    clear_unread(u, cid)
+                    await websocket.send_text(json.dumps({"action": "chat_opened", "chat_id": cid, "chat": CHATS[cid], "messages": MESSAGES.get(cid, []), "unread": UNREAD.get(u, {})}))
 
-// ===== ПРОФИЛЬ И АДМИНКА =====
-function openProfile() {
-  var my = USERS[cu] || {}; var big = document.getElementById('myBigAvatar');
-  if (my.avatar) { big.innerHTML = '<img src="' + my.avatar + '">'; big.style.background = '#000'; } else { big.innerHTML = ''; big.innerText = cu.charAt(0); big.style.background = my.color || '#2AABEE'; }
-  var rb = document.getElementById('reqVerifyBtn'); if (my.verified) rb.style.display = 'none'; else rb.style.display = 'block';
-  document.getElementById('profileModal').style.display = 'flex';
-}
+            elif a == "message":
+                cid = m["chat_id"]
+                if cid not in CHATS or u not in CHATS[cid]["members"] or u in CHATS[cid].get("banned", []): continue
 
-function openAdmin() {
-  renderAdminList(); renderVerifyRequests(); document.getElementById('adminModal').style.display = 'flex';
-}
-function renderAdminList() {
-  var box = document.getElementById('adminList'); if (!box) return; box.innerHTML = '';
-  Object.keys(USERS).forEach(u => {
-    if (u === cu || u === 'Minechat Бот') return; var isBanned = BANNED.indexOf(u) >= 0; var isMuted = MUTED[u] !== undefined;
-    var row = document.createElement('div'); row.className = 'admin-item'; var bansHtml = '';
-    if (isBanned) bansHtml += '<span class="badge-banned">БАН</span>'; if (isMuted) bansHtml += '<span class="badge-muted">МУТ</span>';
-    row.innerHTML = '<div class="av" style="background:' + getColor(u) + ';width:36px;height:36px;min-width:36px;font-size:14px;"><div class="av-inner">' + u.charAt(0) + '</div></div><div class="info"><div style="font-size:14px;font-weight:600;">' + u + bansHtml + '</div></div><div class="actions">' + (isBanned ? '<button class="unban-btn" onclick="adminAction(\'unban\',\'' + u + '\')">🔓</button>' : '<button class="ban-btn" onclick="adminAction(\'ban\',\'' + u + '\')">🔨</button>') + (isMuted ? '<button class="unmute-btn" onclick="adminAction(\'unmute\',\'' + u + '\')">🔊</button>' : '<button class="mute-btn" onclick="muteMenu(\'' + u + '\')">🔇</button>') + '</div>';
-    box.appendChild(row);
-  });
-}
-function adminAction(action, target) { send({action: action, target: target}); }
-function muteMenu(target) { var d = prompt('Мут на (5m/1h/1d/forever):', '5m'); if (!d) return; if (['5m','1h','1d','forever'].indexOf(d) < 0) { alert('Неверно'); return; } send({action:'mute', target: target, duration: d}); }
+                is_bot_chat = (BOT_NAME in CHATS[cid]["members"])
+                if is_bot_chat and u != BOT_NAME:
+                    mtype = m.get("type", "text")
+                    if USERS.get(u, {}).get("await_sticker") and mtype in ("image", "sticker"):
+                        active = USERS[u].get("active_pack")
+                        if active and active in STICKERS:
+                            STICKERS[active]["stickers"].append(m.get("data", "")); USERS[u]["await_sticker"] = False; save_data()
+                            echo = {"id": new_id("m"), "from": u, "type": "image", "text": "", "data": m.get("data", ""), "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}
+                            MESSAGES[cid].append(echo); save_data()
+                            if u in ACTIVE:
+                                try: await ACTIVE[u].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": echo}))
+                                except: pass
+                            await send_bot(u, "/_sticker_saved")
+                            for w in ACTIVE.values():
+                                try: await w.send_text(json.dumps({"action": "stickers_update", "stickers": {p: {"owner": STICKERS[p]["owner"], "count": len(STICKERS[p]["stickers"])} for p in STICKERS}}))
+                                except: pass
+                            continue
+                    if mtype == "text":
+                        msg = {"id": new_id("m"), "from": u, "type": "text", "text": m.get("text", ""), "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}
+                        MESSAGES[cid].append(msg); save_data()
+                        if u in ACTIVE:
+                            try: await ACTIVE[u].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
+                            except: pass
+                        await send_bot(u, m.get("text", ""))
+                        continue
 
-// ===== ВХОД/ВЫХОД =====
-function switchMode() { isReg = !isReg; document.getElementById('authTitle').innerText = isReg ? 'Регистрация' : 'Minechat (Russia)'; document.getElementById('authBtn').innerText = isReg ? 'Зарегистрироваться' : 'Войти'; document.getElementById('switchLink').innerText = isReg ? 'Уже есть? Войти' : 'Нет аккаунта? Зарегистрироваться'; }
-function doLogin() { var u = document.getElementById('au').value.trim(); var p = document.getElementById('ap').value; if (!u || !p) { alert('Заполните поля'); return; } cu = u; connect(); if (isReg) { ws.onopen = () => { document.getElementById('wsDot').classList.remove('off'); ws.send(JSON.stringify({action:'register', username: cu, password: p})); }; } }
-function logout() { if (!confirm('Выйти?')) return; if (ws) ws.close(); localStorage.removeItem('mc_last_user'); location.reload(); }
-function backToMain() { document.getElementById('chat').style.display = 'none'; document.getElementById('main').style.display = 'flex'; cc = null; }
+                if CHATS[cid]["type"] == "channel" and not is_chat_admin(cid, u): continue
+                if is_muted(u):
+                    await websocket.send_text(json.dumps({"action": "mute_warning"}))
+                    continue
+                msg = {"id": new_id("m"), "from": u, "type": m.get("type", "text"), "text": m.get("text", ""), "data": m.get("data", ""), "mime": m.get("mime", ""), "fname": m.get("fname", ""), "reply_to": m.get("reply_to", ""), "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M")}
+                MESSAGES[cid].append(msg); save_data(); bump_unread(cid, u)
+                for member in CHATS[cid]["members"]:
+                    if member == BOT_NAME: continue
+                    if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
+                for member in CHATS[cid]["members"]:
+                    if member in ACTIVE and member != u:
+                        try: await ACTIVE[member].send_text(json.dumps({"action": "unread_update", "unread": UNREAD.get(member, {})}))
+                        except: pass
 
-function sendMessage() { var i = document.getElementById('mi'); var t = i.value.trim(); if (!t || !cc) return; send({action:'message', chat_id: cc, type:'text', text: t, reply_to: replyTo || ''}); replyTo = null; i.value = ''; i.focus(); }
+            elif a == "react":
+                cid, mid, emoji = m["chat_id"], m["msg_id"], m["emoji"]
+                for msg in MESSAGES.get(cid, []):
+                    if msg["id"] == mid:
+                        users = msg.setdefault("reactions", {}).get(emoji, [])
+                        if u in users: users.remove(u)
+                        else: users.append(u)
+                        msg["reactions"][emoji] = users; save_data()
+                        for member in CHATS[cid]["members"]:
+                            if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "reaction_update", "chat_id": cid, "msg_id": mid, "reactions": msg["reactions"]}))
+                        break
 
-var lastUser = localStorage.getItem('mc_last_user');
-if(lastUser) { document.getElementById('au').value = lastUser; }
-</script>
-</body>
-</html>
+            elif a == "delete":
+                cid, mid = m["chat_id"], m["msg_id"]
+                MESSAGES[cid] = [x for x in MESSAGES.get(cid, []) if x["id"] != mid]; save_data()
+                for member in CHATS[cid]["members"]:
+                    if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "msg_deleted", "chat_id": cid, "msg_id": mid}))
+
+            elif a == "edit":
+                cid, mid, new_text = m["chat_id"], m["msg_id"], m["text"]
+                for msg in MESSAGES.get(cid, []):
+                    if msg["id"] == mid and (msg["from"] == u or is_chat_admin(cid, u)):
+                        msg["text"] = new_text; msg["edited"] = True; break
+                save_data()
+                for member in CHATS[cid]["members"]:
+                    if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "msg_edited", "chat_id": cid, "msg_id": mid, "text": new_text}))
+
+            elif a in ("call_offer", "call_answer", "call_decline", "call_end", "webrtc"):
+                to = m["to"]
+                if to in ACTIVE:
+                    await ACTIVE[to].send_text(json.dumps({"action": {"call_offer": "incoming_call", "call_answer": "call_accepted", "call_decline": "call_declined", "call_end": "call_ended", "webrtc": "webrtc"}[a], "from": u, "data": m.get("data")}))
+
+    except WebSocketDisconnect:
+        if u:
+            USERS[u]["last_seen"] = time.time(); ACTIVE.pop(u, None); save_data()
+        await broadcast_online()
+
+async def broadcast_online():
+    online = list(ACTIVE.keys())
+    last_seen = {n: d.get("last_seen", 0) for n, d in USERS.items()}
+    for w in ACTIVE.values():
+        try: await w.send_text(json.dumps({"action": "online", "users": online, "last_seen": last_seen}))
+        except: pass
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 11460))
+    print(f"🚀 Запуск Minechat (Russia) на порту {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port)
