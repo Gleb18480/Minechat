@@ -34,11 +34,12 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 #chat{display:none;flex-direction:column;height:100%;}
 .ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
 #msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;}
-.m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;position:relative;touch-action:pan-y; transition: transform 0.2s;}
+.m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;position:relative;touch-action:pan-y; transition: transform 0.2s; word-break: break-word;}
 .mi{align-self:flex-start;background:var(--input-bg);}
 .mo{align-self:flex-end;background:var(--blue);color:#fff;}
+.m img { max-width: 100%; border-radius: 8px; margin-top: 5px; display: block; }
 .msg-actions{position:absolute;top:-34px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
-.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;padding:4px 8px;}
+.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;padding:4px 8px; cursor: pointer;}
 .m.show-actions .msg-actions{display:flex;}
 #inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);}
 #mi{flex:1;padding:12px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);outline:none;}
@@ -47,7 +48,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 .stories-row { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: var(--panel); border-bottom: 1px solid var(--border); }
 .story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; }
 .story-item .av { width: 60px; height: 60px; }
-.doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; gap: 10px; cursor: pointer; }
+.doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; gap: 10px; cursor: pointer; margin-top: 5px;}
 #incomingScreen { display:none; position:fixed; inset:0; background:linear-gradient(135deg,var(--bg),var(--panel)); z-index:99999; flex-direction:column; align-items:center; justify-content:space-between; padding:60px 20px; text-align:center;}
 .inc-avatar { width:140px; height:140px; border-radius:50%; margin:0 auto 24px; display:flex; align-items:center; justify-content:center; font-size:56px; font-weight:600; color:#fff; overflow:hidden; background:var(--blue); animation:pulse 1.5s infinite;}
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(42,171,238,0.7); } 70% { box-shadow: 0 0 0 40px rgba(42,171,238,0); } 100% { box-shadow: 0 0 0 0 rgba(42,171,238,0); } }
@@ -59,15 +60,17 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 <!-- АВТОРИЗАЦИЯ / СОХРАНЕННЫЕ АККАУНТЫ -->
 <div id="auth">
   <div class="auth-box">
-    <div class="logo">✈</div>
+    <div class="logo" style="font-size:48px; color:var(--blue); margin-bottom:10px;">✈</div>
     <h2 id="authTitle">Minechat (Russia)</h2>
     <div id="savedAccounts" style="margin-bottom:20px;"></div>
+    
     <div id="loginForm">
         <input class="inp" id="au" placeholder="Имя пользователя">
         <input class="inp" id="ap" type="password" placeholder="Пароль">
         <button class="btn" onclick="doLogin()">Войти</button>
         <button class="btn gray" style="margin-top:10px;" onclick="document.getElementById('regStep1').style.display='block'; this.style.display='none';">Создать аккаунт</button>
     </div>
+
     <!-- Регистрация -->
     <div id="regStep1" style="display:none; margin-top:20px;">
         <input class="inp" id="regName" placeholder="Имя">
@@ -81,18 +84,20 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
     </div>
     <div id="regStep3" style="display:none; margin-top:20px;">
         <video id="ageVerifyVideo" autoplay playsinline muted style="width:100%; border-radius:12px; transform:scaleX(-1);"></video>
-        <div id="ageVerifyStatus" style="margin:10px 0;">Смотрите прямо</div>
-        <button class="btn" onclick="startAgeVerification(true)">Начать проверку</button>
+        <div id="ageVerifyStatus" style="margin:10px 0;">Загрузка камеры...</div>
+        <button class="btn" onclick="startAgeVerification()">Начать проверку</button>
     </div>
   </div>
 </div>
 
 <!-- ГЛАВНЫЙ ЭКРАН -->
 <div id="main">
-  <div class="hdr"><div class="title" style="flex:1;">Minechat (Russia)</div><div class="dot" id="wsDot"></div></div>
+  <div class="hdr"><div class="title" style="flex:1;">Minechat (Russia)</div><div class="dot" id="wsDot" style="width:9px; height:9px; border-radius:50%; background:#4caf50;"></div></div>
+  
   <div class="stories-row" id="storiesRow">
     <div class="story-item" onclick="addStory()"><div class="av" style="background:var(--input-bg);">➕</div><span>Добавить</span></div>
   </div>
+
   <div id="content-area">
     <div id="view-chats" class="view active">
       <div class="srch-wrap" style="padding:10px;"><input class="inp" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
@@ -109,6 +114,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
       </div>
     </div>
   </div>
+
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div>Чаты</div>
     <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div>Поиск</div>
@@ -122,13 +128,13 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
     <button onclick="backToMain()" style="background:none;border:none;color:var(--blue);font-size:24px;">←</button>
     <div class="av" id="ha" style="width:40px;height:40px;"><div class="av-inner">?</div></div>
     <div style="flex:1;"><div id="hn" style="font-weight:600;">-</div></div>
-    <button onclick="send({action:'set_pin', chat_id: cc})" style="background:none;border:none;font-size:20px;">📌</button>
+    <button onclick="send({action:'set_pin', chat_id: cc})" style="background:none;border:none;font-size:20px; cursor:pointer;">📌</button>
   </div>
   <div id="msgs"></div>
   <div id="inp">
-    <button class="ib" onclick="showAttachMenu()">📎</button>
+    <button class="ib" onclick="showAttachMenu()" style="background:none;border:none;font-size:24px;color:var(--text-muted); cursor:pointer;">📎</button>
     <input id="mi" placeholder="Сообщение..." autocomplete="off">
-    <button onclick="sendMessage()" style="background:var(--blue);color:#fff;border:none;border-radius:50%;width:40px;height:40px;">➤</button>
+    <button onclick="sendMessage()" style="background:var(--blue);color:#fff;border:none;border-radius:50%;width:40px;height:40px; cursor:pointer;">➤</button>
   </div>
 </div>
 
@@ -141,15 +147,15 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
         <div id="incType" style="font-size:16px; color:var(--text-muted);">📞 Аудиозвонок</div>
     </div>
     <div style="display:flex; gap:60px;">
-        <div><button onclick="declineIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#e74c3c;color:#fff;">📵</button><div style="color:var(--text-muted); margin-top:10px;">Отклонить</div></div>
-        <div><button id="incAcceptBtn" onclick="acceptIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#4caf50;color:#fff;">📞</button><div style="color:var(--text-muted); margin-top:10px;">Принять</div></div>
+        <div><button onclick="declineIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#e74c3c;color:#fff; cursor:pointer;">📵</button><div style="color:var(--text-muted); margin-top:10px;">Отклонить</div></div>
+        <div><button id="incAcceptBtn" onclick="acceptIncoming()" style="width:80px;height:80px;border-radius:50%;border:none;font-size:34px;background:#4caf50;color:#fff; cursor:pointer;">📞</button><div style="color:var(--text-muted); margin-top:10px;">Принять</div></div>
     </div>
 </div>
 
 <!-- МОДАЛКИ -->
 <div class="modal" id="forwardModal"><div class="modal-box"><h3>Переслать в:</h3><div id="forwardList"></div><button class="btn gray" onclick="document.getElementById('forwardModal').style.display='none'">Отмена</button></div></div>
-<div class="modal" id="docModal"><div class="modal-box"><h3 id="docTitle" contenteditable="true">Документ</h3><textarea id="docText" style="width:100%;height:200px;margin-top:10px;padding:10px;background:var(--input-bg);color:var(--text);border:none;"></textarea><button class="btn" onclick="saveDoc()">Сохранить</button><button class="btn gray" onclick="downloadDoc()">Скачать .txt</button></div></div>
-<div class="modal" id="profileModal"><div class="modal-box"><h3>Профиль</h3><button class="btn gray" onclick="requestPermissions()">Запросить все разрешения</button><button class="btn" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div></div>
+<div class="modal" id="docModal"><div class="modal-box"><h3 id="docTitle" contenteditable="true" style="outline:none; border-bottom:1px solid var(--border); padding-bottom:5px;">Документ</h3><textarea id="docText" style="width:100%;height:200px;margin-top:10px;padding:10px;background:var(--input-bg);color:var(--text);border:none; border-radius:8px; outline:none; resize:none;"></textarea><button class="btn" onclick="saveDoc()">Сохранить</button><button class="btn gray" onclick="downloadDoc()">Скачать .txt</button></div></div>
+<div class="modal" id="profileModal"><div class="modal-box"><h3>Профиль</h3><p style="margin-bottom:15px; color:var(--text-muted);">Разрешения для звонков и медиа</p><button class="btn gray" onclick="requestPermissions()">Запросить все разрешения</button><button class="btn" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div></div>
 
 </div>
 
@@ -157,10 +163,9 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var ws, cu, cc, USERS = {}, CHATS = {}, MESSAGES = {}, STORIES = {}, PINNED = [], searchTimeout, currentDocId = null, replyTo = null;
 var isCaller = false, callTarget = null, isVideoCall = false, pc = null, localStream = null;
-var ageVerify = { active: false, buffer: [], step: 'straight1' };
 var regData = {};
 
-// Проверка на Shared Text
+// Проверка на Shared Text (когда поделились из другого приложения)
 const urlParams = new URLSearchParams(window.location.search);
 const sharedText = urlParams.get('shared_text');
 if (sharedText) setTimeout(() => alert('Вы поделились текстом: ' + sharedText), 1000);
@@ -197,8 +202,9 @@ function connect() {
     ws = new WebSocket(wsProto + location.host + "/ws");
     ws.onmessage = (e) => handleMsg(JSON.parse(e.data));
     ws.onopen = () => { ws.send(JSON.stringify({action:'login', username: cu, password: document.getElementById('ap').value})); };
+    ws.onclose = () => document.getElementById('wsDot').style.background = '#e74c3c';
 }
-function send(d) { if(ws?.readyState===1) ws.send(JSON.stringify(d)); }
+function send(d) { if(ws && ws.readyState === 1) ws.send(JSON.stringify(d)); }
 
 function handleMsg(m) {
     if(m.action==='register_ok') { cu = regData.name; saveAccount(cu, regData.pass); connect(); }
@@ -209,7 +215,11 @@ function handleMsg(m) {
         renderChats(); renderStories();
         if ("Notification" in window) Notification.requestPermission();
     }
-    if(m.action==='new_message') { if(!MESSAGES[m.chat_id]) MESSAGES[m.chat_id]=[]; MESSAGES[m.chat_id].push(m.msg); if(cc===m.chat_id) appendMsg(m.msg); }
+    if(m.action==='new_message') { 
+        if(!MESSAGES[m.chat_id]) MESSAGES[m.chat_id]=[]; 
+        MESSAGES[m.chat_id].push(m.msg); 
+        if(cc===m.chat_id) appendMsg(m.msg); 
+    }
     if(m.action==='chat_opened') {
         cc=m.chat_id; MESSAGES[cc]=m.messages; document.getElementById('main').style.display='none';
         document.getElementById('chat').style.display='flex'; document.getElementById('hn').innerText = m.chat.name || m.chat.members.find(x=>x!==cu);
@@ -256,7 +266,12 @@ function renderStories() {
 }
 function addStory() {
     var inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-    inp.onchange = () => { var r = new FileReader(); r.onload=()=>{ send({action:'add_story', image: r.result}); }; r.readAsDataURL(inp.files[0]); }; inp.click();
+    inp.onchange = () => { 
+        var r = new FileReader(); 
+        r.onload=()=>{ send({action:'add_story', image: r.result}); }; 
+        r.readAsDataURL(inp.files[0]); 
+    }; 
+    inp.click();
 }
 function openChat(cid) { send({action:'open_chat', chat_id: cid}); send({action:'mark_read', chat_id: cid}); }
 function switchTab(t) {
@@ -284,11 +299,13 @@ function appendMsg(m, skip) {
     d.addEventListener('touchend', ()=>{if(currX-startX>40) replyTo = m.id; d.style.transform='translateX(0)'; startX=0; currX=0;});
 
     d.onclick = () => { document.querySelectorAll('.m').forEach(x=>x.classList.remove('show-actions')); d.classList.add('show-actions'); };
+    
     var html = m.text || '';
     if(m.type==='doc') html = `<div class="doc-msg" onclick="send({action:'get_doc',doc_id:'${m.id}'})"><span>📄</span> ${m.text}</div>`;
-    if(m.type==='image') html = `<img src="${m.data}" style="max-width:100%;border-radius:8px;">`;
+    if(m.type==='image') html = `<img src="${m.data}">`;
+    
     html += `<div class="msg-actions">
-        <button onclick="event.stopPropagation();replyTo='${m.id}';alert('Ответ на сообщение')">↩</button>
+        <button onclick="event.stopPropagation();replyTo='${m.id}';alert('Режим ответа включен')">↩</button>
         <button onclick="event.stopPropagation();showForward('${m.id}')">↪️</button>
         ${mine ? `<button onclick="event.stopPropagation();send({action:'delete',chat_id:'${cc}',msg_id:'${m.id}'})">🗑</button>` : ''}
     </div>`;
@@ -304,12 +321,55 @@ function showForward(id) {
     document.getElementById('forwardModal').style.display='flex';
 }
 
+// ===== ОТПРАВКА ВЛОЖЕНИЙ =====
 function showAttachMenu() {
-    var m = document.createElement('div'); m.className='menu'; m.style.bottom='70px'; m.style.left='10px'; m.style.background='var(--panel)'; m.style.padding='10px'; m.style.borderRadius='10px'; m.style.position='absolute'; m.style.zIndex='1000';
-    m.innerHTML = `<div onclick="createDoc()" style="padding:10px; cursor:pointer;">📝 Создать документ (.txt)</div>`;
+    var m = document.createElement('div'); 
+    m.className='menu'; m.style.bottom='70px'; m.style.left='10px'; m.style.background='var(--panel)'; 
+    m.style.padding='10px'; m.style.borderRadius='10px'; m.style.position='absolute'; m.style.zIndex='1000';
+    m.innerHTML = `
+        <div onclick="openCamera()" style="padding:10px; cursor:pointer;">📷 Сделать фото</div>
+        <div onclick="openGallery()" style="padding:10px; cursor:pointer;">🖼 Фото из галереи</div>
+        <div onclick="createDoc()" style="padding:10px; cursor:pointer;">📝 Создать документ (.txt)</div>
+    `;
     document.body.appendChild(m);
     setTimeout(()=>document.addEventListener('click', ()=>m.remove(), {once:true}), 100);
 }
+
+function openCamera() { 
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment'; 
+    inp.onchange = () => { sendPhoto(inp.files[0]); }; inp.click(); 
+}
+
+function openGallery() { 
+    var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; 
+    inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); 
+}
+
+function sendPhoto(file) {
+    if (!cc || !file) return;
+    if (file.size > 10 * 1024 * 1024) { alert('Фото > 10 МБ'); return; }
+    
+    // ⚠️ ВСТАВЬ СЮДА СВОЙ КЛЮЧ ОТ IMGBB
+    var IMGBB_KEY = 'ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ'; 
+
+    alert('Загрузка фото... Пожалуйста, подождите.');
+    
+    var formData = new FormData();
+    formData.append('image', file);
+
+    fetch('https://api.imgbb.com/1/upload?key=' + IMGBB_KEY, { method: 'POST', body: formData })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            send({action:'message', chat_id: cc, type:'image', data: data.data.url, fname: file.name, mime: 'image/jpeg', reply_to: replyTo || ''});
+            replyTo = null;
+        } else {
+            alert('Ошибка загрузки фото: ' + data.error.message);
+        }
+    })
+    .catch(err => alert('Ошибка сети при загрузке фото: ' + err.message));
+}
+
 function createDoc() { var t = prompt('Название (добавьте .txt):', 'Документ.txt'); if(t) send({action:'message', chat_id: cc, type:'doc', text:t}); }
 function saveDoc() { send({action:'save_doc', doc_id: currentDocId, title: document.getElementById('docTitle').innerText, text: document.getElementById('docText').value}); }
 function downloadDoc() { var blob = new Blob([document.getElementById('docText').value], {type: 'text/plain'}); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = document.getElementById('docTitle').innerText || 'doc.txt'; a.click(); }
@@ -354,6 +414,7 @@ function regNext(step) {
         regData.pass = document.getElementById('regPass').value;
         if(!regData.pass) return alert("Введите пароль");
         document.getElementById('regStep2').style.display='none'; document.getElementById('regStep3').style.display='block';
+        startAgeVerification();
     }
 }
 async function startAgeVerification() {
