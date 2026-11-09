@@ -12,7 +12,7 @@ INDEX_FILE = os.path.join(BASE, "index.html")
 BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
 
-USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, VERIFY_REQ, UNREAD, ACTIVE = {}, {}, {}, {}, [0], [], {}, {}, {}, {}
+USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}
 
 def new_id(p="c"): COUNTER[0] += 1; return p + str(COUNTER[0])
 def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
@@ -20,7 +20,7 @@ def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
 def save_data():
     try:
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "unread": UNREAD}, f, ensure_ascii=False)
+            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "unread": UNREAD, "stories": STORIES}, f, ensure_ascii=False)
     except Exception as e: print("Save error:", e)
 
 def load_data():
@@ -32,13 +32,14 @@ def load_data():
         MESSAGES.update(data.get("messages", {})); DOCUMENTS.update(data.get("documents", {}))
         COUNTER[0] = data.get("counter", 0); BANNED.extend(data.get("banned", []))
         MUTED.update(data.get("muted", {})); UNREAD.update(data.get("unread", {}))
+        STORIES.update(data.get("stories", {}))
         return True
     except: return False
 
 def init_default():
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "pinned": [], "devices": []},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "bot": True, "verified": True, "pinned": [], "devices": []}
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "bot": True, "verified": True}
     })
     CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True}
     MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать!", "time": datetime.now().strftime("%H:%M")}]
@@ -48,14 +49,12 @@ if not load_data(): init_default()
 
 def normalize_name(raw): return " ".join(w.capitalize() for w in raw.strip().split())
 
-# Безопасное выполнение Python-кода бота
 def run_bot_code(code, text):
     try:
-        # Ограничиваем встроенные функции для безопасности
-        safe_globals = {"__builtins__": {"len": len, "str": str, "int": int, "float": float, "range": range, "list": list, "dict": dict, "print": print}}
+        # Безопасное выполнение Python
+        safe_globals = {"__builtins__": {"len": len, "str": str, "int": int, "float": float, "range": range, "list": list, "dict": dict}}
         local_vars = {}
         exec(code, safe_globals, local_vars)
-        
         if "handle_message" in local_vars:
             return str(local_vars["handle_message"](text))
         return "Ошибка: в коде нет функции handle_message(text)"
@@ -79,7 +78,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name in USERS: await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "pinned": [], "devices": [], "phone": m.get("phone",""), "email": m.get("email","")}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "pinned": [], "phone": m.get("phone",""), "email": m.get("email","")}
                     CHATS[MAIN_ID]["members"].append(name)
                     save_data()
                     await websocket.send_text(json.dumps({"action": "register_ok"}))
@@ -90,16 +89,10 @@ async def ws(websocket: WebSocket):
                 p = hashlib.md5(m["password"].encode()).hexdigest()
                 if name in USERS and USERS[name]["password"] == p:
                     u = name
-                    dev_id = m.get("deviceId", "unknown")
-                    if "devices" not in USERS[u]: USERS[u]["devices"] = []
-                    if dev_id not in USERS[u]["devices"]:
-                        USERS[u]["devices"].append(dev_id)
-                        if len(USERS[u]["devices"]) > 2: USERS[u]["devices"].pop(0)
-                    
                     ACTIVE[u] = websocket
                     save_data()
                     
-                    my_bots_list = [{"name": b_name, "owner": b_data.get("owner")} for b_name, b_data in USERS.items() if b_data.get("bot") and b_data.get("owner") == u]
+                    my_bots_list = [{"name": b_name} for b_name, b_data in USERS.items() if b_data.get("bot") and b_data.get("owner") == u]
                     
                     await websocket.send_text(json.dumps({
                         "action": "login_ok", "username": u, "users": list(USERS.keys()),
@@ -107,39 +100,55 @@ async def ws(websocket: WebSocket):
                         "creator": USERS[u].get("creator", False),
                         "verified_users": [n for n, d in USERS.items() if d.get("verified")],
                         "pinned": USERS[u].get("pinned", []),
-                        "my_bots": my_bots_list
+                        "my_bots": my_bots_list,
+                        "stories": STORIES
                     }))
                 else: await websocket.send_text(json.dumps({"action": "login_fail", "reason": "Неверный пароль"}))
                 continue
 
             if not u: continue
 
-            # --- СОЗДАНИЕ БОТА ---
             if a == "create_bot":
                 bot_name = normalize_name(m.get("name", ""))
                 code = m.get("code", "")
                 if bot_name in USERS:
                     await websocket.send_text(json.dumps({"action": "error", "message": "Бот с таким именем уже существует"}))
                 else:
-                    USERS[bot_name] = {
-                        "password": "bot", "color": "#9c27b0", "bot": True, 
-                        "owner": u, "code": code, "verified": False
-                    }
+                    USERS[bot_name] = {"password": "bot", "color": "#9c27b0", "bot": True, "owner": u, "code": code, "verified": False}
                     save_data()
                     await websocket.send_text(json.dumps({"action": "bot_created", "bot": {"name": bot_name, "owner": u}}))
+
+            elif a == "delete_bot":
+                bot_name = m.get("name")
+                if bot_name in USERS and USERS[bot_name].get("owner") == u:
+                    del USERS[bot_name]
+                    save_data()
+                    await websocket.send_text(json.dumps({"action": "bot_deleted", "name": bot_name}))
 
             elif a == "get_my_bots":
                 my_bots_list = [{"name": b_name} for b_name, b_data in USERS.items() if b_data.get("bot") and b_data.get("owner") == u]
                 await websocket.send_text(json.dumps({"action": "bots_list", "bots": my_bots_list}))
 
-            # --- СОЗДАНИЕ ЧАТОВ / ГРУПП / КАНАЛОВ ---
-            elif a in ["create_channel", "create_group"]:
-                cid = new_id("c")
-                ctype = "channel" if a == "create_channel" else "group"
-                CHATS[cid] = {"type": ctype, "name": m["name"], "members": [u], "owner": u, "verified": False}
+            elif a == "create_channel":
+                cid = new_id("ch_")
+                CHATS[cid] = {"type": "channel", "name": m.get("name"), "members": [u], "owner": u, "verified": False}
                 MESSAGES[cid] = []
                 save_data()
                 await websocket.send_text(json.dumps({"action": "channel_created", "chat_id": cid, "chat": CHATS[cid]}))
+                
+            elif a == "create_group":
+                cid = new_id("gr_")
+                CHATS[cid] = {"type": "group", "name": m.get("name"), "members": [u], "owner": u, "verified": False}
+                MESSAGES[cid] = []
+                save_data()
+                await websocket.send_text(json.dumps({"action": "channel_created", "chat_id": cid, "chat": CHATS[cid]}))
+
+            elif a == "add_story":
+                STORIES[u] = {"image": m.get("image", ""), "time": datetime.now().strftime("%H:%M")}
+                save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "stories_updated", "stories": STORIES}))
+                    except: pass
 
             elif a == "set_pin":
                 cid = m.get("chat_id")
@@ -162,7 +171,6 @@ async def ws(websocket: WebSocket):
                     save_data()
                 await websocket.send_text(json.dumps({"action": "chat_opened", "chat_id": cid, "chat": CHATS[cid], "messages": MESSAGES.get(cid, [])}))
 
-            # --- ОТПРАВКА СООБЩЕНИЙ И РАБОТА БОТОВ ---
             elif a == "message":
                 cid = m["chat_id"]
                 if cid in CHATS and u in CHATS[cid]["members"]:
@@ -175,17 +183,14 @@ async def ws(websocket: WebSocket):
                             try: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
                             except: pass
                     
-                    # Проверяем, есть ли в чате бот
                     for member in CHATS[cid]["members"]:
                         if member != u and USERS.get(member, {}).get("bot"):
-                            # Нашли бота, выполняем его код!
                             bot_code = USERS[member].get("code", "")
-                            if bot_code:
+                            if bot_code and msg["type"] == "text":
                                 reply_text = run_bot_code(bot_code, msg["text"])
                                 bot_msg = {"id": new_id("m"), "from": member, "type": "text", "text": reply_text, "data": "", "time": datetime.now().strftime("%H:%M")}
                                 MESSAGES[cid].append(bot_msg)
                                 save_data()
-                                # Отправляем ответ бота пользователю
                                 if u in ACTIVE:
                                     try: await ACTIVE[u].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": bot_msg}))
                                     except: pass
