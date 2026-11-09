@@ -23,16 +23,28 @@ h2{font-size:24px;margin-bottom:6px;}
 .btn{width:100%;padding:14px;margin-top:8px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:600;cursor:pointer;text-transform:uppercase;}
 .btn.gray{background:#3a4a5a; color:#fff;} .btn.red{background:#e74c3c; color:#fff;} .btn.purple{background:#9c27b0; color:#fff;}
 .lnk{display:block;margin-top:16px;color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;}
+.account-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--input-bg); border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
+.account-item .av { width: 40px; height: 40px; font-size: 16px; }
 
 /* ГЛАВНЫЙ ЭКРАН */
 #main{display:none;flex-direction:column;height:100%;}
 .hdr{padding:12px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);}
 .hdr .title{flex:1;font-weight:600;font-size:17px;}
 .dot{width:9px;height:9px;border-radius:50%;background:#4caf50;} .dot.off{background:#e74c3c;}
+.hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
+
 #content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .view.active { display: block; }
 
+/* STORIES */
+.stories-row { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: var(--panel); border-bottom: 1px solid var(--border); }
+.story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer;}
+.story-item .av { width: 60px; height: 60px; }
+.story-ring { border: 2px solid var(--blue); padding: 2px; }
+
+.srch-wrap{padding:10px 14px;background:var(--panel); display: flex; gap: 5px;}
+.srch{width:100%;padding:10px 16px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);font-size:15px;outline:none;}
 .lst{padding:6px;}
 .it{padding:11px;margin-bottom:2px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:12px;}
 .it:active{background:var(--input-bg);}
@@ -80,6 +92,8 @@ h2{font-size:24px;margin-bottom:6px;}
 .modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;color:var(--text);}
 .modal-box h3{font-size:20px;margin-bottom:14px;}
 .settings-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 16px;}
+.bot-row { display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+.bot-del-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -87,15 +101,20 @@ h2{font-size:24px;margin-bottom:6px;}
 <div id="app">
 <!-- ЭКРАН АВТОРИЗАЦИИ -->
 <div id="auth">
+  <!-- Экран входа со списком аккаунтов -->
   <div class="auth-box" id="loginScreen">
     <div class="logo">✈</div>
     <h2>Вход в Minechat</h2>
-    <input class="inp" id="loginName" placeholder="Имя пользователя" autocomplete="off">
-    <input class="inp" id="loginPass" type="password" placeholder="Пароль" autocomplete="off">
-    <button class="btn" onclick="doLogin()">Войти</button>
+    <div id="savedAccountsList" style="margin-bottom: 15px;"></div>
+    <div id="manualLogin" style="display: block;">
+        <input class="inp" id="loginName" placeholder="Имя пользователя" autocomplete="off">
+        <input class="inp" id="loginPass" type="password" placeholder="Пароль" autocomplete="off">
+        <button class="btn" onclick="doLogin()">Войти</button>
+    </div>
     <span class="lnk" onclick="showRegScreen(1)">Нет аккаунта? Зарегистрируйтесь!</span>
   </div>
 
+  <!-- Экран регистрации 1/3 -->
   <div class="auth-box" id="regScreen1" style="display:none;">
     <h2>Регистрация 1/3</h2>
     <div class="sub">Основная информация</div>
@@ -106,6 +125,7 @@ h2{font-size:24px;margin-bottom:6px;}
     <span class="lnk" onclick="showLoginScreen()">Уже есть аккаунт? Войти</span>
   </div>
 
+  <!-- Экран регистрации 2/3 -->
   <div class="auth-box" id="regScreen2" style="display:none;">
     <h2>Регистрация 2/3</h2>
     <div class="sub">Придумайте пароль</div>
@@ -113,6 +133,7 @@ h2{font-size:24px;margin-bottom:6px;}
     <button class="btn" onclick="regNext(2)">Далее</button>
   </div>
 
+  <!-- Экран регистрации 3/3 -->
   <div class="auth-box" id="regScreen3" style="display:none;">
     <h2>Регистрация 3/3</h2>
     <div class="sub">Подтверждение возраста</div>
@@ -129,15 +150,25 @@ h2{font-size:24px;margin-bottom:6px;}
     <div class="dot" id="wsDot"></div>
   </div>
 
+  <!-- STORIES ВЕРНУЛИ НАЗАД -->
+  <div class="stories-row" id="storiesRow">
+    <div class="story-item" onclick="addStory()">
+      <div class="av" style="background:var(--input-bg);">➕</div>
+      <span>Добавить</span>
+    </div>
+  </div>
+
   <div id="content-area">
     <div id="view-chats" class="view active">
+      <div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
       <div class="lst" id="cl"></div>
     </div>
     
-    <!-- ПОИСК -->
-    <div id="view-search" class="view">
-      <div style="padding:10px;"><input class="inp" id="sr-global" placeholder="Поиск людей..." oninput="searchUsers(this.value)" style="margin:0;"></div>
-      <div class="lst" id="global-search-list"></div>
+    <div id="view-calls" class="view"><div class="lst" id="call-list"></div></div>
+
+    <div id="view-contacts" class="view">
+      <div class="srch-wrap"><input class="srch" id="sr-contacts" placeholder="Найти контакт" oninput="renderContacts(this.value)"></div>
+      <div class="lst" id="contacts-list"></div>
     </div>
 
     <!-- НАСТРОЙКИ -->
@@ -156,7 +187,8 @@ h2{font-size:24px;margin-bottom:6px;}
 
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
-    <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div><div>Поиск</div></div>
+    <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
+    <div class="nav-item" onclick="switchTab('contacts')" id="nav-contacts"><div class="nav-icon">👥</div><div>Контакты</div></div>
     <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
   </div>
 </div>
@@ -182,7 +214,7 @@ h2{font-size:24px;margin-bottom:6px;}
   </div>
 </div>
 
-<!-- МОДАЛКИ -->
+<!-- МОДАЛКА ДОКУМЕНТА -->
 <div class="modal" id="docModal">
   <div class="modal-box">
     <h3 id="docTitle" contenteditable="true" style="outline:none; border-bottom:1px solid var(--border); padding-bottom:5px;">Документ.txt</h3>
@@ -209,7 +241,7 @@ h2{font-size:24px;margin-bottom:6px;}
     return "Я не понимаю."</textarea>
         <button class="btn" style="background:#4caf50; margin-top:10px;" onclick="saveBot()">Сохранить и запустить</button>
     </div>
-    <button class="btn gray" onclick="document.getElementById('botsModal').style.display='none'">Закрыть</button>
+    <button class="btn gray" style="margin-top:15px;" onclick="document.getElementById('botsModal').style.display='none'">Закрыть</button>
   </div>
 </div>
 
@@ -217,12 +249,12 @@ h2{font-size:24px;margin-bottom:6px;}
   <div class="modal-box" style="text-align:center;">
     <h3>👤 Мой профиль</h3>
     <div id="myAvatarBig" style="width:100px;height:100px;border-radius:50%;background:var(--blue);margin:0 auto 15px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;">?</div>
-    <button class="btn gray" onclick="requestAllPermissions()">Запросить разрешения (Камера, Микрофон)</button>
+    <button class="btn gray" onclick="requestAllPermissions()">Запросить разрешения</button>
     <button class="btn" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button>
   </div>
 </div>
 
-<!-- ЭКРАН ВХОДЯЩЕГО ЗВОНКА -->
+<!-- ЭКРАН ВХОДЯЩЕГО ЗВОНКА (С КНОПКОЙ ПЕРЕЗВОНЮ) -->
 <div id="incomingScreen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,var(--bg),var(--panel));z-index:1500;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 20px;">
   <div style="text-align:center;">
     <div style="font-size:14px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;">Входящий звонок</div>
@@ -242,13 +274,29 @@ h2{font-size:24px;margin-bottom:6px;}
 <script>
 // === ПЕРЕМЕННЫЕ ===
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-var ws, cu, cc, USERS = {}, CHATS = {}, MESSAGES = {}, PINNED = [], searchTimeout;
+var ws, cu, cc, USERS = {}, CHATS = {}, MESSAGES = {}, PINNED = [], searchTimeout, STORIES = {}, myBots = [];
 var currentDocId = null, replyTo = null;
-var ageVerifyData = {}, myBots = [];
+var ageVerifyData = {};
 
-// ID устройства для мультиаккаунта (макс 2)
-var deviceId = localStorage.getItem('mc_device_id');
-if (!deviceId) { deviceId = 'dev_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('mc_device_id', deviceId); }
+// Управление аккаунтами (макс 2)
+var savedAccounts = JSON.parse(localStorage.getItem('mc_accounts') || '[]');
+function renderSavedAccounts() {
+    var box = document.getElementById('savedAccountsList'); box.innerHTML = '';
+    savedAccounts.forEach(acc => {
+        var div = document.createElement('div'); div.className = 'account-item';
+        div.innerHTML = `<div class="av" style="background:var(--blue);">${acc.user[0]}</div><div style="flex:1;text-align:left;font-weight:bold;">${acc.user}</div>`;
+        div.onclick = () => { document.getElementById('loginName').value = acc.user; document.getElementById('loginPass').value = acc.pass; doLogin(); };
+        box.appendChild(div);
+    });
+}
+function saveAccount(user, pass) {
+    savedAccounts = savedAccounts.filter(a => a.user !== user);
+    savedAccounts.push({user, pass});
+    if(savedAccounts.length > 2) savedAccounts.shift(); // Храним только 2
+    localStorage.setItem('mc_accounts', JSON.stringify(savedAccounts));
+    renderSavedAccounts();
+}
+renderSavedAccounts();
 
 function connect(user, pass, isReg = false) {
     ws = new WebSocket(wsProto + location.host + "/ws");
@@ -256,26 +304,15 @@ function connect(user, pass, isReg = false) {
     ws.onopen = () => { 
         document.getElementById('wsDot').classList.remove('off'); 
         if(isReg) ws.send(JSON.stringify({action:'register', username: user, password: pass, phone: ageVerifyData.phone, email: ageVerifyData.email}));
-        else ws.send(JSON.stringify({action:'login', username: user, password: pass, deviceId: deviceId})); 
+        else ws.send(JSON.stringify({action:'login', username: user, password: pass})); 
     };
     ws.onclose = () => document.getElementById('wsDot').classList.add('off');
 }
 function send(d) { if(ws && ws.readyState===1) ws.send(JSON.stringify(d)); }
 
 // === АВТОРИЗАЦИЯ ===
-function showLoginScreen() {
-    document.getElementById('loginScreen').style.display = 'block';
-    document.getElementById('regScreen1').style.display = 'none';
-    document.getElementById('regScreen2').style.display = 'none';
-    document.getElementById('regScreen3').style.display = 'none';
-}
-function showRegScreen(step) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('regScreen1').style.display = 'none';
-    document.getElementById('regScreen2').style.display = 'none';
-    document.getElementById('regScreen3').style.display = 'none';
-    document.getElementById('regScreen' + step).style.display = 'block';
-}
+function showLoginScreen() { document.getElementById('loginScreen').style.display = 'block'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; }
+function showRegScreen(step) { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; document.getElementById('regScreen' + step).style.display = 'block'; }
 
 function doLogin() {
     var u = document.getElementById('loginName').value.trim();
@@ -305,19 +342,11 @@ var ageHistory = [];
 async function startAgeVerification() {
     document.getElementById('startAgeBtn').style.display = 'none';
     document.getElementById('ageVerifyStatus').innerText = "Загрузка...";
-    
     await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     await faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     
-    try { 
-        var s = await navigator.mediaDevices.getUserMedia({video:true}); 
-        document.getElementById('ageVerifyVideo').srcObject = s; 
-    } catch(e) { 
-        alert("Нет доступа к камере"); 
-        document.getElementById('startAgeBtn').style.display = 'block';
-        return; 
-    }
+    try { var s = await navigator.mediaDevices.getUserMedia({video:true}); document.getElementById('ageVerifyVideo').srcObject = s; } catch(e) { alert("Нет доступа к камере"); document.getElementById('startAgeBtn').style.display = 'block'; return; }
     
     var step = 'straight1';
     var loop = setInterval(async () => {
@@ -359,34 +388,29 @@ function handleMsg(m) {
     
     if(m.action==='login_ok') {
         cu = m.username; USERS = m.users; CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
-        PINNED = m.pinned || []; myBots = m.my_bots || [];
+        PINNED = m.pinned || []; myBots = m.my_bots || []; STORIES = m.stories || {};
         
+        // Сохраняем аккаунт для быстрого входа
+        saveAccount(cu, document.getElementById('loginPass').value);
+
         document.getElementById('auth').style.display='none'; 
         document.getElementById('main').style.display='flex';
-        renderChats(); requestAllPermissions();
+        renderChats(); renderStories(); renderContacts(); requestAllPermissions();
     }
-    if(m.action==='new_message') { 
-        if(!MESSAGES[m.chat_id]) MESSAGES[m.chat_id]=[]; 
-        MESSAGES[m.chat_id].push(m.msg); 
-        if(cc===m.chat_id) appendMsg(m.msg, false); 
-    }
-    if(m.action==='chat_opened') { 
-        cc=m.chat_id; MESSAGES[cc]=m.messages; 
-        document.getElementById('main').style.display='none'; 
-        document.getElementById('chat').style.display='flex'; 
-        document.getElementById('hn').innerText = m.chat.name || m.chat.members.find(x=>x!==cu); 
-        renderMsgs(); 
-    }
+    if(m.action==='new_message') { if(!MESSAGES[m.chat_id]) MESSAGES[m.chat_id]=[]; MESSAGES[m.chat_id].push(m.msg); if(cc===m.chat_id) appendMsg(m.msg, false); }
+    if(m.action==='chat_opened') { cc=m.chat_id; MESSAGES[cc]=m.messages; document.getElementById('main').style.display='none'; document.getElementById('chat').style.display='flex'; document.getElementById('hn').innerText = m.chat.name || m.chat.members.find(x=>x!==cu); renderMsgs(); }
     if(m.action==='pins_updated') { PINNED = m.pinned; renderChats(); }
     if(m.action==='search_results') { renderSearchResults(m.results); }
     if(m.action==='doc_data') { currentDocId = m.doc_id; document.getElementById('docTitle').innerText = m.title; document.getElementById('docText').value = m.text; document.getElementById('docModal').style.display='flex'; }
-    if(m.action==='channel_created') { CHATS[m.chat_id] = m.chat; renderChats(); alert("Канал создан!"); }
+    if(m.action==='channel_created') { CHATS[m.chat_id] = m.chat; renderChats(); alert("Чат создан!"); }
     if(m.action==='new_verify_request') alert(`🔔 Пользователь ${m.from} просит галочку!`);
     if(m.action==='error') alert(m.message);
     
-    // Ответы для ботов
+    // Боты
     if(m.action==='bot_created') { myBots.push(m.bot); renderMyBots(); alert("Бот создан!"); }
+    if(m.action==='bot_deleted') { myBots = myBots.filter(b => b.name !== m.name); renderMyBots(); }
     if(m.action==='bots_list') { myBots = m.bots; renderMyBots(); }
+    if(m.action==='stories_updated') { STORIES = m.stories; renderStories(); }
 }
 
 // === РЕНДЕР ===
@@ -407,38 +431,49 @@ function renderChats() {
     });
 }
 
+function renderStories() {
+    var row = document.getElementById('storiesRow'); row.innerHTML = `<div class="story-item" onclick="addStory()"><div class="av" style="background:var(--input-bg);">➕</div><span>Добавить</span></div>`;
+    Object.keys(STORIES).forEach(u => {
+        var el = document.createElement('div'); el.className='story-item';
+        el.innerHTML = `<div class="av story-ring"><div class="av-inner"><img src="${STORIES[u].image}"></div></div><span>${u}</span>`;
+        el.onclick = () => alert("История от " + u + "\nВремя: " + STORIES[u].time);
+        row.appendChild(el);
+    });
+}
+function addStory() {
+    var inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
+    inp.onchange = () => { var r = new FileReader(); r.onload=()=>{ send({action:'add_story', image: r.result}); }; r.readAsDataURL(inp.files[0]); };
+    inp.click();
+}
+
+function renderContacts(filter) {
+    filter = (filter || '').toLowerCase(); var l = document.getElementById('contacts-list'); l.innerHTML = '';
+    Object.keys(USERS).forEach(u => {
+        if (u === cu || (filter && u.toLowerCase().indexOf(filter) < 0)) return;
+        var it = document.createElement('div'); it.className='it';
+        it.innerHTML = `<div class="av" style="background:var(--blue);">${u[0]}</div><div>${u}</div>`;
+        it.onclick = () => { send({action:'open_private', with: u}); switchTab('chats'); };
+        l.appendChild(it);
+    });
+}
+
 function renderMyBots() {
     var box = document.getElementById('myBotsList'); if(!box) return; box.innerHTML = '';
     if(myBots.length === 0) box.innerHTML = '<div style="color:var(--text-muted)">У вас пока нет ботов.</div>';
     myBots.forEach(b => {
-        var div = document.createElement('div'); div.className = 'it';
-        div.innerHTML = `<div class="av" style="background:#9c27b0;">🤖</div><div>${b.name}</div>`;
-        div.onclick = () => { send({action:'open_private', with: b.name}); document.getElementById('botsModal').style.display='none'; };
+        var div = document.createElement('div'); div.className = 'bot-row';
+        div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;" onclick="openBotChat('${b.name}')"><span style="font-size:20px;">🤖</span><b>${b.name}</b></div>
+                         <button class="bot-del-btn" onclick="event.stopPropagation(); deleteBot('${b.name}')">🗑 Удалить</button>`;
         box.appendChild(div);
     });
 }
-
-// === БОТЫ ===
-function openMyBots() {
-    send({action: 'get_my_bots'});
-    document.getElementById('botsModal').style.display='flex';
-    document.getElementById('botEditor').style.display='none';
-}
-function createBotUI() {
-    document.getElementById('botEditor').style.display='block';
-}
-function saveBot() {
-    var name = document.getElementById('botNameInput').value.trim();
-    var code = document.getElementById('botCodeInput').value;
-    if(!name || !code) return alert("Заполните имя и код!");
-    if(!name.endsWith('Bot') && !name.endsWith('bot')) name += 'Bot';
-    send({action: 'create_bot', name: name, code: code});
-    document.getElementById('botEditor').style.display='none';
+function openBotChat(name) { send({action:'open_private', with: name}); document.getElementById('botsModal').style.display='none'; }
+function deleteBot(name) {
+    if(!confirm('Удалить бота ' + name + '?')) return;
+    send({action: 'delete_bot', name: name});
 }
 
 // === ОСТАЛЬНЫЕ ФУНКЦИИ ===
-function searchUsers(q) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => send({action:'search_users', query: q}), 500); }
-function renderSearchResults(list) { var el = document.getElementById('global-search-list'); el.innerHTML=''; list.forEach(u => { var it = document.createElement('div'); it.className='it'; it.innerText = u; it.onclick = () => { send({action:'open_private', with: u}); switchTab('chats'); }; el.appendChild(it); }); }
 function openChat(cid) { send({action:'open_chat', chat_id: cid}); send({action:'mark_read', chat_id: cid}); }
 function switchTab(t) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); document.getElementById('view-'+t).classList.add('active'); document.getElementById('nav-'+t).classList.add('active'); }
 function renderMsgs() { var c=document.getElementById('msgs'); c.innerHTML=''; (MESSAGES[cc]||[]).forEach(m=>appendMsg(m, true)); }
@@ -473,9 +508,12 @@ function sendMessage() { var t = document.getElementById('mi').value.trim(); if(
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function openProfile() { document.getElementById('profileModal').style.display='flex'; }
 function logout() { location.reload(); }
-function toggleTheme() { document.body.classList.toggle('light-theme'); }
+function openMyBots() { send({action: 'get_my_bots'}); document.getElementById('botsModal').style.display='flex'; document.getElementById('botEditor').style.display='none'; }
+function createBotUI() { document.getElementById('botEditor').style.display='block'; }
+function saveBot() { var name = document.getElementById('botNameInput').value.trim(); var code = document.getElementById('botCodeInput').value; if(!name || !code) return alert("Заполните поля!"); if(!name.endsWith('Bot') && !name.endsWith('bot')) name += 'Bot'; send({action: 'create_bot', name: name, code: code}); document.getElementById('botEditor').style.display='none'; }
+function showLoginScreen() { document.getElementById('loginScreen').style.display = 'block'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; }
+function showRegScreen(step) { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; document.getElementById('regScreen' + step).style.display = 'block'; }
 
-// Перезвоню
 function declineIncomingMsg() {
   document.getElementById('incomingScreen').style.display = 'none';
   send({action:'call_decline', to: callTarget});
@@ -483,10 +521,7 @@ function declineIncomingMsg() {
   send({action:'message', chat_id: cid, type:'text', text: 'Скоро перезвоню!'});
   callTarget = null;
 }
-
-// Запуск
-var lastUser = localStorage.getItem('mc_last_user');
-if(lastUser) { document.getElementById('loginName').value = lastUser; }
+function private_id(a, b) { return "p_" + [a,b].sort().join("_"); }
 </script>
 </body>
-</html>
+  </html>
