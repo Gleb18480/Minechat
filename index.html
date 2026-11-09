@@ -6,14 +6,8 @@
 <title>Minechat (Russia)</title>
 <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
-:root {
-  --bg: #0e1621; --panel: #17212b; --text: #ffffff; --text-muted: #8b9aab;
-  --blue: #2AABEE; --border: #0e1621; --input-bg: #242f3d;
-}
-body.light-theme {
-  --bg: #f4f4f5; --panel: #ffffff; --text: #000000; --text-muted: #707579;
-  --blue: #2AABEE; --border: #e1e1e1; --input-bg: #efefef;
-}
+:root { --bg: #0e1621; --panel: #17212b; --text: #ffffff; --text-muted: #8b9aab; --blue: #2AABEE; --border: #0e1621; --input-bg: #242f3d; }
+body.light-theme { --bg: #f4f4f5; --panel: #ffffff; --text: #000000; --text-muted: #707579; --blue: #2AABEE; --border: #e1e1e1; --input-bg: #efefef; }
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;}
 html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position:fixed;overflow:hidden;overscroll-behavior:none; transition: background 0.3s, color 0.3s;}
 input,textarea,button{font-family:inherit;}
@@ -76,13 +70,11 @@ h2{font-size:24px;margin-bottom:6px;}
 .mi .nm2{font-weight:600;font-size:12px;color:var(--blue);display:block;margin-bottom:2px;}
 .mo{align-self:flex-end;background:var(--blue);border-top-right-radius:4px;color:#fff;}
 .m img,.m video{max-width:100%;border-radius:10px;margin-top:4px;display:block;}
-.m .sticker-img{width:128px;height:128px;object-fit:contain;background:transparent;}
 .m .doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; align-items: center; gap: 10px; cursor: pointer;}
-.m .reply{background:rgba(0,0,0,.25);border-left:3px solid var(--blue);padding:4px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;opacity:.85;}
 .dl-btn { display: inline-block; margin-top: 5px; font-size: 12px; text-decoration: none; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #fff; }
 
-.msg-actions{position:absolute;top:-34px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
-.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:4px 8px;border-radius:6px;}
+.msg-actions{position:absolute;top:-38px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
+.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:6px 10px;border-radius:6px;}
 .m.show-actions .msg-actions{display:flex;}
 
 #inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:calc(10px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
@@ -108,7 +100,6 @@ h2{font-size:24px;margin-bottom:6px;}
 <div id="app">
 <!-- АВТОРИЗАЦИЯ -->
 <div id="auth">
-  <!-- Вход -->
   <div class="auth-box" id="loginScreen">
     <div class="logo">✈</div>
     <h2>Вход в Minechat</h2>
@@ -121,7 +112,6 @@ h2{font-size:24px;margin-bottom:6px;}
     <span class="lnk" onclick="showRegScreen(1)">Нет аккаунта? Зарегистрируйтесь!</span>
   </div>
 
-  <!-- Регистрация 1/3 -->
   <div class="auth-box" id="regScreen1" style="display:none;">
     <h2>Регистрация 1/3</h2>
     <div class="sub">Основная информация</div>
@@ -132,7 +122,6 @@ h2{font-size:24px;margin-bottom:6px;}
     <span class="lnk" onclick="showLoginScreen()">Уже есть аккаунт? Войти</span>
   </div>
 
-  <!-- Регистрация 2/3 -->
   <div class="auth-box" id="regScreen2" style="display:none;">
     <h2>Регистрация 2/3</h2>
     <div class="sub">Придумайте пароль</div>
@@ -140,7 +129,6 @@ h2{font-size:24px;margin-bottom:6px;}
     <button class="btn" onclick="regNext(2)">Далее</button>
   </div>
 
-  <!-- Регистрация 3/3 -->
   <div class="auth-box" id="regScreen3" style="display:none;">
     <h2>Регистрация 3/3</h2>
     <div class="sub">Подтверждение возраста</div>
@@ -170,20 +158,18 @@ h2{font-size:24px;margin-bottom:6px;}
       <div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
       <div class="lst" id="cl"></div>
     </div>
-    <div id="view-calls" class="view"><div class="lst" id="call-list"></div></div>
-    <div id="view-contacts" class="view">
-      <div class="srch-wrap"><input class="srch" id="sr-contacts" placeholder="Найти контакт" oninput="renderContacts(this.value)"></div>
-      <div class="lst" id="contacts-list"></div>
-    </div>
     
-    <!-- НАСТРОЙКИ -->
+    <!-- ВМЕСТО КОНТАКТОВ ТЕПЕРЬ ПОИСК -->
+    <div id="view-search" class="view">
+      <div class="srch-wrap"><input class="srch" id="sr-global" placeholder="Найти человека..." oninput="searchUsers(this.value)"></div>
+      <div class="lst" id="global-search-list"></div>
+    </div>
+
+    <div id="view-calls" class="view"><div class="lst" id="call-list"></div></div>
+
     <div id="view-settings" class="view">
       <div class="lst" style="padding:0;">
         <div class="settings-item" onclick="openProfile()"><span>👤 Мой профиль</span><span>➔</span></div>
-        <div class="settings-item" onclick="openMyBots()"><span>🤖 Мои боты</span><span>➔</span></div>
-        <div class="settings-item" onclick="createChannel()"><span>📢 Создать канал</span><span>➔</span></div>
-        <div class="settings-item" onclick="createGroup()"><span>👥 Создать группу</span><span>➔</span></div>
-        <div class="settings-item" onclick="requestVerify()"><span>✔ Запросить галочку</span><span>➔</span></div>
         <div class="settings-item" onclick="toggleTheme()"><span>🎨 Светлая тема</span><label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
         <div class="settings-item" onclick="logout()" style="color:#e74c3c;"><span>🚪 Выйти</span></div>
       </div>
@@ -192,8 +178,8 @@ h2{font-size:24px;margin-bottom:6px;}
 
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
+    <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div><div>Поиск</div></div>
     <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
-    <div class="nav-item" onclick="switchTab('contacts')" id="nav-contacts"><div class="nav-icon">👥</div><div>Контакты</div></div>
     <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
   </div>
 </div>
@@ -280,10 +266,15 @@ h2{font-size:24px;margin-bottom:6px;}
 <div class="modal" id="profileModal"><div class="modal-box" style="text-align:center;">
     <h3>👤 Мой профиль</h3>
     <div class="big-av" id="myBigAvatar" style="background:#2AABEE;">?</div>
-    <button class="btn gray" onclick="requestAllPermissions()">Запросить все разрешения</button>
+    <button class="btn gray" onclick="requestAllPermissions()">Запросить разрешения</button>
     <button class="btn purple" onclick="setMyStatus()">💬 Статус</button>
-    <button class="btn" id="reqVerifyBtn" onclick="requestVerify()">✔ Галочка</button>
-    <div class="row"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
+    <button class="btn" id="reqVerifyBtn" onclick="requestVerify()">✔ Запросить галочку</button>
+    <div style="margin-top:10px; border-top:1px solid var(--border); padding-top:10px;">
+        <button class="btn" style="background:#4caf50;" onclick="createChannel()">📢 Создать канал</button>
+        <button class="btn" style="background:#4caf50; margin-top:8px;" onclick="createGroup()">👥 Создать группу</button>
+        <button class="btn" style="background:#9c27b0; margin-top:8px;" onclick="openMyBots()">🤖 Мои боты</button>
+    </div>
+    <div class="row" style="margin-top:10px;"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
 </div></div>
 
 <!-- ЗВОНКИ -->
@@ -301,7 +292,6 @@ h2{font-size:24px;margin-bottom:6px;}
   </div>
 </div>
 
-<!-- ВХОДЯЩИЙ ЗВОНОК (С КНОПКОЙ ПЕРЕЗВОНЮ) -->
 <div id="incomingScreen" style="display:none;position:fixed;inset:0;background:linear-gradient(135deg,var(--bg),var(--panel));z-index:1500;flex-direction:column;align-items:center;justify-content:space-between;padding:60px 20px;">
   <div style="text-align:center;">
     <div style="font-size:14px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:30px;">Входящий звонок</div>
@@ -382,7 +372,8 @@ function handleMessage(m) {
       
       document.getElementById('auth').style.display = 'none'; document.getElementById('main').style.display = 'flex';
       if (isCreator) document.getElementById('adminBtn').style.display = 'block';
-      renderChats(); renderContacts(); renderStories(); switchTab('chats');
+      renderChats(); renderStories(); switchTab('chats');
+      requestAllPermissions(); // Запрашиваем разрешения при входе
       break;
     case 'new_message':
       if (!MESSAGES[m.chat_id]) MESSAGES[m.chat_id] = [];
@@ -407,13 +398,13 @@ function handleMessage(m) {
 
       send({action:'mark_read', chat_id: cc});
       renderMessages(); break;
-    case 'online': ONLINE = m.users; if (m.last_seen) LAST_SEEN = m.last_seen; renderChats(); renderContacts(); break;
-    case 'status_update': STATUSES[m.username] = m.status; renderChats(); renderContacts(); break;
-    case 'age_update': AGE_GROUPS[m.username] = m.age_group; renderContacts(); break;
+    case 'online': ONLINE = m.users; if (m.last_seen) LAST_SEEN = m.last_seen; renderChats(); break;
+    case 'status_update': STATUSES[m.username] = m.status; renderChats(); break;
+    case 'age_update': AGE_GROUPS[m.username] = m.age_group; break;
     case 'phone_update': PHONES[m.username] = m.phone; break;
     case 'email_update': EMAILS[m.username] = m.email; break;
     case 'device_update': DEVICES[m.username] = m.device; break;
-    case 'avatar_update': if(USERS[m.username]) USERS[m.username].avatar = m.avatar; renderChats(); renderContacts(); if(cc) renderMessages(); break;
+    case 'avatar_update': if(USERS[m.username]) USERS[m.username].avatar = m.avatar; renderChats(); if(cc) renderMessages(); break;
     case 'incoming_call': showIncomingCall(m.from, m.data); break;
     case 'call_accepted': document.getElementById('callSt').innerText = 'Разговор'; if (isCaller) createOffer(); break;
     case 'call_ended': endCall(true); break;
@@ -436,13 +427,13 @@ function handleMessage(m) {
     case 'bot_created': myBots.push(m.bot); renderMyBots(); alert("Бот создан!"); break;
     case 'bot_deleted': myBots = myBots.filter(b => b.name !== m.name); renderMyBots(); break;
     case 'bots_list': myBots = m.bots; renderMyBots(); break;
+    case 'search_results': renderSearchResults(m.results); break;
   }
 }
 
 function getOtherUser(cid) { var mm = CHATS[cid] ? CHATS[cid].members : []; for (var i = 0; i < mm.length; i++) if (mm[i] !== cu) return mm[i]; return cu; }
 function getColor(n) { return {'Носов Глеб':'#2196f3','Носова Наталья':'#e91e63','Носов Даниил':'#ff9800','Носов Виталий':'#4caf50','Minechat Бот':'#9c27b0'}[n] || '#9c27b0'; }
 
-// СТАРЫЕ ФУНКЦИИ (СОХРАНЕНЫ)
 function renderChats(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
   Object.keys(CHATS).forEach(cid => {
@@ -453,16 +444,19 @@ function renderChats(filter) {
     item.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(item);
   });
 }
-function renderContacts(filter) {
-  filter = (filter || '').toLowerCase(); var l = document.getElementById('contacts-list'); l.innerHTML = '';
-  Object.keys(USERS).forEach(u => {
-    if (u === cu || (filter && u.toLowerCase().indexOf(filter) < 0)) return;
-    var isOn = ONLINE.indexOf(u) >= 0;
-    var item = document.createElement('div'); item.className = 'it';
-    item.innerHTML = '<div class="av" style="background:' + USERS[u].color + ';"><div class="av-inner">' + (USERS[u].avatar ? '<img src="'+USERS[u].avatar+'">' : u.charAt(0)) + '</div>' + (isOn ? '<span class="on"></span>' : '') + '</div><div style="flex:1;min-width:0"><div class="nm"><span>' + u + '</span>' + (USERS[u].verified ? ' <span class="badge-verified">✔</span>' : '') + '</div><div class="pv">' + (STATUSES[u] || (isOn ? 'онлайн' : 'офлайн')) + '</div></div>';
-    item.onclick = () => openContactProfile(u); l.appendChild(item);
-  });
+
+function renderSearchResults(list) {
+    var el = document.getElementById('global-search-list'); el.innerHTML='';
+    list.forEach(u => {
+        var it = document.createElement('div'); it.className='it'; 
+        it.innerHTML = `<div class="av" style="background:var(--blue);">${u[0]}</div><div>${u}</div>`;
+        it.onclick = () => { send({action:'open_private', with: u}); switchTab('chats'); };
+        el.appendChild(it);
+    });
 }
+function searchUsers(q) { clearTimeout(searchTimeout); searchTimeout = setTimeout(() => send({action:'search_users', query: q}), 500); }
+var searchTimeout;
+
 function renderStories() {
   var row = document.getElementById('storiesRow'); row.innerHTML = `<div class="story-item" onclick="addStory()"><div class="av" style="background:var(--input-bg);">➕</div><span>Добавить</span></div>`;
   Object.keys(STORIES).forEach(u => {
@@ -524,7 +518,7 @@ function appendMessage(m, skipScroll) {
   if (m.reply_to) { var rmsg = (MESSAGES[cc] || []).find(x => x.id === m.reply_to); if (rmsg) html += '<div class="reply">↩ ' + rmsg.from + ': ' + esc(rmsg.text || 'медиа').slice(0, 40) + '</div>'; }
   
   if (m.type === 'text') html += renderTextWithLinks(m.text);
-  else if (m.type === 'doc') html += '<div class="doc-msg" onclick="event.stopPropagation();send({action:\'get_doc\',doc_id:\''+m.id+'\'})"><span>📄</span><div><b>' + esc(m.text) + '</b></div></div>';
+  else if (m.type === 'doc') html += '<div class="doc-msg" onclick="event.stopPropagation();send({action:\'get_doc\',doc_id:\''+m.id+'\'})"><span>📄</span><div><b>' + esc(m.text) + '</b><br><a href="data:text/plain;charset=utf-8,'+encodeURIComponent(m.text)+'" download="'+esc(m.text)+'" style="font-size:10px;">⬇️ Скачать</a></div></div>';
   else if (m.type === 'image') html += '<img src="' + m.data + '"><br><a href="' + m.data + '" download="image.jpg" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>';
   else if (m.type === 'video') html += '<video src="' + m.data + '" controls></video><br><a href="' + m.data + '" download="video.mp4" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>';
   else if (m.type === 'sticker') html += '<img class="sticker-img" src="' + m.data + '">';
@@ -538,44 +532,53 @@ function appendMessage(m, skipScroll) {
 
   html += '<span class="t">' + m.time + (m.edited ? ' ✏' : '') + checks + '</span>';
   
+  // МЕНЮ ДЕЙСТВИЙ
   html += '<div class="msg-actions">';
-  html += '<button onclick="event.stopPropagation();toggleEmojiBar(\'' + m.id + '\')">❤️</button>';
-  html += '<button onclick="event.stopPropagation();replyToMsg(\'' + m.id + '\')">↩</button>';
-  html += '<button onclick="event.stopPropagation();shareMessage(\'' + m.id + '\')">📤</button>';
-  if (mine || isCreator) html += '<button onclick="event.stopPropagation();deleteMsg(\'' + m.id + '\')">🗑</button>';
+  html += '<button onclick="event.stopPropagation();replyToMsg(\'' + m.id + '\')" title="Ответить">↩</button>';
+  html += '<button onclick="event.stopPropagation();shareMessage(\'' + m.id + '\')" title="Переслать">↪️</button>';
+  html += '<button onclick="event.stopPropagation();shareExternal(\'' + m.id + '\')" title="Поделиться">📤</button>';
+  if (mine || isCreator) html += '<button onclick="event.stopPropagation();deleteMsg(\'' + m.id + '\')" title="Удалить">🗑</button>';
   html += '</div>';
   d.innerHTML = html; c.appendChild(d);
   if (!skipScroll) c.scrollTop = c.scrollHeight;
 }
 
 function toggleActions(el) { var wasOpen = el.classList.contains('show-actions'); document.querySelectorAll('.m').forEach(x => x.classList.remove('show-actions')); if (!wasOpen) el.classList.add('show-actions'); }
-function toggleEmojiBar(msgId) {
-  var bar = document.getElementById('emojiBar'); if(!bar) return;
-  bar.innerHTML = '';
-  EMOJIS.forEach(e => {
-    var span = document.createElement('span'); span.innerText = e;
-    span.onclick = () => { addReaction(msgId, e); bar.style.display = 'none'; };
-    bar.appendChild(span);
-  });
-  bar.style.display = 'flex';
-}
-function addReaction(id, emoji) { send({action:'react', chat_id: cc, msg_id: id, emoji: emoji}); }
 function replyToMsg(id) { replyTo = id; document.getElementById('mi').placeholder = 'Ответ...'; }
 function deleteMsg(id) { if (!confirm('Удалить?')) return; send({action:'delete', chat_id: cc, msg_id: id}); }
 function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
 function renderWave() { var h = ''; for (var i = 0; i < 18; i++) h += '<span style="height:' + (4 + Math.random() * 14) + 'px"></span>'; return h; }
-function renderTextWithLinks(text) {
-  var result = '', parts = []; var placeholders = {};
-  var PHONE_RE = /(\+7[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}|8[\s\-]?\(?\d{3}\)?[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2})/g;
-  text = text.replace(PHONE_RE, function(match) { var key = '\u0001PHONE' + parts.length + '\u0001'; placeholders[key] = match; parts.push(match); return key; });
-  var URL_RE = /(https?:\/\/[^\s<]+)/gi; var lastIndex = 0, match; URL_RE.lastIndex = 0;
-  while ((match = URL_RE.exec(text)) !== null) { result += esc(text.slice(lastIndex, match.index)); result += '<a href="' + esc(match[0]) + '" target="_blank" style="color:#7ec8ff;text-decoration:underline;" onclick="event.stopPropagation();">' + esc(match[0]) + '</a>'; lastIndex = match.index + match[0].length; }
-  result += esc(text.slice(lastIndex));
-  for (var key in placeholders) { var cleanPhone = placeholders[key].replace(/[^\d+]/g, ''); var btn = '<span class="phone-btn" onclick="event.stopPropagation();openPayModal(\'' + cleanPhone + '\');">' + esc(placeholders[key]) + '</span>'; result = result.replace(esc(key), btn); }
-  return result;
+
+function shareExternal(id) {
+    var msg = MESSAGES[cc].find(x => x.id === id);
+    if(!msg) return;
+    var textToShare = msg.text || msg.data || "Файл";
+    if (navigator.share) {
+        navigator.share({ title: 'Minechat', text: textToShare }).catch(err => console.log('Ошибка', err));
+    } else {
+        alert("Ваш браузер не поддерживает функцию 'Поделиться'");
+    }
+}
+function shareMessage(id) { 
+    // Пересылка внутри приложения
+    var msg = MESSAGES[cc].find(x => x.id === id);
+    if(!msg) return;
+    var target = prompt("Введите имя пользователя или название канала для пересылки:");
+    if(target) {
+        var targetId = Object.keys(CHATS).find(k => CHATS[k].name === target || CHATS[k].members.includes(target));
+        if(targetId) send({action:'message', chat_id: targetId, type:msg.type, text:msg.text, data:msg.data});
+        else alert("Получатель не найден");
+    }
 }
 
-function shareMessage(id) { var msg = MESSAGES[cc].find(x => x.id === id); if(!msg) return; var textToShare = msg.text || msg.data; if (navigator.share) { navigator.share({ title: 'Minechat', text: textToShare }).catch(err => console.log('Ошибка', err)); } else { alert("Браузер не поддерживает функцию 'Поделиться'"); } }
+// ОРИГИНАЛЬНОЕ ОТПРАВЛЕНИЕ ФОТО
+function showAttachMenu() { if(document.querySelector('.menu')) document.querySelector('.menu').remove(); var m = document.createElement('div'); m.className='menu'; m.style.bottom='70px'; m.style.left='10px'; m.innerHTML = `<div onclick="createDoc()">📝 Создать документ (.txt)</div><div onclick="openCamera()">📷 Фото</div><div onclick="openGallery()">🖼 Галерея</div>`; document.body.appendChild(m); setTimeout(()=>document.addEventListener('click', ()=>m.remove(), {once:true}), 100); }
+function openCamera() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
+function openGallery() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
+function sendPhoto(file) { if (!cc) return; if (file.size > 10 * 1024 * 1024) { alert('Фото > 10 МБ'); return; } var r = new FileReader(); r.onload = () => { send({action:'message', chat_id: cc, type:'image', data: r.result, fname: file.name, mime: file.type, reply_to: replyTo || ''}); replyTo = null; }; r.readAsDataURL(file); }
+
+function createDoc() { var t = prompt('Название (добавьте .txt):', 'Документ.txt'); if(t) { if(!t.endsWith('.txt')) t += '.txt'; send({action:'message', chat_id: cc, type:'doc', text:t}); } }
+function saveDocument() { var title = document.getElementById('docTitle').innerText; if(!title.endsWith('.txt')) title += '.txt'; send({action:'save_doc', doc_id: currentDocId, title: title, text: document.getElementById('docText').value}); document.getElementById('docModal').style.display='none'; }
 
 // БОТЫ
 function renderMyBots() {
@@ -594,7 +597,7 @@ function openMyBots() { send({action: 'get_my_bots'}); document.getElementById('
 function createBotUI() { document.getElementById('botEditor').style.display='block'; }
 function saveBot() { var name = document.getElementById('botNameInput').value.trim(); var code = document.getElementById('botCodeInput').value; if(!name || !code) return alert("Заполните поля!"); if(!name.endsWith('Bot') && !name.endsWith('bot')) name += 'Bot'; send({action: 'create_bot', name: name, code: code}); document.getElementById('botEditor').style.display='none'; }
 
-// ЗВОНКИ И ПЕРЕЗВОН
+// ЗВОНКИ
 function declineIncomingMsg() {
   document.getElementById('incomingScreen').style.display = 'none';
   send({action:'call_decline', to: callTarget});
@@ -604,19 +607,18 @@ function declineIncomingMsg() {
 }
 function private_id(a, b) { return "p_" + [a,b].sort().join("_"); }
 
-// ОСТАЛЬНЫЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ (СОХРАНЕНЫ)
-function openProfile() { document.getElementById('profileModal').style.display='flex'; }
+// ВСПОМОГАТЕЛЬНЫЕ
+function openProfile() { var my = USERS[cu] || {}; var big = document.getElementById('myBigAvatar'); if (my.avatar) { big.innerHTML = '<img src="' + my.avatar + '">'; big.style.background = '#000'; } else { big.innerHTML = ''; big.innerText = cu.charAt(0); big.style.background = my.color || '#2AABEE'; } var rb = document.getElementById('reqVerifyBtn'); if (my.verified) rb.style.display = 'none'; else rb.style.display = 'block'; document.getElementById('profileModal').style.display = 'flex'; }
 function requestAllPermissions() { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(stream => stream.getTracks().forEach(t => t.stop())).catch(e => console.log("Доступ запрещен")); }
 function createChannel() { var name = prompt("Название канала:"); if(name) send({action:'create_channel', name:name}); }
 function createGroup() { var name = prompt("Название группы:"); if(name) send({action:'create_group', name:name}); }
 function requestVerify() { send({action: 'request_verify'}); document.getElementById('profileModal').style.display='none'; }
-function createDoc() { var t = prompt('Название (добавьте .txt):', 'Документ.txt'); if(t) { if(!t.endsWith('.txt')) t += '.txt'; send({action:'message', chat_id: cc, type:'doc', text:t}); } }
-function saveDocument() { var title = document.getElementById('docTitle').innerText; if(!title.endsWith('.txt')) title += '.txt'; send({action:'save_doc', doc_id: currentDocId, title: title, text: document.getElementById('docText').value}); document.getElementById('docModal').style.display='none'; }
-function showAttachMenu() { if(document.querySelector('.menu')) document.querySelector('.menu').remove(); var m = document.createElement('div'); m.className='menu'; m.style.bottom='70px'; m.style.left='10px'; m.innerHTML = `<div onclick="createDoc()">📝 Создать документ (.txt)</div>`; document.body.appendChild(m); setTimeout(()=>document.addEventListener('click', ()=>m.remove(), {once:true}), 100); }
 function sendMessage() { var t = document.getElementById('mi').value.trim(); if(!t || !cc) return; send({action:'message', chat_id: cc, type:'text', text: t, reply_to: replyTo||''}); document.getElementById('mi').value=''; replyTo=null; }
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function logout() { if (!confirm('Выйти?')) return; if (ws) ws.close(); localStorage.removeItem('mc_last_user'); location.reload(); }
-function switchTab(tab) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('view-' + tab).classList.add('active'); document.getElementById('nav-' + tab).classList.add('active'); if(tab === 'calls') renderCalls(); if(tab==='contacts') renderContacts(); if(tab==='chats') renderChats(); }
+function switchTab(tab) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); document.getElementById('view-' + tab).classList.add('active'); document.getElementById('nav-' + tab).classList.add('active'); if(tab === 'calls') renderCalls(); if(tab==='chats') renderChats(); }
+function setMyStatus() { var s = prompt('Статус:', STATUSES[cu] || ''); if (s !== null) { send({action:'set_status', status: s}); STATUSES[cu] = s; } }
+function toggleTheme() { document.body.classList.toggle('light-theme'); }
 
 function showLoginScreen() { document.getElementById('loginScreen').style.display = 'block'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; }
 function showRegScreen(step) { document.getElementById('loginScreen').style.display = 'none'; document.getElementById('regScreen1').style.display = 'none'; document.getElementById('regScreen2').style.display = 'none'; document.getElementById('regScreen3').style.display = 'none'; document.getElementById('regScreen' + step).style.display = 'block'; }
@@ -632,7 +634,7 @@ function regNext(step) {
     }
 }
 
-// ПРОВЕРКА ВОЗРАСТА (СГЛАЖЕННАЯ)
+// ИСПРАВЛЕННАЯ ПРОВЕРКА ВОЗРАСТА (МЕДИАНА)
 var ageHistory = [];
 async function startAgeVerification() {
     document.getElementById('startAgeBtn').style.display = 'none'; document.getElementById('ageVerifyStatus').innerText = "Загрузка...";
@@ -644,11 +646,15 @@ async function startAgeVerification() {
     var loop = setInterval(async () => {
         var det = await faceapi.detectSingleFace(document.getElementById('ageVerifyVideo')).withFaceLandmarks().withAgeAndGender();
         if(!det) return document.getElementById('ageVerifyStatus').innerText = "Лицо не найдено";
+        
+        // СГЛАЖИВАНИЕ (МЕДИАНА)
         ageHistory.push(det.age); if(ageHistory.length > 20) ageHistory.shift();
         var sorted = [...ageHistory].sort((a,b)=>a-b); var medianAge = sorted[Math.floor(sorted.length/2)];
+        
         var pts = det.landmarks.positions; var nose = pts[30];
         var lx = pts.slice(36,42).reduce((a,p)=>a+p.x,0)/6, rx = pts.slice(42,48).reduce((a,p)=>a+p.x,0)/6;
         var ratio = Math.abs(nose.x-lx)/Math.abs(rx-nose.x); var pose = ratio > 1.3 ? 'left' : ratio < 0.7 ? 'right' : 'straight';
+        
         var st = document.getElementById('ageVerifyStatus');
         if(step === 'straight1') { st.innerText="Смотрите прямо (~"+Math.round(medianAge)+" лет)"; if(pose==='straight' && ageHistory.length > 5) step='left'; }
         else if(step === 'left') { st.innerText="Поверните ВЛЕВО"; if(pose==='left') step='right'; }
@@ -659,4 +665,4 @@ async function startAgeVerification() {
 var lastUser = localStorage.getItem('mc_last_user'); if(lastUser) { document.getElementById('loginName').value = lastUser; }
 </script>
 </body>
-</html>
+        </html>
