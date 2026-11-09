@@ -38,13 +38,12 @@ def load_data():
 
 def init_default():
     USERS.clear()
-    # ВОЗВРАЩАЕМ ВСЕХ РОДНЫХ
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
-        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
-        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
-        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
     })
     CHATS.clear()
     CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
@@ -56,7 +55,6 @@ if not load_data(): init_default()
 
 def normalize_name(raw): return " ".join(w.capitalize() for w in raw.strip().split())
 
-# Запуск кода ботов
 def run_bot_code(code, text):
     try:
         safe_globals = {"__builtins__": {"len": len, "str": str, "int": int, "float": float, "range": range, "list": list, "dict": dict}}
@@ -85,7 +83,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name in USERS: await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}, "devices": []}
                     CHATS[MAIN_ID]["members"].append(name)
                     save_data()
                     await websocket.send_text(json.dumps({"action": "register_ok"}))
