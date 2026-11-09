@@ -39,16 +39,30 @@ def load_data():
 def init_default():
     USERS.clear()
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
-        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
-        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
-        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "devices": []},
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
     })
+    
     CHATS.clear()
-    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
     MESSAGES.clear()
+
+    family_members = ["Носова Наталья", "Носов Даниил", "Носов Виталий"]
+    for member in family_members:
+        cid = private_id("Носов Глеб", member)
+        CHATS[cid] = {"type": "private", "name": "", "members": ["Носов Глеб", member], "owner": "", "banned": []}
+        MESSAGES[cid] = [{"id": "m_fam_" + member, "from": member, "type": "text", "text": "Привет!", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
+        USERS["Носов Глеб"]["pinned"].append(cid)
+
+    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
     MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
+    
+    cid_bot = private_id("Носов Глеб", BOT_NAME)
+    CHATS[cid_bot] = {"type": "private", "name": "", "members": ["Носов Глеб", BOT_NAME], "owner": "", "banned": []}
+    MESSAGES[cid_bot] = [{"id": "m_bot_hello", "from": BOT_NAME, "type": "text", "text": "Привет! /help", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
+
     save_data()
 
 if not load_data(): init_default()
@@ -83,7 +97,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name in USERS: await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}, "devices": []}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}, "pinned": []}
                     CHATS[MAIN_ID]["members"].append(name)
                     save_data()
                     await websocket.send_text(json.dumps({"action": "register_ok"}))
@@ -122,7 +136,38 @@ async def ws(websocket: WebSocket):
 
             if not u: continue
 
-            if a == "create_bot":
+            # ВОССТАНОВЛЕННЫЕ ОБРАБОТЧИКИ ПРОФИЛЯ
+            if a == "set_phone":
+                USERS[u]["phone"] = (m.get("phone", "") or "").strip()[:30]; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "phone_update", "username": u, "phone": USERS[u]["phone"]}))
+                    except: pass
+            elif a == "set_email":
+                USERS[u]["email"] = (m.get("email", "") or "").strip()[:50]; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "email_update", "username": u, "email": USERS[u]["email"]}))
+                    except: pass
+            elif a == "set_age_group":
+                try: age = int(m.get("age", 0))
+                except: age = 0
+                group = m.get("group", "")
+                USERS[u]["age"] = age; USERS[u]["age_group"] = group; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "age_update", "username": u, "age": age, "age_group": group}))
+                    except: pass
+            elif a == "set_status":
+                USERS[u]["status"] = (m.get("status", "") or "").strip()[:100]; save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "status_update", "username": u, "status": USERS[u]["status"]}))
+                    except: pass
+            elif a == "set_avatar":
+                USERS[u]["avatar"] = m.get("avatar", ""); save_data()
+                for w in ACTIVE.values():
+                    try: await w.send_text(json.dumps({"action": "avatar_update", "username": u, "avatar": USERS[u]["avatar"]}))
+                    except: pass
+            
+            # ОСТАЛЬНОЕ
+            elif a == "create_bot":
                 bot_name = normalize_name(m.get("name", ""))
                 code = m.get("code", "")
                 if bot_name in USERS: await websocket.send_text(json.dumps({"action": "error", "message": "Имя занято"}))
