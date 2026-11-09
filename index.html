@@ -9,49 +9,84 @@
 :root { --bg: #0e1621; --panel: #17212b; --text: #ffffff; --text-muted: #8b9aab; --blue: #2AABEE; --border: #0e1621; --input-bg: #242f3d; }
 body.light-theme { --bg: #f4f4f5; --panel: #ffffff; --text: #000000; --text-muted: #707579; --blue: #2AABEE; --border: #e1e1e1; --input-bg: #efefef; }
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-tap-highlight-color:transparent;}
-html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position:fixed;overflow:hidden;overscroll-behavior:none;}
+html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position:fixed;overflow:hidden;overscroll-behavior:none; transition: background 0.3s, color 0.3s;}
+input,textarea,button{font-family:inherit;}
 #app{height:100vh;height:100dvh;display:flex;flex-direction:column;width:100%;max-width:900px;margin:0 auto;position:relative;background:var(--bg);}
-#auth{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;overflow-y:auto;}
+
+/* АВТОРИЗАЦИЯ */
+#auth{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;background:linear-gradient(135deg,var(--panel),var(--bg));overflow-y:auto;}
 .auth-box{width:100%;max-width:400px;text-align:center;}
+.logo{width:90px;height:90px;margin:0 auto 20px;background:linear-gradient(135deg,#2AABEE,#229ED9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;}
+h2{font-size:24px;margin-bottom:6px;}
+.sub{font-size:13px;color:var(--text-muted);margin-bottom:24px;}
 .inp{width:100%;padding:14px;margin-bottom:10px;border:none;border-radius:10px;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;}
-.btn{width:100%;padding:14px;margin-top:8px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
-.btn.gray{background:#3a4a5a;} .btn.red{background:#e74c3c;} .btn.purple{background:#9c27b0;}
-.link{color:var(--blue);cursor:pointer;font-size:14px;margin-top:15px;display:inline-block;text-decoration:none;font-weight:600;}
+.btn{width:100%;padding:14px;margin-top:8px;border:none;border-radius:10px;background:var(--blue);color:#fff;font-size:15px;font-weight:600;cursor:pointer;text-transform:uppercase;}
+.btn.gray{background:#3a4a5a; color:#fff;} .btn.red{background:#e74c3c; color:#fff;} .btn.purple{background:#9c27b0; color:#fff;}
+.lnk{display:block;margin-top:16px;color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;}
+
+/* ГЛАВНЫЙ ЭКРАН */
 #main{display:none;flex-direction:column;height:100%;}
 .hdr{padding:12px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);}
-#content-area { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.view { display: none; flex: 1; overflow-y: auto; }
+.hdr .title{flex:1;font-weight:600;font-size:17px;}
+.dot{width:9px;height:9px;border-radius:50%;background:#4caf50;} .dot.off{background:#e74c3c;}
+.hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
+
+#content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .view.active { display: block; }
-#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; color: var(--text-muted); cursor: pointer; font-size: 12px; }
-.nav-item.active { color: var(--blue); }
-.nav-icon { font-size: 24px; margin-bottom: 4px; }
-.it{padding:11px;display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:9px;}
+
+.srch-wrap{padding:10px 14px;background:var(--panel); display: flex; gap: 5px;}
+.srch{width:100%;padding:10px 16px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);font-size:15px;outline:none;}
+.lst{padding:6px;}
+.it{padding:11px;margin-bottom:2px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:12px;}
 .it:active{background:var(--input-bg);}
-.av{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;color:#fff;position:relative;}
-.av-inner{width:100%;height:100%;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;}
-.av img{width:100%;height:100%;object-fit:cover;}
-.story-ring { border: 2px solid var(--blue); padding: 2px; }
-#chat{display:none;flex-direction:column;height:100%;}
-.ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
-#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;}
-.m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;position:relative;touch-action:pan-y; transition: transform 0.2s;}
-.mi{align-self:flex-start;background:var(--input-bg);}
-.mo{align-self:flex-end;background:var(--blue);color:#fff;}
-.msg-actions{position:absolute;top:-34px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:4px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
-.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;padding:4px 8px;}
+.av{width:50px;height:50px;min-width:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;color:#fff;position:relative;overflow:visible;}
+.av-inner{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
+.av .on{position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#4caf50;border:2px solid var(--panel);z-index:2;}
+.nm{font-size:15px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.pv{font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge-verified { color: var(--blue); font-size: 14px; }
+
+/* НИЖНЕЕ МЕНЮ */
+#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; color: var(--text-muted); cursor: pointer; font-size: 12px; transition: 0.2s; }
+.nav-item.active { color: var(--blue); font-weight: 600; }
+.nav-icon { font-size: 24px; margin-bottom: 4px; }
+
+/* ЧАТ */
+#chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
+.ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.bk{background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer;padding:4px 10px;}
+#msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch;}
+.m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;word-wrap:break-word;position:relative; touch-action: pan-y; transition: transform 0.2s;}
+.m .t{font-size:10px;opacity:.6;float:right;margin-left:8px;margin-top:4px;}
+.mi{align-self:flex-start;background:var(--input-bg);border-top-left-radius:4px;}
+.mi .nm2{font-weight:600;font-size:12px;color:var(--blue);display:block;margin-bottom:2px;}
+.mo{align-self:flex-end;background:var(--blue);border-top-right-radius:4px;color:#fff;}
+.m img,.m video{max-width:100%;border-radius:10px;margin-top:4px;display:block;}
+.m .sticker-img{width:128px;height:128px;object-fit:contain;background:transparent;}
+.m .file{display:flex;align-items:center;gap:8px;padding:8px;background:rgba(0,0,0,.2);border-radius:8px;margin-top:4px;font-size:13px;}
+.m .reply{background:rgba(0,0,0,.25);border-left:3px solid var(--blue);padding:4px 8px;border-radius:4px;margin-bottom:4px;font-size:12px;opacity:.85;}
+.m .doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; align-items: center; gap: 10px; cursor: pointer;}
+.dl-btn { display: inline-block; margin-top: 5px; font-size: 12px; text-decoration: none; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #fff; }
+
+.msg-actions{position:absolute;top:-38px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
+.msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:6px 10px;border-radius:6px;}
 .m.show-actions .msg-actions{display:flex;}
-#inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;border-top:1px solid var(--border);}
-#mi{flex:1;padding:12px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);outline:none;}
+
+#inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:calc(10px + env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
+#mi{flex:1;padding:12px 16px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;min-width:0;}
+.ib{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px;flex-shrink:0;}
+.sb{background:var(--blue);border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* МОДАЛКИ */
+.menu{position:fixed;background:var(--panel);border-radius:12px;padding:6px;z-index:2000;box-shadow:0 10px 30px rgba(0,0,0,.7);min-width:220px; color:var(--text);}
+.menu div{padding:12px 18px;font-size:14px;cursor:pointer;border-radius:8px;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:420px;max-height:85vh;overflow-y:auto;}
-.stories-row { display: flex; gap: 10px; overflow-x: auto; padding: 10px; background: var(--panel); border-bottom: 1px solid var(--border); }
-.story-item { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; }
-.story-item .av { width: 60px; height: 60px; }
-.doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; gap: 10px; cursor: pointer; }
-.menu { position: absolute; bottom: 70px; left: 10px; background: var(--panel); padding: 10px; border-radius: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-.menu div { padding: 10px 15px; cursor: pointer; border-radius: 8px; background: var(--input-bg); text-align: center; font-weight: bold; }
-.badge { font-size: 14px; margin-left: 4px; }
+.modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;color:var(--text);}
+.modal-box h3{font-size:20px;margin-bottom:14px;}
+.settings-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 16px;}
 </style>
 </head>
 <body>
@@ -59,183 +94,225 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 <div id="app">
 <!-- ЭКРАН АВТОРИЗАЦИИ -->
 <div id="auth">
-  
-  <!-- ВХОД -->
+  <!-- Экран входа -->
   <div class="auth-box" id="loginScreen">
+    <div class="logo">✈</div>
     <h2>Вход в Minechat</h2>
-    <input class="inp" id="loginName" placeholder="Имя пользователя">
-    <input class="inp" id="loginPass" type="password" placeholder="Пароль">
+    <input class="inp" id="loginName" placeholder="Имя пользователя" autocomplete="off">
+    <input class="inp" id="loginPass" type="password" placeholder="Пароль" autocomplete="off">
     <button class="btn" onclick="doLogin()">Войти</button>
-    <!-- Текст точь-в-точь как ты просил -->
-    <a class="link" onclick="showAuthScreen('register')">Нет аккаунта? Зарегистрируйтесь!</a>
+    <span class="lnk" onclick="showRegScreen(1)">Нет аккаунта? Зарегистрируйтесь!</span>
   </div>
 
-  <!-- РЕГИСТРАЦИЯ 1/3 -->
-  <div class="auth-box" id="regStep1" style="display:none;">
+  <!-- Экран регистрации 1/3 -->
+  <div class="auth-box" id="regScreen1" style="display:none;">
     <h2>Регистрация 1/3</h2>
-    <input class="inp" id="regName" placeholder="Имя пользователя">
+    <div class="sub">Основная информация</div>
+    <input class="inp" id="regName" placeholder="Придумайте имя пользователя">
     <input class="inp" id="regPhone" placeholder="Телефон (+7...)">
-    <input class="inp" id="regEmail" placeholder="Email">
+    <input class="inp" id="regEmail" placeholder="Почта (Email)">
     <button class="btn" onclick="regNext(1)">Далее</button>
-    <a class="link" onclick="showAuthScreen('login')">Уже есть аккаунт? Войти</a>
+    <span class="lnk" onclick="showLoginScreen()">Уже есть аккаунт? Войти</span>
   </div>
 
-  <!-- РЕГИСТРАЦИЯ 2/3 -->
-  <div class="auth-box" id="regStep2" style="display:none;">
+  <!-- Экран регистрации 2/3 -->
+  <div class="auth-box" id="regScreen2" style="display:none;">
     <h2>Регистрация 2/3</h2>
-    <input class="inp" id="regPass" type="password" placeholder="Придумайте пароль">
+    <div class="sub">Придумайте пароль</div>
+    <input class="inp" id="regPass" type="password" placeholder="Пароль">
     <button class="btn" onclick="regNext(2)">Далее</button>
   </div>
 
-  <!-- РЕГИСТРАЦИЯ 3/3 (FACE ID) -->
-  <div class="auth-box" id="regStep3" style="display:none;">
+  <!-- Экран регистрации 3/3 -->
+  <div class="auth-box" id="regScreen3" style="display:none;">
     <h2>Регистрация 3/3</h2>
-    <p style="margin-bottom:10px;">Подтвердите возраст</p>
-    <video id="ageVerifyVideo" autoplay playsinline muted style="width:100%; border-radius:12px; transform:scaleX(-1); background:#000;"></video>
-    <div id="ageVerifyStatus" style="margin:10px 0;">Смотрите прямо</div>
-    <button class="btn gray" onclick="startAgeVerification(true)">Начать проверку</button>
+    <div class="sub">Подтверждение возраста</div>
+    <video id="ageVerifyVideo" autoplay playsinline muted style="width:100%; border-radius:12px; transform:scaleX(-1); background:#000; margin-bottom:10px;"></video>
+    <div id="ageVerifyStatus" style="margin:10px 0; font-weight:bold; color:var(--blue);">Нажмите кнопку ниже</div>
+    <button class="btn" onclick="startAgeVerification()" id="startAgeBtn">Начать проверку</button>
   </div>
 </div>
 
 <!-- ГЛАВНЫЙ ЭКРАН -->
 <div id="main">
-  <div class="hdr"><div class="title" style="flex:1;">Minechat (Russia)</div><div class="dot" id="wsDot"></div></div>
-  
-  <!-- STORIES -->
-  <div class="stories-row" id="storiesRow">
-    <div class="story-item" onclick="addStory()">
-      <div class="av" style="background:var(--input-bg);">➕</div>
-      <span>Добавить</span>
-    </div>
+  <div class="hdr">
+    <div class="title">Minechat (Russia)</div>
+    <div class="dot" id="wsDot"></div>
+    <button class="hb" id="adminBtn" style="display:none" onclick="openAdmin()" title="Админ">🔧</button>
   </div>
 
   <div id="content-area">
+    <!-- ЧАТЫ -->
     <div id="view-chats" class="view active">
-      <div class="srch-wrap" style="padding:10px;"><input class="inp" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
+      <div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
       <div class="lst" id="cl"></div>
     </div>
     
+    <!-- ПОИСК (ВМЕСТО КОНТАКТОВ) -->
     <div id="view-search" class="view">
-      <div class="srch-wrap" style="padding:10px;"><input class="inp" id="sr-global" placeholder="Поиск людей по имени..." oninput="searchUsers(this.value)"></div>
+      <div class="srch-wrap"><input class="srch" id="sr-global" placeholder="Найти человека..." oninput="searchUsers(this.value)"></div>
       <div class="lst" id="global-search-list"></div>
     </div>
 
     <!-- НАСТРОЙКИ -->
     <div id="view-settings" class="view">
-      <div class="lst">
-        <div class="it" onclick="openProfile()">👤 Мой профиль</div>
-        <div class="it" onclick="createChannel()">➕ Создать канал</div>
-        <div class="it" onclick="requestVerify()">✔️ Запросить галочку</div>
-        <div class="it" onclick="logout()" style="color:#e74c3c;">🚪 Выйти</div>
+      <div class="lst" style="padding:0;">
+        <div class="settings-item" onclick="openProfile()"><span>👤 Мой профиль</span><span>➔</span></div>
+        <div class="settings-item" onclick="requestAllPermissions()"><span>🔔 Включить уведомления</span><span>➔</span></div>
+        <div class="settings-item" onclick="toggleTheme()"><span>🎨 Светлая тема</span><label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
+        <div class="settings-item" onclick="logout()" style="color:#e74c3c;"><span>🚪 Выйти</span></div>
       </div>
     </div>
   </div>
 
   <div id="bottom-nav">
-    <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div>Чаты</div>
-    <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div>Поиск</div>
-    <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div>Настройки</div>
+    <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
+    <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div><div>Поиск</div></div>
+    <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
   </div>
 </div>
 
-<!-- ЧАТ -->
+<!-- ЭКРАН ЧАТА -->
 <div id="chat">
   <div class="ch">
-    <button onclick="backToMain()" style="background:none;border:none;color:var(--blue);font-size:24px;">←</button>
-    <div class="av" id="ha" style="width:40px;height:40px;"><div class="av-inner">?</div></div>
-    <div style="flex:1;"><div id="hn" style="font-weight:600;">-</div></div>
-    <button onclick="send({action:'set_pin', chat_id: cc})" style="background:none;border:none;font-size:20px;">📌</button>
+    <button class="bk" onclick="backToMain()">←</button>
+    <div class="av" id="ha" style="width:40px;height:40px;background:var(--blue);"><div class="av-inner">?</div></div>
+    <div style="flex:1;min-width:0">
+      <div class="nm" id="hn">-</div>
+      <div class="st" id="hs">офлайн</div>
+    </div>
+    <button class="hb" onclick="send({action:'set_pin', chat_id: cc})" title="Закрепить">📌</button>
+    <button class="hb" id="chatSettingsBtn" style="display:none" onclick="openChatSettings()" title="Настройки">⚙️</button>
+    <button class="hb" id="callVidBtn" onclick="startCall(true)">📹</button>
+    <button class="hb" id="callAudBtn" onclick="startCall(false)">📞</button>
   </div>
   <div id="msgs"></div>
   
   <div id="inp">
-    <button class="ib" style="background:none;border:none;color:var(--text);font-size:24px;" onclick="showAttachMenu()">📎</button>
-    <input id="mi" placeholder="Сообщение..." autocomplete="off">
-    <button onclick="sendMessage()" style="background:var(--blue);color:#fff;border:none;border-radius:50%;width:40px;height:40px;">➤</button>
+    <button class="ib" onclick="showAttachMenu(event)">📎</button>
+    <input id="mi" placeholder="Сообщение..." enterkeyhint="send" autocomplete="off">
+    <button class="ib" onclick="startVoice()">🎤</button>
+    <button class="sb" onclick="sendMessage()">➤</button>
   </div>
 </div>
 
 <!-- МОДАЛКИ -->
-<div class="modal" id="forwardModal"><div class="modal-box"><h3>Переслать в:</h3><div id="forwardList"></div><button class="btn gray" onclick="document.getElementById('forwardModal').style.display='none'">Отмена</button></div></div>
-<div class="modal" id="docModal"><div class="modal-box"><h3 id="docTitle" contenteditable="true">Документ</h3><textarea id="docText" style="width:100%;height:200px;margin-top:10px;padding:10px;background:var(--input-bg);color:var(--text);border:none;"></textarea><button class="btn" onclick="saveDoc()">Сохранить</button><button class="btn gray" onclick="downloadDoc()">Скачать .txt</button></div></div>
-<div class="modal" id="profileModal"><div class="modal-box"><h3>Профиль</h3><button class="btn gray" onclick="requestPermissions()">Запросить все разрешения</button><button class="btn" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div></div>
+<div class="modal" id="docModal">
+  <div class="modal-box">
+    <h3 id="docTitle" contenteditable="true" style="outline:none; border-bottom:1px solid var(--border); padding-bottom:5px;">Документ.txt</h3>
+    <textarea id="docText" style="width:100%; height:300px; background:var(--input-bg); color:var(--text); border:none; border-radius:8px; padding:10px; margin-top:10px; font-size:16px; outline:none; resize:none;"></textarea>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+      <button class="btn" onclick="saveDocument()">Сохранить</button>
+      <button class="btn gray" onclick="document.getElementById('docModal').style.display='none'">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="profileModal">
+  <div class="modal-box" style="text-align:center;">
+    <h3>👤 Мой профиль</h3>
+    <div id="myBigAvatar" style="width:100px;height:100px;border-radius:50%;background:var(--blue);margin:0 auto 15px;display:flex;align-items:center;justify-content:center;font-size:40px;color:#fff;">?</div>
+    <button class="btn gray" onclick="requestAllPermissions()">Разрешения (Камера, Микрофон)</button>
+    <button class="btn purple" onclick="setMyStatus()">💬 Статус</button>
+    <button class="btn" id="reqVerifyBtn" onclick="requestVerify()">✔ Галочка</button>
+    <div class="row"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
+  </div>
+</div>
 
 </div>
 
 <script>
 // === ПЕРЕМЕННЫЕ ===
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
-var ws, cu, cc, USERS = {}, CHATS = {}, MESSAGES = {}, STORIES = {}, PINNED = [], searchTimeout;
-var ageVerify = { active: false, buffer: [], step: 'straight1' };
-var replyTo = null;
-var currentDocId = null;
-var myCreatorStatus = false;
-var verifiedUsers = [];
+var ws, cu, cc, USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, PINNED = [];
+var STATUSES = {}, LAST_SEEN = {}, AGE_GROUPS = {}, isCreator = false;
+var searchTimeout, replyTo = null, currentDocId = null;
+var ageVerifyData = {};
+
+// ID устройства (для мультиаккаунта, макс 2)
+var deviceId = localStorage.getItem('mc_device_id');
+if (!deviceId) { deviceId = 'dev_' + Math.random().toString(36).substr(2, 9); localStorage.setItem('mc_device_id', deviceId); }
 
 // Инициализация WebSocket
-function connect() {
+function connect(user, pass, isReg = false) {
     ws = new WebSocket(wsProto + location.host + "/ws");
     ws.onmessage = (e) => handleMsg(JSON.parse(e.data));
-    ws.onopen = () => console.log("WS Connected");
-    ws.onclose = () => console.log("WS Disconnected");
+    ws.onopen = () => { 
+        document.getElementById('wsDot').classList.remove('off'); 
+        if(isReg) ws.send(JSON.stringify({action:'register', username: user, password: pass, phone: ageVerifyData.phone, email: ageVerifyData.email}));
+        else ws.send(JSON.stringify({action:'login', username: user, password: pass, deviceId: deviceId})); 
+    };
+    ws.onclose = () => document.getElementById('wsDot').classList.add('off');
 }
-connect();
-
-function send(d) { if(ws?.readyState===1) ws.send(JSON.stringify(d)); }
+function send(d) { if(ws && ws.readyState===1) ws.send(JSON.stringify(d)); }
 
 // === АВТОРИЗАЦИЯ ===
-function showAuthScreen(screen) {
+function showLoginScreen() {
+    document.getElementById('loginScreen').style.display = 'block';
+    document.getElementById('regScreen1').style.display = 'none';
+    document.getElementById('regScreen2').style.display = 'none';
+    document.getElementById('regScreen3').style.display = 'none';
+}
+function showRegScreen(step) {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('regStep1').style.display = 'none';
-    document.getElementById('regStep2').style.display = 'none';
-    document.getElementById('regStep3').style.display = 'none';
-    
-    if(screen === 'login') document.getElementById('loginScreen').style.display = 'block';
-    if(screen === 'register') document.getElementById('regStep1').style.display = 'block';
+    document.getElementById('regScreen1').style.display = 'none';
+    document.getElementById('regScreen2').style.display = 'none';
+    document.getElementById('regScreen3').style.display = 'none';
+    document.getElementById('regScreen' + step).style.display = 'block';
 }
 
 function doLogin() {
-    var name = document.getElementById('loginName').value.trim();
-    var pass = document.getElementById('loginPass').value;
-    if(!name || !pass) return alert("Заполните все поля");
-    send({action:'login', username: name, password: pass});
+    var u = document.getElementById('loginName').value.trim();
+    var p = document.getElementById('loginPass').value;
+    if (!u || !p) return alert('Заполните поля');
+    cu = u; connect(cu, p, false);
 }
 
-var regData = {};
 function regNext(step) {
-    if(step===1) {
-        regData.name = document.getElementById('regName').value.trim();
-        regData.phone = document.getElementById('regPhone').value.trim();
-        regData.email = document.getElementById('regEmail').value.trim();
-        if(!regData.name || !regData.phone || !regData.email) return alert("Заполните все поля");
-        document.getElementById('regStep1').style.display='none';
-        document.getElementById('regStep2').style.display='block';
-    } else if(step===2) {
-        regData.pass = document.getElementById('regPass').value;
-        if(!regData.pass) return alert("Введите пароль");
-        document.getElementById('regStep2').style.display='none';
-        document.getElementById('regStep3').style.display='block';
+    if(step === 1) {
+        var name = document.getElementById('regName').value.trim();
+        var phone = document.getElementById('regPhone').value.trim();
+        var email = document.getElementById('regEmail').value.trim();
+        if(!name || !phone || !email) return alert("Заполните все поля");
+        ageVerifyData.name = name; ageVerifyData.phone = phone; ageVerifyData.email = email;
+        showRegScreen(2);
+    } else if(step === 2) {
+        var pass = document.getElementById('regPass').value;
+        if(!pass) return alert("Введите пароль");
+        ageVerifyData.pass = pass;
+        showRegScreen(3);
     }
 }
 
-// === ПРОВЕРКА ВОЗРАСТА (FACEAPI) ===
-async function startAgeVerification(isReg) {
-    document.getElementById('ageVerifyStatus').innerText = "Загрузка моделей...";
+// === ПРОВЕРКА ВОЗРАСТА ===
+var ageHistory = [];
+async function startAgeVerification() {
+    document.getElementById('startAgeBtn').style.display = 'none';
+    document.getElementById('ageVerifyStatus').innerText = "Загрузка...";
+    
     await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     await faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
     
-    try { var s = await navigator.mediaDevices.getUserMedia({video:true}); document.getElementById('ageVerifyVideo').srcObject = s; } catch(e) { return alert("Нет доступа к камере"); }
+    try { 
+        var s = await navigator.mediaDevices.getUserMedia({video:true}); 
+        document.getElementById('ageVerifyVideo').srcObject = s; 
+    } catch(e) { 
+        alert("Нет доступа к камере"); 
+        document.getElementById('startAgeBtn').style.display = 'block';
+        return; 
+    }
     
-    ageVerify.active = true; ageVerify.buffer = []; ageVerify.step = 'straight1';
+    var step = 'straight1';
     var loop = setInterval(async () => {
-        if(!ageVerify.active) return clearInterval(loop);
         var det = await faceapi.detectSingleFace(document.getElementById('ageVerifyVideo')).withFaceLandmarks().withAgeAndGender();
         if(!det) return document.getElementById('ageVerifyStatus').innerText = "Лицо не найдено";
         
-        ageVerify.buffer.push(det.age);
-        if(ageVerify.buffer.length > 20) ageVerify.buffer.shift();
-        var avgAge = ageVerify.buffer.reduce((a,b)=>a+b,0) / ageVerify.buffer.length;
+        // Сбор данных и медиана (исправляет скачки 10-17)
+        ageHistory.push(det.age);
+        if(ageHistory.length > 20) ageHistory.shift();
+        var sorted = [...ageHistory].sort((a,b)=>a-b);
+        var medianAge = sorted[Math.floor(sorted.length/2)];
         
         var pts = det.landmarks.positions; var nose = pts[30];
         var lx = pts.slice(36,42).reduce((a,p)=>a+p.x,0)/6, rx = pts.slice(42,48).reduce((a,p)=>a+p.x,0)/6;
@@ -243,57 +320,44 @@ async function startAgeVerification(isReg) {
         var pose = ratio > 1.3 ? 'left' : ratio < 0.7 ? 'right' : 'straight';
         
         var st = document.getElementById('ageVerifyStatus');
-        if(ageVerify.step==='straight1') { st.innerText="Смотрите прямо (возраст ~"+Math.round(avgAge)+")"; if(pose==='straight') ageVerify.step='left'; }
-        else if(ageVerify.step==='left') { st.innerText="Поверните ВЛЕВО"; if(pose==='left') ageVerify.step='right'; }
-        else if(ageVerify.step==='right') { st.innerText="Поверните ВПРАВО"; if(pose==='right') ageVerify.step='straight2'; }
-        else if(ageVerify.step==='straight2') { st.innerText="Посмотрите прямо"; if(pose==='straight') {
-            ageVerify.active = false; clearInterval(loop);
-            var finalAge = Math.round(avgAge);
-            var group = finalAge <= 8 ? '1-8' : finalAge <= 13 ? '9-13' : finalAge <= 17 ? '14-17' : '18+';
-            
-            if(isReg) {
-                regData.age = finalAge; regData.group = group;
-                send({action:'register', username: regData.name, password: regData.pass, phone: regData.phone, email: regData.email});
-            } else {
-                send({action:'set_age_group', age: finalAge, group: group});
-                alert("Ваш возраст: " + finalAge + " (" + group + ")");
-                document.getElementById('ageVerifyStatus').innerText = "";
+        if(step === 'straight1') { st.innerText="Смотрите прямо (~"+Math.round(medianAge)+" лет)"; if(pose==='straight' && ageHistory.length > 5) step='left'; }
+        else if(step === 'left') { st.innerText="Поверните ВЛЕВО"; if(pose==='left') step='right'; }
+        else if(step === 'right') { st.innerText="Поверните ВПРАВО"; if(pose==='right') step='straight2'; }
+        else if(step === 'straight2') { 
+            st.innerText="Посмотрите прямо"; 
+            if(pose==='straight') {
+                clearInterval(loop); s.getTracks().forEach(t=>t.stop());
+                var finalAge = Math.round(medianAge);
+                st.innerText = "Успешно! Возраст: " + finalAge;
+                cu = ageVerifyData.name;
+                connect(cu, ageVerifyData.pass, true); 
             }
-        }}
+        }
     }, 400);
 }
 
-// === ОБРАБОТКА СООБЩЕНИЙ ОТ СЕРВЕРА ===
+// === ОБРАБОТКА СООБЩЕНИЙ ===
 function handleMsg(m) {
-    if(m.action==='register_ok') { 
-        alert("Регистрация успешна! Теперь войдите."); 
-        showAuthScreen('login'); 
-    }
-    if(m.action==='register_fail') {
-        alert("Ошибка регистрации: " + m.reason);
-        showAuthScreen('login');
-    }
-    if(m.action==='login_fail') {
-        alert("Ошибка входа: " + m.reason);
-    }
+    if(m.action==='register_ok') { alert("Регистрация успешна!"); showLoginScreen(); }
+    if(m.action==='register_fail') { alert("Ошибка: " + m.reason); showLoginScreen(); }
+    if(m.action==='login_fail') { alert("Ошибка: " + m.reason); }
+    
     if(m.action==='login_ok') {
-        cu = m.username;
-        myCreatorStatus = m.creator || false;
-        verifiedUsers = m.verified_users || [];
-        
-        USERS = {}; m.users.forEach(u => USERS[u] = {color:"#2AABEE"}); 
-        CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
-        STORIES = m.stories || {}; PINNED = m.pinned || [];
+        cu = m.username; isCreator = m.creator || false;
+        USERS = m.users; CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
+        PINNED = m.pinned || [];
+        VERIFIED = {}; (m.verified_users || []).forEach(u => VERIFIED[u] = true);
         
         document.getElementById('auth').style.display='none'; 
         document.getElementById('main').style.display='flex';
-        renderChats(); renderStories();
-        if ("Notification" in window) Notification.requestPermission();
+        if(isCreator) document.getElementById('adminBtn').style.display = 'block';
+        
+        renderChats(); requestAllPermissions();
     }
     if(m.action==='new_message') { 
         if(!MESSAGES[m.chat_id]) MESSAGES[m.chat_id]=[]; 
         MESSAGES[m.chat_id].push(m.msg); 
-        if(cc===m.chat_id) appendMsg(m.msg); 
+        if(cc===m.chat_id) appendMsg(m.msg, false); 
     }
     if(m.action==='chat_opened') { 
         cc=m.chat_id; MESSAGES[cc]=m.messages; 
@@ -304,59 +368,37 @@ function handleMsg(m) {
     }
     if(m.action==='pins_updated') { PINNED = m.pinned; renderChats(); }
     if(m.action==='search_results') { renderSearchResults(m.results); }
-    if(m.action==='stories_updated') { STORIES = m.stories; renderStories(); }
     if(m.action==='doc_data') { currentDocId = m.doc_id; document.getElementById('docTitle').innerText = m.title; document.getElementById('docText').value = m.text; document.getElementById('docModal').style.display='flex'; }
-    if(m.action==='channel_created') {
-        alert(`Канал "${m.chat.name}" создан!`);
-        CHATS[m.chat_id] = m.chat;
-        renderChats();
-    }
-    if(m.action==='verify_request_sent') alert(m.message);
-    if(m.action==='new_verify_request') alert(`🔔 Запрос на галочку от: ${m.from}`);
-    if(m.action==='error') alert("Ошибка: " + m.message);
+    if(m.action==='channel_created') { CHATS[m.chat_id] = m.chat; renderChats(); alert("Канал создан!"); }
+    if(m.action==='new_verify_request') alert(`🔔 Пользователь ${m.from} просит галочку!`);
+    if(m.action==='error') alert(m.message);
 }
 
-// === РЕНДЕР ИНТЕРФЕЙСА ===
+// === РЕНДЕР И ФУНКЦИИ ===
 function getUserBadge(username) {
     let b = '';
-    // Если это создатель - даем шестеренку
-    if(username === "Носов Глеб") b += ' <span class="badge">⚙️</span>';
-    // Если в списке верифицированных - даем галочку
-    if(verifiedUsers.includes(username)) b += ' <span class="badge" style="color:var(--blue);">✔️</span>';
+    if(username === "Носов Глеб") b += ' <span class="badge-verified">⚙️</span>';
+    if(VERIFIED[username]) b += ' <span class="badge-verified">✔️</span>';
     return b;
 }
 
 function renderChats(filter) {
+    filter = (filter || '').toLowerCase();
     var cl = document.getElementById('cl'); cl.innerHTML='';
+    
     PINNED.forEach(cid => {
         if(CHATS[cid]) {
             var it = document.createElement('div'); it.className='it';
-            it.innerHTML = `<div class="av" style="background:var(--blue);">📌</div><div>${CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu)}</div>`;
+            it.innerHTML = `<div class="av" style="background:var(--blue);">📌</div><div>${CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu)}${getUserBadge(CHATS[cid].name)}</div>`;
             it.onclick = () => openChat(cid); cl.appendChild(it);
         }
     });
     Object.keys(CHATS).forEach(cid => {
-        if(PINNED.includes(cid)) return;
+        if(PINNED.includes(cid) || CHATS[cid].type === 'private') return;
         var it = document.createElement('div'); it.className='it';
         it.innerHTML = `<div class="av" style="background:var(--blue);">💬</div><div>${CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu)}</div>`;
         it.onclick = () => openChat(cid); cl.appendChild(it);
     });
-}
-
-function renderStories() {
-    var row = document.getElementById('storiesRow'); row.innerHTML = `<div class="story-item" onclick="addStory()"><div class="av" style="background:var(--input-bg);">➕</div><span>Добавить</span></div>`;
-    Object.keys(STORIES).forEach(u => {
-        var el = document.createElement('div'); el.className='story-item';
-        el.innerHTML = `<div class="av story-ring"><div class="av-inner"><img src="${STORIES[u].image}"></div></div><span>${u}</span>`;
-        el.onclick = () => alert("История от " + u + "\nВремя: " + STORIES[u].time);
-        row.appendChild(el);
-    });
-}
-
-function addStory() {
-    var inp = document.createElement('input'); inp.type='file'; inp.accept='image/*';
-    inp.onchange = () => { var r = new FileReader(); r.onload=()=>{ send({action:'add_story', image: r.result}); }; r.readAsDataURL(inp.files[0]); };
-    inp.click();
 }
 
 function searchUsers(q) {
@@ -386,111 +428,75 @@ function appendMsg(m, skip) {
     var c = document.getElementById('msgs'); var d = document.createElement('div');
     var mine = m.from === cu; d.className = 'm '+(mine?'mo':'mi');
     
-    var senderName = m.from + getUserBadge(m.from);
-    
-    let startX=0, currX=0;
-    d.addEventListener('touchstart', e=>{startX=e.touches[0].clientX;});
-    d.addEventListener('touchmove', e=>{currX=e.touches[0].clientX; if(currX-startX>0)d.style.transform=`translateX(${Math.min(currX-startX,50)}px)`;});
-    d.addEventListener('touchend', ()=>{if(currX-startX>40) replyTo = m.id; d.style.transform='translateX(0)'; startX=0; currX=0;});
-
     d.onclick = () => { document.querySelectorAll('.m').forEach(x=>x.classList.remove('show-actions')); d.classList.add('show-actions'); };
     
-    var html = `<div style="font-size:11px;opacity:0.7;margin-bottom:2px;">${senderName}</div>` + (m.text || '');
-    if(m.type==='doc') html = `<div style="font-size:11px;opacity:0.7;">${senderName}</div><div class="doc-msg" onclick="send({action:'get_doc',doc_id:'${m.id}'})"><span>📄</span> ${m.text}</div>`;
-    if(m.type==='image') html = `<div style="font-size:11px;opacity:0.7;">${senderName}</div><img src="${m.data}" style="max-width:100%;border-radius:8px;">`;
+    var html = '';
+    if(!mine && m.from) html += `<div class="nm2" style="color:var(--blue); font-size:12px; font-weight:bold;">${m.from}</div>`;
     
+    if(m.type==='doc') {
+        html += `<div class="doc-msg" onclick="event.stopPropagation();send({action:'get_doc',doc_id:'${m.id}'})"><span>📄</span> ${m.text}</div>`;
+    } else if(m.type==='image') {
+        html += `<img src="${m.data}"><br><a href="${m.data}" download="image.jpg" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>`;
+    } else if(m.type==='video') {
+        html += `<video src="${m.data}" controls></video><br><a href="${m.data}" download="video.mp4" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>`;
+    } else {
+        html += m.text || '';
+    }
+    
+    html += `<div class="t">${m.time}</div>`;
+    
+    // Кнопки действий
     html += `<div class="msg-actions">
-        <button onclick="event.stopPropagation();replyTo='${m.id}';alert('Ответ на сообщение')">↩</button>
-        <button onclick="event.stopPropagation();showForward('${m.id}')">↪️</button>
-        ${mine ? `<button onclick="event.stopPropagation();send({action:'delete',chat_id:'${cc}',msg_id:'${m.id}'})">🗑</button>` : ''}
+        <button onclick="event.stopPropagation();replyTo='${m.id}';alert('Режим ответа')" title="Ответить">↩</button>
+        <button onclick="event.stopPropagation();shareMessage('${m.id}')" title="Поделиться">📤</button>
+        ${mine ? `<button onclick="event.stopPropagation();send({action:'delete',chat_id:'${cc}',msg_id:'${m.id}'})" title="Удалить">🗑</button>` : ''}
     </div>`;
+    
     d.innerHTML = html; c.appendChild(d);
     if(!skip) c.scrollTop = c.scrollHeight;
 }
 
-function showForward(id) {
-    var msg = MESSAGES[cc].find(x=>x.id===id);
-    document.getElementById('forwardList').innerHTML = '';
-    Object.keys(CHATS).forEach(cid => {
-        var it = document.createElement('div'); it.className='it'; it.innerText = CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu);
-        it.onclick = () => { send({action:'forward', to_chat: cid, msg: msg}); document.getElementById('forwardModal').style.display='none'; };
-        document.getElementById('forwardList').appendChild(it);
-    });
-    document.getElementById('forwardModal').style.display='flex';
+function shareMessage(id) {
+    var msg = MESSAGES[cc].find(x => x.id === id);
+    if(!msg) return;
+    var textToShare = msg.text || msg.data || "Файл";
+    if (navigator.share) {
+        navigator.share({ title: 'Minechat', text: textToShare }).catch(err => console.log('Ошибка', err));
+    } else {
+        alert("Ваш браузер не поддерживает функцию 'Поделиться'");
+    }
 }
 
-// === ВЛОЖЕНИЯ И IMGBB ===
+function requestAllPermissions() {
+    if ("Notification" in window && Notification.permission === "default") Notification.requestPermission();
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true })
+        .then(stream => stream.getTracks().forEach(t => t.stop()))
+        .catch(e => console.log("Доступ запрещен"));
+}
+
+function createDoc() { 
+    var t = prompt('Название (добавьте .txt):', 'Документ.txt'); 
+    if(t) { if(!t.endsWith('.txt')) t += '.txt'; send({action:'message', chat_id: cc, type:'doc', text:t}); }
+}
+function saveDocument() { 
+    var title = document.getElementById('docTitle').innerText;
+    if(!title.endsWith('.txt')) title += '.txt';
+    send({action:'save_doc', doc_id: currentDocId, title: title, text: document.getElementById('docText').value}); 
+    document.getElementById('docModal').style.display='none';
+}
+
 function showAttachMenu() {
     if(document.querySelector('.menu')) document.querySelector('.menu').remove();
-    var m = document.createElement('div'); m.className='menu';
-    m.innerHTML = `
-        <div onclick="openCamera()">📷 Камера</div>
-        <div onclick="openGallery()">🖼 Галерея</div>
-        <div onclick="createDoc()">📝 Документ (.txt)</div>
-    `;
+    var m = document.createElement('div'); m.className='menu'; m.style.bottom='70px'; m.style.left='10px';
+    m.innerHTML = `<div onclick="createDoc()">📝 Создать документ (.txt)</div>`;
     document.body.appendChild(m);
     setTimeout(()=>document.addEventListener('click', ()=>m.remove(), {once:true}), 100);
 }
 
-function openCamera() {
-    let inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment';
-    inp.onchange = () => { if(inp.files[0]) sendPhoto(inp.files[0]); };
-    inp.click();
-}
-
-function openGallery() {
-    let inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*';
-    inp.onchange = () => { if(inp.files[0]) sendPhoto(inp.files[0]); };
-    inp.click();
-}
-
-function sendPhoto(file) {
-    if (!cc || !file) return alert('Откройте чат для отправки фото');
-    if (file.size > 10 * 1024 * 1024) return alert('Файл слишком большой (макс. 10 МБ)');
-
-    // ⚠️ ВСТАВЬ СЮДА СВОЙ НОВЫЙ КЛЮЧ ОТ IMGBB
-    var IMGBB_KEY = 'ТВОЙ_КЛЮЧ_ИЗ_IMGBB'; 
-
-    alert('Загрузка фото... Пожалуйста, подождите.');
-    var formData = new FormData();
-    formData.append('image', file);
-
-    fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            send({action:'message', chat_id: cc, type:'image', data: data.data.url});
-        } else {
-            alert('Ошибка ImgBB: ' + (data.error?.message || 'Неизвестная ошибка'));
-        }
-    })
-    .catch(err => { console.error(err); alert('Ошибка сети при загрузке фото'); });
-}
-
-// === ДОКУМЕНТЫ И ПРОЧЕЕ ===
-function createChannel() {
-    const name = prompt('Введите название нового канала:');
-    if (name) send({action: 'create_channel', name: name});
-}
-
-function requestVerify() {
-    if (!cu) return alert('Сначала войдите в аккаунт.');
-    send({action: 'request_verify'});
-}
-
-function createDoc() { var t = prompt('Название (добавьте .txt):', 'Документ.txt'); if(t) send({action:'message', chat_id: cc, type:'doc', text:t}); }
-function saveDoc() { send({action:'save_doc', doc_id: currentDocId, title: document.getElementById('docTitle').innerText, text: document.getElementById('docText').value}); }
-function downloadDoc() { var blob = new Blob([document.getElementById('docText').value], {type: 'text/plain'}); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = document.getElementById('docTitle').innerText || 'doc.txt'; a.click(); }
-
 function sendMessage() { var t = document.getElementById('mi').value.trim(); if(!t || !cc) return; send({action:'message', chat_id: cc, type:'text', text: t, reply_to: replyTo||''}); document.getElementById('mi').value=''; replyTo=null; }
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function openProfile() { document.getElementById('profileModal').style.display='flex'; }
-function requestPermissions() { Notification.requestPermission(); navigator.mediaDevices.getUserMedia({audio:true,video:true}).then(s=>s.getTracks().forEach(t=>t.stop())).catch(e=>alert("Ошибка: "+e)); }
+function requestVerify() { send({action: 'request_verify'}); document.getElementById('profileModal').style.display='none'; }
 function logout() { location.reload(); }
 </script>
 </body>
