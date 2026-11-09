@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Minechat (Russia)</title>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         :root { --bg: #0e1621; --panel: #17212b; --text: #ffffff; --accent: #2481cc; --badge: #4fae4e; }
         body.light-theme { --bg: #f4f4f5; --panel: #ffffff; --text: #000000; }
@@ -18,8 +17,7 @@
         .auth-box { width: 100%; max-width: 400px; text-align: center; }
         .inp { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 8px; border: none; background: var(--panel); color: var(--text); outline: none; }
         .btn { width: 100%; padding: 14px; margin-top: 8px; border-radius: 8px; border: none; color: white; font-weight: bold; cursor: pointer; background: var(--accent); }
-        .btn.gray { background: #3a4a5a; }
-
+        
         /* Главный экран */
         #main { display: none; flex-direction: column; height: 100%; }
         .hdr { padding: 12px 14px; background: var(--panel); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
@@ -41,8 +39,8 @@
         .menu { position: absolute; bottom: 70px; left: 10px; background: var(--panel); padding: 10px; border-radius: 10px; z-index: 1000; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .menu-item { padding: 10px 15px; cursor: pointer; border-radius: 8px; background: var(--bg); text-align: center; }
 
-        /* Нижняя панель */
-        .bottom-bar { padding: 10px; background: var(--panel); display: flex; gap: 10px; }
+        /* Нижняя панель с фишками */
+        .bottom-bar { padding: 10px; background: var(--panel); display: flex; gap: 10px; border-top: 1px solid #2b394a; }
         .bottom-bar button { flex: 1; padding: 10px; border: none; border-radius: 8px; background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
         .bottom-bar button.secondary { background: #3a4a5a; }
     </style>
@@ -54,16 +52,17 @@
     <div id="auth">
         <div class="auth-box">
             <h2>Вход в Minechat</h2>
-            <p id="ageVerify" style="margin: 15px 0; color: #ff5555;"></p>
+            <p id="auth-status" style="margin: 15px 0; color: #ff5555; font-size: 14px;"></p>
             <input type="text" id="username" class="inp" placeholder="Твой никнейм">
-            <button class="btn" onclick="startRegistration()">Войти</button>
+            <input type="password" id="password" class="inp" placeholder="Пароль (по умолчанию 123)">
+            <button class="btn" onclick="loginOrRegister()">Войти / Зарегистрироваться</button>
         </div>
     </div>
 
     <!-- Чат -->
     <div id="main">
         <div class="hdr">
-            <span>Minechat</span>
+            <span>Minechat: Main Channel</span>
             <span id="user-display"></span>
         </div>
         <div id="content-area"></div>
@@ -72,7 +71,7 @@
             <input type="text" id="messageInput" placeholder="Сообщение..." onkeypress="handleEnter(event)">
             <button class="send-btn" onclick="sendMessage()">➤</button>
         </div>
-        <!-- Нижняя панель с новыми функциями -->
+        <!-- Новые функции -->
         <div class="bottom-bar">
             <button onclick="createChannel()">Создать канал</button>
             <button class="secondary" onclick="requestVerify()">Запросить галочку</button>
@@ -81,30 +80,91 @@
 </div>
 
 <script>
-    const socket = io();
-    let cc = false;
+    // --- WebSocket Инициализация (Нативная, под FastAPI) ---
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
     let currentUser = "";
+    let myPassword = "";
+    let isVerified = false;
 
-    // --- Авторизация (упрощённая, без камеры для примера) ---
-    async function startRegistration() {
-        currentUser = document.getElementById('username').value.trim();
-        if(!currentUser) return alert('Введите ник!');
+    ws.onopen = () => {
+        console.log("Подключено к серверу");
+    };
 
-        // Отправляем запрос на сервер (регистрация или вход)
-        socket.emit('register', { username: currentUser, password: '123' }); // Упрощённо
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleServerMessage(data);
+    };
+
+    ws.onclose = () => {
+        console.log("Отключено от сервера");
+        document.getElementById('auth-status').innerText = "Соединение потеряно. Обновите страницу.";
+    };
+
+    // --- Обработка ответов от сервера ---
+    function handleServerMessage(data) {
+        const a = data.action;
+
+        if (a === 'register_ok') {
+            document.getElementById('auth-status').innerText = "Успешная регистрация! Входим...";
+            // Сразу логинимся после регистрации
+            ws.send(JSON.stringify({ action: 'login', username: currentUser, password: myPassword }));
+        } 
+        else if (a === 'register_fail') {
+            document.getElementById('auth-status').innerText = "Ошибка: " + data.reason;
+        }
+        else if (a === 'login_ok') {
+            // Успешный вход
+            currentUser = data.username;
+            isVerified = data.verified_users.includes(currentUser);
+            
+            document.getElementById('auth').style.display = 'none';
+            document.getElementById('main').style.display = 'flex';
+            document.getElementById('user-display').innerText = currentUser + (isVerified ? ' ✔️' : '');
+            
+            // Очищаем чат перед загрузкой истории (если сервер ее прислал)
+            document.getElementById('content-area').innerHTML = '';
+            if(data.messages && data.messages.length > 0) {
+                data.messages.forEach(m => addMessageToChat(m.from, m.text, m.from === currentUser, data.verified_users.includes(m.from), m.type === 'image'));
+            }
+        }
+        else if (a === 'login_fail') {
+            document.getElementById('auth-status').innerText = "Ошибка: " + data.reason;
+        }
+        else if (a === 'new_message') {
+            // Пришло новое сообщение
+            const msg = data.msg;
+            const senderIsVerified = false; // В идеале сервер должен присылать инфу о верификации отправителя, но пока опустим
+            addMessageToChat(msg.from, msg.text, msg.from === currentUser, senderIsVerified, msg.type === 'image');
+        }
+        else if (a === 'channel_created') {
+            alert(`Канал "${data.chat.name}" успешно создан!`);
+            // В реальном приложении тут нужно добавить канал в список чатов на экране
+        }
+        else if (a === 'verify_request_sent') {
+            alert(data.message);
+        }
+        else if (a === 'new_verify_request') {
+            // Это видит только создатель
+            alert(`🔔 Запрос на галочку от: ${data.from}`);
+        }
+        else if (a === 'error') {
+            alert("Ошибка сервера: " + data.message);
+        }
     }
 
-    socket.on('register_ok', () => {
-        cc = true;
-        document.getElementById('auth').style.display = 'none';
-        document.getElementById('main').style.display = 'flex';
-        document.getElementById('user-display').innerText = currentUser;
-        alert('Регистрация успешна! Теперь можно войти (для простоты используйте тот же ник).');
-    });
+    // --- Авторизация ---
+    function loginOrRegister() {
+        currentUser = document.getElementById('username').value.trim();
+        myPassword = document.getElementById('password').value.trim() || '123';
+        
+        if(!currentUser) return alert('Введите ник!');
+        document.getElementById('auth-status').innerText = "Подключение...";
 
-    socket.on('register_fail', (data) => {
-        alert('Ошибка: ' + data.reason);
-    });
+        // Пытаемся зарегистрироваться (если ник занят, сервер выдаст ошибку)
+        // Если ник занят, мы потом попробуем войти (для простоты)
+        ws.send(JSON.stringify({ action: 'register', username: currentUser, password: myPassword }));
+    }
 
     // --- Чат ---
     function handleEnter(e) {
@@ -114,26 +174,31 @@
     function sendMessage() {
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
-        if(!text || !cc) return;
+        if(!text || ws.readyState !== WebSocket.OPEN) return;
 
-        socket.emit('message', { chat_id: 'main_channel', text: text });
+        // Отправляем сообщение в main_channel
+        ws.send(JSON.stringify({ 
+            action: 'message', 
+            chat_id: 'main_channel', 
+            type: 'text', 
+            text: text 
+        }));
         input.value = '';
     }
 
-    socket.on('new_message', (data) => {
-        if (data.chat_id === 'main_channel') {
-            const isMe = data.msg.from === currentUser;
-            const verified = false; // Можно проверять по списку verified_users
-            addMessageToChat(data.msg.from, data.msg.text, isMe, verified);
-        }
-    });
-
-    function addMessageToChat(user, content, isMe, isVerified = false) {
+    function addMessageToChat(user, content, isMe, verified = false, isImage = false) {
         const area = document.getElementById('content-area');
         const div = document.createElement('div');
         div.className = `msg ${isMe ? 'my' : ''}`;
-        const badge = isVerified ? '<span class="verified-badge">✔️</span>' : '';
-        div.innerHTML = `<b>${user}${badge}:</b><br>${content}`;
+        
+        const badge = verified ? '<span class="verified-badge">✔️</span>' : '';
+        
+        if (isImage) {
+            div.innerHTML = `<b>${user}${badge}:</b><br><img src="${content}" alt="Фото">`;
+        } else {
+            div.innerHTML = `<b>${user}${badge}:</b><br>${content}`;
+        }
+        
         area.appendChild(div);
         area.scrollTop = area.scrollHeight;
     }
@@ -177,7 +242,7 @@
 
     // --- Загрузка фото через ImgBB ---
     function sendPhoto(file) {
-        if (!cc || !file) return;
+        if (!file) return;
         if (file.size > 10 * 1024 * 1024) return alert('Файл слишком большой (макс. 10 МБ)');
 
         // ⚠️ ВСТАВЬ СЮДА СВОЙ НОВЫЙ КЛЮЧ ОТ IMGBB
@@ -194,7 +259,13 @@
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                socket.emit('message', { chat_id: 'main_channel', type: 'image', text: data.data.url });
+                // Отправляем ссылку в WebSocket
+                ws.send(JSON.stringify({ 
+                    action: 'message', 
+                    chat_id: 'main_channel', 
+                    type: 'image', 
+                    text: data.data.url 
+                }));
             } else {
                 alert('Ошибка ImgBB: ' + (data.error?.message || 'Неизвестная ошибка'));
             }
@@ -205,36 +276,18 @@
         });
     }
 
-    // --- Новые функции: Каналы и Верификация ---
+    // --- Каналы и Верификация ---
     function createChannel() {
         const name = prompt('Введите название нового канала:');
         if (name) {
-            socket.emit('create_channel', { name: name });
+            ws.send(JSON.stringify({ action: 'create_channel', name: name }));
         }
     }
 
-    socket.on('channel_created', (data) => {
-        alert(`Канал "${data.chat.name}" успешно создан!`);
-    });
-
-    socket.on('error', (data) => {
-        alert('Ошибка: ' + data.message);
-    });
-
     function requestVerify() {
-        if (!cc) return alert('Сначала войдите в аккаунт.');
-        socket.emit('request_verify');
+        if (!currentUser) return alert('Сначала войдите в аккаунт.');
+        ws.send(JSON.stringify({ action: 'request_verify' }));
     }
-
-    socket.on('verify_request_sent', (data) => {
-        alert(data.message);
-    });
-
-    socket.on('new_verify_request', (data) => {
-        // Это уведомление приходит только администратору
-        alert(`🔔 ${data.message}`);
-    });
-
 </script>
 </body>
 </html>
