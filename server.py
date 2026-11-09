@@ -12,7 +12,7 @@ INDEX_FILE = os.path.join(BASE, "index.html")
 BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
 
-USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}
+USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}, {}
 
 def new_id(p="c"): COUNTER[0] += 1; return p + str(COUNTER[0])
 def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
@@ -20,7 +20,7 @@ def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
 def save_data():
     try:
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "unread": UNREAD, "stories": STORIES}, f, ensure_ascii=False)
+            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "stickers": STICKERS, "unread": UNREAD, "stories": STORIES}, f, ensure_ascii=False)
     except Exception as e: print("Save error:", e)
 
 def load_data():
@@ -28,30 +28,37 @@ def load_data():
     try:
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        USERS.update(data.get("users", {})); CHATS.update(data.get("chats", {}))
-        MESSAGES.update(data.get("messages", {})); DOCUMENTS.update(data.get("documents", {}))
-        COUNTER[0] = data.get("counter", 0); BANNED.extend(data.get("banned", []))
-        MUTED.update(data.get("muted", {})); UNREAD.update(data.get("unread", {}))
-        STORIES.update(data.get("stories", {}))
+        USERS.clear(); USERS.update(data.get("users", {})); CHATS.clear(); CHATS.update(data.get("chats", {}))
+        MESSAGES.clear(); MESSAGES.update(data.get("messages", {})); DOCUMENTS.clear(); DOCUMENTS.update(data.get("documents", {}))
+        COUNTER[0] = data.get("counter", 0); BANNED.clear(); BANNED.extend(data.get("banned", []))
+        MUTED.clear(); MUTED.update(data.get("muted", {})); STICKERS.clear(); STICKERS.update(data.get("stickers", {}))
+        UNREAD.clear(); UNREAD.update(data.get("unread", {})); STORIES.clear(); STORIES.update(data.get("stories", {}))
         return True
     except: return False
 
 def init_default():
+    USERS.clear()
+    # ВОЗВРАЩАЕМ ВСЕХ РОДНЫХ
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "bot": True, "verified": True}
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}},
     })
-    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True}
-    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать!", "time": datetime.now().strftime("%H:%M")}]
+    CHATS.clear()
+    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
+    MESSAGES.clear()
+    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
     save_data()
 
 if not load_data(): init_default()
 
 def normalize_name(raw): return " ".join(w.capitalize() for w in raw.strip().split())
 
+# Запуск кода ботов
 def run_bot_code(code, text):
     try:
-        # Безопасное выполнение Python
         safe_globals = {"__builtins__": {"len": len, "str": str, "int": int, "float": float, "range": range, "list": list, "dict": dict}}
         local_vars = {}
         exec(code, safe_globals, local_vars)
@@ -78,7 +85,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name in USERS: await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "pinned": [], "phone": m.get("phone",""), "email": m.get("email","")}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}}
                     CHATS[MAIN_ID]["members"].append(name)
                     save_data()
                     await websocket.send_text(json.dumps({"action": "register_ok"}))
@@ -90,6 +97,7 @@ async def ws(websocket: WebSocket):
                 if name in USERS and USERS[name]["password"] == p:
                     u = name
                     ACTIVE[u] = websocket
+                    USERS[u]["last_seen"] = time.time()
                     save_data()
                     
                     my_bots_list = [{"name": b_name} for b_name, b_data in USERS.items() if b_data.get("bot") and b_data.get("owner") == u]
@@ -99,6 +107,14 @@ async def ws(websocket: WebSocket):
                         "chats": [{"id": cid, **ch} for cid, ch in CHATS.items() if u in ch["members"]],
                         "creator": USERS[u].get("creator", False),
                         "verified_users": [n for n, d in USERS.items() if d.get("verified")],
+                        "avatars": {n: d.get("avatar", "") for n, d in USERS.items()},
+                        "statuses": {n: d.get("status", "") for n, d in USERS.items()},
+                        "last_seen": {n: d.get("last_seen", 0) for n, d in USERS.items()},
+                        "ages": {n: d.get("age", 0) for n, d in USERS.items()},
+                        "age_groups": {n: d.get("age_group", "") for n, d in USERS.items()},
+                        "phones": {n: d.get("phone", "") for n, d in USERS.items()},
+                        "emails": {n: d.get("email", "") for n, d in USERS.items()},
+                        "devices": {n: d.get("device", {}) for n, d in USERS.items()},
                         "pinned": USERS[u].get("pinned", []),
                         "my_bots": my_bots_list,
                         "stories": STORIES
@@ -111,8 +127,7 @@ async def ws(websocket: WebSocket):
             if a == "create_bot":
                 bot_name = normalize_name(m.get("name", ""))
                 code = m.get("code", "")
-                if bot_name in USERS:
-                    await websocket.send_text(json.dumps({"action": "error", "message": "Бот с таким именем уже существует"}))
+                if bot_name in USERS: await websocket.send_text(json.dumps({"action": "error", "message": "Имя занято"}))
                 else:
                     USERS[bot_name] = {"password": "bot", "color": "#9c27b0", "bot": True, "owner": u, "code": code, "verified": False}
                     save_data()
@@ -131,14 +146,14 @@ async def ws(websocket: WebSocket):
 
             elif a == "create_channel":
                 cid = new_id("ch_")
-                CHATS[cid] = {"type": "channel", "name": m.get("name"), "members": [u], "owner": u, "verified": False}
+                CHATS[cid] = {"type": "channel", "name": m.get("name"), "members": [u], "owner": u, "verified": False, "admins": {u: "Владелец"}, "banned": [], "pinned": ""}
                 MESSAGES[cid] = []
                 save_data()
                 await websocket.send_text(json.dumps({"action": "channel_created", "chat_id": cid, "chat": CHATS[cid]}))
                 
             elif a == "create_group":
                 cid = new_id("gr_")
-                CHATS[cid] = {"type": "group", "name": m.get("name"), "members": [u], "owner": u, "verified": False}
+                CHATS[cid] = {"type": "group", "name": m.get("name"), "members": [u], "owner": u, "verified": False, "admins": {u: "Владелец"}, "banned": [], "pinned": ""}
                 MESSAGES[cid] = []
                 save_data()
                 await websocket.send_text(json.dumps({"action": "channel_created", "chat_id": cid, "chat": CHATS[cid]}))
@@ -153,6 +168,7 @@ async def ws(websocket: WebSocket):
             elif a == "set_pin":
                 cid = m.get("chat_id")
                 if cid:
+                    if "pinned" not in USERS[u]: USERS[u]["pinned"] = []
                     if cid in USERS[u]["pinned"]: USERS[u]["pinned"].remove(cid)
                     else: USERS[u]["pinned"].append(cid)
                     save_data()
