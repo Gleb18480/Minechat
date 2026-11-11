@@ -18,21 +18,22 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 .btn.gray{background:#3a4a5a;}
 
 #main{display:none;flex-direction:column;flex:1;overflow:hidden;}
-.hdr{padding:12px 14px;background:var(--panel);display:flex;align-items:center;border-bottom:1px solid var(--border);}
+.hdr{padding:12px 14px;background:var(--panel);display:flex;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
 .hdr .title{flex:1;font-weight:600;font-size:17px;}
 .coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
 
-#content-area { flex: 1; overflow-y: auto; position: relative; }
+#content-area { flex: 1; overflow-y: auto; position: relative; padding-bottom: 10px; }
 .view { display: none; height: 100%; }
 .view.active { display: block; }
 
 .lst{padding:6px;}
 .it{padding:15px; margin-bottom:5px; border-radius:9px; cursor:pointer; background:var(--panel); display:flex; align-items:center; gap:12px;}
 
-#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); padding-bottom: env(safe-area-inset-bottom); }
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 10px 0; color: var(--text-muted); cursor: pointer; font-size: 12px; }
+/* ЖЕСТКО ФИКСИРУЕМ МЕНЮ ВНИЗУ */
+#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; min-height: 65px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); z-index: 100;}
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; font-size: 11px; }
 .nav-item.active { color: var(--blue); font-weight: 600; }
-.nav-icon { font-size: 24px; margin-bottom: 4px; }
+.nav-icon { font-size: 24px; margin-bottom: 2px; }
 
 #chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
 .ch{padding:12px;background:var(--panel);display:flex;align-items:center;border-bottom:1px solid var(--border);}
@@ -121,7 +122,6 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
   </div>
 </div>
 
-<!-- ВЫБОР РЕЖИМА -->
 <div class="modal" id="modeModal">
     <div class="modal-box">
         <h3 id="modeTitle">Игра</h3>
@@ -131,7 +131,6 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
     </div>
 </div>
 
-<!-- ЭКРАН ИГРЫ -->
 <div id="gameScreen">
     <h3 id="gameTitle" style="text-align:center;">Игра</h3>
     <div id="gameStatus" style="text-align:center; color:var(--text-muted); margin:10px 0;"></div>
@@ -158,7 +157,6 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
     <button class="btn gray" style="margin-top:auto;" onclick="leaveGame()">Выйти в меню</button>
 </div>
 
-<!-- МОДАЛКА ИГР В ЧАТЕ -->
 <div class="modal" id="gameMenuModal">
     <div class="modal-box">
         <h3>Выберите игру</h3>
@@ -219,11 +217,8 @@ function handleMessage(m) {
 
 function renderGame() {
     document.getElementById('gameStatus').innerText = activeRoom.turn === cu ? "ВАШ ХОД" : "Ход: " + activeRoom.turn;
-    document.getElementById('tttBoard').style.display = 'none';
-    document.getElementById('board').style.display = 'none';
-    document.getElementById('citiesBoard').style.display = 'none';
-    document.getElementById('footballBoard').style.display = 'none';
-    document.getElementById('unoBoard').style.display = 'none';
+    document.getElementById('tttBoard').style.display = 'none'; document.getElementById('board').style.display = 'none';
+    document.getElementById('citiesBoard').style.display = 'none'; document.getElementById('footballBoard').style.display = 'none'; document.getElementById('unoBoard').style.display = 'none';
 
     if(activeRoom.game === 'tictactoe') {
         document.getElementById('tttBoard').style.display = 'grid';
@@ -270,28 +265,18 @@ function renderGame() {
     }
 }
 
-// ВЫБОР РЕЖИМА
-function selectGame(type, title) {
-    selectedGameType = type;
-    document.getElementById('modeTitle').innerText = title;
-    document.getElementById('modeModal').style.display = 'flex';
-}
-function startBotGame() {
-    send({action: 'start_bot_game', game: selectedGameType});
-    document.getElementById('modeModal').style.display='none';
-}
+function selectGame(type, title) { selectedGameType = type; document.getElementById('modeTitle').innerText = title; document.getElementById('modeModal').style.display = 'flex'; }
+function startBotGame() { send({action: 'start_bot_game', game: selectedGameType}); document.getElementById('modeModal').style.display='none'; }
 function startFriendGame() {
-    var target = prompt("Введите имя друга (например: Александр (kiberone)):", "");
+    var target = prompt("Введите имя друга:", "");
     if(target && USERS[target]) {
-        var bet = parseInt(prompt("Ставка (монеты):", "100"));
-        if(!bet) return;
+        var bet = parseInt(prompt("Ставка (монеты):", "100")); if(!bet) return;
         send({action: 'create_room', game: selectedGameType, target: target, bet: bet});
         document.getElementById('modeModal').style.display='none';
         alert("Приглашение отправлено в личный чат!");
     } else if(target) alert("Пользователь не найден!");
 }
 
-// ИГРЫ ИЗ ЧАТА
 function openGameMenu() { if(!cc) return; document.getElementById('gameMenuModal').style.display = 'flex'; }
 function openGameOptions(type) {
     var target = prompt("Введите имя друга:", "");
@@ -334,4 +319,4 @@ function doLogin() { cu=document.getElementById('loginName').value.trim(); if(!c
 function logout() { location.reload(); }
 </script>
 </body>
-  </html>
+</html>
