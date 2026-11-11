@@ -13,7 +13,6 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 input,textarea,button{font-family:inherit;}
 #app{height:100vh;height:100dvh;display:flex;flex-direction:column;width:100%;max-width:900px;margin:0 auto;position:relative;background:var(--bg);}
 
-/* АВТОРИЗАЦИЯ */
 #auth{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;background:linear-gradient(135deg,var(--panel),var(--bg));overflow-y:auto;}
 .auth-box{width:100%;max-width:400px;text-align:center;}
 .logo{width:90px;height:90px;margin:0 auto 20px;background:linear-gradient(135deg,#2AABEE,#229ED9);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#fff;}
@@ -25,12 +24,12 @@ h2{font-size:24px;margin-bottom:6px;}
 .lnk{display:block;margin-top:16px;color:var(--blue);font-size:14px;font-weight:600;cursor:pointer;}
 .account-item { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--input-bg); border-radius: 10px; margin-bottom: 10px; cursor: pointer; }
 
-/* ГЛАВНЫЙ ЭКРАН */
 #main{display:none;flex-direction:column;height:100%;}
 .hdr{padding:12px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);}
 .hdr .title{flex:1;font-weight:600;font-size:17px;}
 .dot{width:9px;height:9px;border-radius:50%;background:#4caf50;} .dot.off{background:#e74c3c;}
 .hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
+.coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-size: 14px; font-weight: bold; display: flex; align-items: center; gap: 4px;}
 
 #content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -59,7 +58,6 @@ h2{font-size:24px;margin-bottom:6px;}
 .nav-item.active { color: var(--blue); font-weight: 600; }
 .nav-icon { font-size: 24px; margin-bottom: 4px; }
 
-/* ЧАТ */
 #chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
 .ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .bk{background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer;padding:4px 10px;}
@@ -72,6 +70,8 @@ h2{font-size:24px;margin-bottom:6px;}
 .m img,.m video{max-width:100%;border-radius:10px;margin-top:4px;display:block;}
 .m .doc-msg { border: 1px solid var(--blue); padding: 10px; border-radius: 8px; background: rgba(42,171,238,0.1); display: flex; align-items: center; gap: 10px; cursor: pointer;}
 .dl-btn { display: inline-block; margin-top: 5px; font-size: 12px; text-decoration: none; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; color: #fff; }
+.m .gift-msg { background: linear-gradient(45deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); }
+.m .gift-msg span { font-size: 40px; display: block; margin-bottom: 5px; }
 
 .msg-actions{position:absolute;top:-38px;right:0;background:var(--panel);border-radius:8px;padding:4px;display:none;gap:2px;box-shadow:0 4px 12px rgba(0,0,0,.5);z-index:10;}
 .msg-actions button{background:none;border:none;color:var(--text-muted);font-size:16px;cursor:pointer;padding:6px 10px;border-radius:6px;}
@@ -82,7 +82,6 @@ h2{font-size:24px;margin-bottom:6px;}
 .ib{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px;flex-shrink:0;}
 .sb{background:var(--blue);border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
-/* МОДАЛКИ */
 .menu{position:fixed;background:var(--panel);border-radius:12px;padding:6px;z-index:2000;box-shadow:0 10px 30px rgba(0,0,0,.7);min-width:220px; color:var(--text);}
 .menu div{padding:12px 18px;font-size:14px;cursor:pointer;border-radius:8px;}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -99,12 +98,21 @@ h2{font-size:24px;margin-bottom:6px;}
 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--blue); }
 input:checked + .slider:before { transform: translateX(22px); }
+
+/* Игры */
+.game-card { background: var(--panel); border-radius: 16px; padding: 20px; margin: 15px; text-align: center; }
+.dice { font-size: 80px; margin: 20px 0; }
+.bet-input { width: 100px; text-align: center; font-size: 18px; margin: 10px auto; display: block; }
+.gift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gift-item { background: var(--input-bg); padding: 15px; border-radius: 12px; text-align: center; cursor: pointer; }
+.gift-item span { font-size: 40px; display: block; margin-bottom: 5px; }
+.gift-item div { font-weight: bold; margin-bottom: 5px; }
+.gift-item small { color: #ffd700; }
 </style>
 </head>
 <body>
 
 <div id="app">
-<!-- АВТОРИЗАЦИЯ -->
 <div id="auth">
   <div class="auth-box" id="loginScreen">
     <div class="logo">✈</div>
@@ -144,11 +152,11 @@ input:checked + .slider:before { transform: translateX(22px); }
   </div>
 </div>
 
-<!-- ГЛАВНЫЙ ЭКРАН -->
 <div id="main">
   <div class="hdr">
     <div class="title">Minechat (Russia)</div>
-    <div class="dot" id="wsDot"></div>
+    <div class="coin-badge" id="coinDisplay">🪙 0</div>
+    <div class="dot" id="wsDot" style="margin-left:10px;"></div>
     <button class="hb" id="adminBtn" style="display:none" onclick="openAdmin()" title="Админ">🔧</button>
   </div>
 
@@ -170,6 +178,17 @@ input:checked + .slider:before { transform: translateX(22px); }
       <div class="lst" id="global-search-list"></div>
     </div>
 
+    <!-- НОВАЯ ВКЛАДКА ИГРЫ -->
+    <div id="view-games" class="view">
+        <div class="game-card">
+            <h3>🎲 Игра в Кубик</h3>
+            <p style="color:var(--text-muted); font-size:14px; margin-top:5px;">Если выпадет 4, 5 или 6 — ты выиграл x2. Если 1, 2 или 3 — проиграл.</p>
+            <div class="dice" id="diceResult">🎲</div>
+            <input type="number" class="inp bet-input" id="diceBet" placeholder="Ставка" value="100">
+            <button class="btn" onclick="playDice()" style="margin-top:10px;">Бросить кубик</button>
+        </div>
+    </div>
+
     <div id="view-calls" class="view"><div class="lst" id="call-list"></div></div>
 
     <div id="view-settings" class="view">
@@ -184,12 +203,12 @@ input:checked + .slider:before { transform: translateX(22px); }
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
     <div class="nav-item" onclick="switchTab('search')" id="nav-search"><div class="nav-icon">🔍</div><div>Поиск</div></div>
+    <div class="nav-item" onclick="switchTab('games')" id="nav-games"><div class="nav-icon">🎮</div><div>Игры</div></div>
     <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
     <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
   </div>
 </div>
 
-<!-- ЧАТ -->
 <div id="chat">
   <div class="ch">
     <button class="bk" onclick="backToMain()">←</button>
@@ -213,13 +232,28 @@ input:checked + .slider:before { transform: translateX(22px); }
 
   <div id="inp">
     <button class="ib" onclick="showAttachMenu(event)">📎</button>
+    <button class="ib" onclick="openGifts()" style="color:#ff9800;">🎁</button>
     <input id="mi" placeholder="Сообщение..." enterkeyhint="send" autocomplete="off">
     <button class="ib" id="recBtn" onclick="startVoice()">🎤</button>
     <button class="sb" onclick="sendMessage()">➤</button>
   </div>
 </div>
 
-<!-- МОДАЛКИ -->
+<!-- МОДАЛКА ПОДАРКОВ -->
+<div class="modal" id="giftsModal">
+  <div class="modal-box">
+    <h3>🎁 Выберите подарок</h3>
+    <div class="gift-grid" id="giftsGrid">
+      <div class="gift-item" onclick="sendGift('Роза', '🌹', 50)"><span>🌹</span><div>Роза</div><small>50 🪙</small></div>
+      <div class="gift-item" onclick="sendGift('Мишка', '🧸', 100)"><span>🧸</span><div>Мишка</div><small>100 🪙</small></div>
+      <div class="gift-item" onclick="sendGift('Пицца', '🍕', 200)"><span>🍕</span><div>Пицца</div><small>200 🪙</small></div>
+      <div class="gift-item" onclick="sendGift('Алмаз', '💎', 500)"><span>💎</span><div>Алмаз</div><small>500 🪙</small></div>
+      <div class="gift-item" onclick="sendGift('Ракета', '🚀', 1000)"><span>🚀</span><div>Ракета</div><small>1000 🪙</small></div>
+    </div>
+    <button class="btn gray" style="margin-top:15px;" onclick="document.getElementById('giftsModal').style.display='none'">Закрыть</button>
+  </div>
+</div>
+
 <div class="modal" id="docModal">
   <div class="modal-box">
     <h3 id="docTitle" contenteditable="true" style="outline:none; border-bottom:1px solid var(--border); padding-bottom:5px;">Документ.txt</h3>
@@ -257,6 +291,7 @@ input:checked + .slider:before { transform: translateX(22px); }
       <div style="margin-bottom: 8px;"><b>Возраст:</b> <span id="cpAge"></span></div>
       <div style="margin-bottom: 8px;"><b>Телефон:</b> <span id="cpPhone"></span></div>
       <div style="margin-bottom: 8px;"><b>Почта:</b> <span id="cpEmail"></span></div>
+      <div style="margin-bottom: 8px;"><b>Баланс:</b> <span id="cpCoins" style="color:#ffd700; font-weight:bold;">0</span> 🪙</div>
     </div>
     <div class="row" style="flex-direction: column; gap:8px;">
       <button class="btn" onclick="startChatFromProfile()">💬 Написать</button>
@@ -268,7 +303,6 @@ input:checked + .slider:before { transform: translateX(22px); }
     </div>
 </div></div>
 
-<!-- МОЙ ПРОФИЛЬ (С ВОССТАНОВЛЕННЫМИ КНОПКАМИ) -->
 <div class="modal" id="profileModal"><div class="modal-box" style="text-align:center;">
     <h3>👤 Мой профиль</h3>
     <div class="big-av" id="myBigAvatar" style="background:#2AABEE;">?</div>
@@ -277,7 +311,6 @@ input:checked + .slider:before { transform: translateX(22px); }
     <button class="btn gray" onclick="document.getElementById('avatarInput').click()">Изменить аватар</button>
     <button class="btn purple" onclick="setMyStatus()">💬 Статус</button>
     
-    <!-- ВОССТАНОВЛЕННЫЕ КНОПКИ -->
     <button class="btn" onclick="openPhoneModal()">📱 Номер</button>
     <button class="btn" onclick="openEmailModal()">📧 Почта</button>
     <button class="btn purple" onclick="startProfileAgeVerification()">🔞 Возраст (FaceID)</button>
@@ -292,14 +325,11 @@ input:checked + .slider:before { transform: translateX(22px); }
     <div class="row" style="margin-top:10px;"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
 </div></div>
 
-<!-- МОДАЛКИ ДЛЯ ТЕЛЕФОНА И ПОЧТЫ -->
 <div class="modal" id="phoneModal"><div class="modal-box"><h3>📱 Номер</h3><input class="inp" id="myPhoneInput"><button class="btn" onclick="savePhone()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('phoneModal').style.display='none'">Закрыть</button></div></div></div>
 <div class="modal" id="emailModal"><div class="modal-box"><h3>📧 Почта</h3><input class="inp" id="myEmailInput"><button class="btn" onclick="saveEmail()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('emailModal').style.display='none'">Закрыть</button></div></div></div>
 
-<!-- МОДАЛКА FACEID ДЛЯ ПРОФИЛЯ -->
 <div class="modal" id="ageVerifyModal"><div class="modal-box"><h3>🔞 Возраст</h3><video id="ageVerifyVideoProfile" autoplay playsinline muted style="width:100%;border-radius:12px;transform:scaleX(-1);"></video><div id="ageVerifyStatusProfile" style="text-align:center;margin:10px 0;"></div><button class="btn gray" onclick="cancelAgeVerification()">Отмена</button></div></div>
 
-<!-- ЗВОНКИ -->
 <div id="callScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:1000;flex-direction:column;">
   <video id="remoteVideo" autoplay playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;"></video>
   <video id="localVideo" autoplay playsinline muted style="position:absolute;top:20px;right:20px;width:110px;height:160px;object-fit:cover;border-radius:12px;border:2px solid var(--blue);z-index:2;background:#1a1a1a;"></video>
@@ -334,7 +364,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var ws = null, cu = null, cc = null, ctype = "private";
 var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STICKERS_META = {}, VERIFY_REQ = {}, UNREAD = {}, STATUSES = {}, LAST_SEEN = {};
-var AGE_GROUPS = {}, PHONES = {}, DEVICES = {}, EMAILS = {};
+var AGE_GROUPS = {}, PHONES = {}, DEVICES = {}, EMAILS = {}, COINS = {};
 var BANNED = [], MUTED = {}, isCreator = false, myMuted = false;
 var isReg = false, replyTo = null, STORIES = {}, myBots = [], PINNED = [];
 var localStream = null, pc = null, callTarget = null, isCaller = false, isVideoCall = false;
@@ -343,7 +373,6 @@ var currentAudio = null;
 var currentDocId = null;
 var ageVerifyData = {};
 
-// УПРАВЛЕНИЕ АККАУНТАМИ (до 2-х)
 var savedAccounts = JSON.parse(localStorage.getItem('mc_accounts') || '[]');
 function renderSavedAccounts() {
     var box = document.getElementById('savedAccountsList'); box.innerHTML = '';
@@ -376,6 +405,10 @@ function connect() {
 var SERVER_URL = location.host;
 function send(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(d)); }
 
+function updateCoinUI() {
+    document.getElementById('coinDisplay').innerText = '🪙 ' + (COINS[cu] || 0);
+}
+
 function handleMessage(m) {
   switch (m.action) {
     case 'login_ok':
@@ -386,6 +419,7 @@ function handleMessage(m) {
       STICKERS_META = m.stickers || {}; VERIFY_REQ = m.verify_req || {};
       UNREAD = m.unread || {}; STATUSES = m.statuses || {}; LAST_SEEN = m.last_seen || {};
       AGE_GROUPS = m.age_groups || {}; PHONES = m.phones || {}; DEVICES = m.devices || {}; EMAILS = m.emails || {};
+      COINS = m.coins || {};
       STORIES = m.stories || {}; myBots = m.my_bots || [];
       PINNED = m.pinned || [];
       m.users.forEach(u => { USERS[u] = {color: getColor(u), verified: !!VERIFIED[u], avatar: (m.avatars && m.avatars[u]) || ""}; });
@@ -395,6 +429,7 @@ function handleMessage(m) {
       
       document.getElementById('auth').style.display = 'none'; document.getElementById('main').style.display = 'flex';
       if (isCreator) document.getElementById('adminBtn').style.display = 'block';
+      updateCoinUI();
       renderChats(); renderStories(); switchTab('chats');
       requestAllPermissions();
       break;
@@ -406,6 +441,23 @@ function handleMessage(m) {
         if (m.msg.from !== cu) send({action:'mark_read', chat_id: cc});
       }
       renderChats(); break;
+    case 'balance_update':
+        COINS[cu] = m.coins;
+        updateCoinUI();
+        if(cc) renderMessages();
+        break;
+    case 'dice_result':
+        var d = document.getElementById('diceResult');
+        var faces = ['⚀','⚁','⚂','⚃','⚄','⚅'];
+        d.innerText = faces[m.roll - 1];
+        if(m.win) {
+            alert(`🎉 Выпало ${m.roll}. Вы выиграли ${m.bet} монет!`);
+            d.style.color = '#4caf50';
+        } else {
+            alert(`😢 Выпало ${m.roll}. Вы проиграли ${m.bet} монет.`);
+            d.style.color = '#e74c3c';
+        }
+        break;
     case 'chat_opened':
       cc = m.chat_id; ctype = m.chat.type; CHATS[cc] = m.chat; MESSAGES[cc] = m.messages || [];
       if (m.unread) UNREAD = m.unread;
@@ -528,6 +580,7 @@ function openContactProfile(username) {
   document.getElementById('cpAge').innerText = AGE_GROUPS[username] ? ({'child_1_8':'🧒 1–8','teen_9_13':'👦 9–13','teen_14_17':'🧑 14–17','adult_18_plus':'👨 18+'})[AGE_GROUPS[username]] : 'Не проверен';
   document.getElementById('cpPhone').innerText = PHONES[username] || 'Скрыт';
   document.getElementById('cpEmail').innerText = EMAILS[username] || 'Скрыт';
+  document.getElementById('cpCoins').innerText = COINS[username] || 0;
   document.getElementById('contactProfileModal').style.display = 'flex';
   document.getElementById('contactProfileModal').dataset.user = username;
 }
@@ -552,6 +605,7 @@ function appendMessage(m, skipScroll) {
   if (m.reply_to) { var rmsg = (MESSAGES[cc] || []).find(x => x.id === m.reply_to); if (rmsg) html += '<div class="reply">↩ ' + rmsg.from + ': ' + esc(rmsg.text || 'медиа').slice(0, 40) + '</div>'; }
   
   if (m.type === 'text') html += renderTextWithLinks(m.text);
+  else if (m.type === 'gift') html += `<div class="gift-msg"><span>${m.data}</span>${esc(m.text)}</div>`;
   else if (m.type === 'doc') html += '<div class="doc-msg" onclick="event.stopPropagation();send({action:\'get_doc\',doc_id:\''+m.id+'\'})"><span>📄</span><div><b>' + esc(m.text) + '</b><br><a href="data:text/plain;charset=utf-8,'+encodeURIComponent(m.text)+'" download="'+esc(m.text)+'" style="font-size:10px;">⬇️ Скачать</a></div></div>';
   else if (m.type === 'image') html += '<img src="' + m.data + '"><br><a href="' + m.data + '" download="image.jpg" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>';
   else if (m.type === 'video') html += '<video src="' + m.data + '" controls></video><br><a href="' + m.data + '" download="video.mp4" class="dl-btn" onclick="event.stopPropagation();">⬇️ Скачать</a>';
@@ -566,7 +620,6 @@ function appendMessage(m, skipScroll) {
 
   html += '<span class="t">' + m.time + (m.edited ? ' ✏' : '') + checks + '</span>';
   
-  // МЕНЮ ДЕЙСТВИЙ
   html += '<div class="msg-actions">';
   html += '<button onclick="event.stopPropagation();replyToMsg(\'' + m.id + '\')" title="Ответить">↩</button>';
   html += '<button onclick="event.stopPropagation();shareMessage(\'' + m.id + '\')" title="Переслать">↪️</button>';
@@ -604,7 +657,6 @@ function shareMessage(id) {
     }
 }
 
-// ОРИГИНАЛЬНОЕ ОТПРАВЛЕНИЕ ФОТО
 function showAttachMenu() { if(document.querySelector('.menu')) document.querySelector('.menu').remove(); var m = document.createElement('div'); m.className='menu'; m.style.bottom='70px'; m.style.left='10px'; m.innerHTML = `<div onclick="createDoc()">📝 Создать документ (.txt)</div><div onclick="openCamera()">📷 Фото</div><div onclick="openGallery()">🖼 Галерея</div>`; document.body.appendChild(m); setTimeout(()=>document.addEventListener('click', ()=>m.remove(), {once:true}), 100); }
 function openCamera() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.capture = 'environment'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
 function openGallery() { var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.onchange = () => { Array.from(inp.files).forEach(f => sendPhoto(f)); }; inp.click(); }
@@ -613,7 +665,23 @@ function sendPhoto(file) { if (!cc) return; if (file.size > 10 * 1024 * 1024) { 
 function createDoc() { var t = prompt('Название (добавьте .txt):', 'Документ.txt'); if(t) { if(!t.endsWith('.txt')) t += '.txt'; send({action:'message', chat_id: cc, type:'doc', text:t}); } }
 function saveDocument() { var title = document.getElementById('docTitle').innerText; if(!title.endsWith('.txt')) title += '.txt'; send({action:'save_doc', doc_id: currentDocId, title: title, text: document.getElementById('docText').value}); document.getElementById('docModal').style.display='none'; }
 
-// БОТЫ
+// ПОДАРКИ И ИГРЫ
+function openGifts() {
+    if(!cc) return alert("Откройте чат!");
+    document.getElementById('giftsModal').style.display='flex';
+}
+function sendGift(name, icon, cost) {
+    if((COINS[cu] || 0) < cost) return alert("Недостаточно монет!");
+    send({action:'send_gift', chat_id: cc, name: name, icon: icon, cost: cost});
+    document.getElementById('giftsModal').style.display='none';
+}
+function playDice() {
+    var bet = parseInt(document.getElementById('diceBet').value);
+    if(!bet || bet <= 0) return alert("Введите ставку!");
+    if((COINS[cu] || 0) < bet) return alert("Недостаточно монет!");
+    send({action:'play_dice', bet: bet});
+}
+
 function renderMyBots() {
     var box = document.getElementById('myBotsList'); if(!box) return; box.innerHTML = '';
     if(myBots.length === 0) box.innerHTML = '<div style="color:var(--text-muted)">У вас пока нет ботов.</div>';
@@ -630,7 +698,6 @@ function openMyBots() { send({action: 'get_my_bots'}); document.getElementById('
 function createBotUI() { document.getElementById('botEditor').style.display='block'; }
 function saveBot() { var name = document.getElementById('botNameInput').value.trim(); var code = document.getElementById('botCodeInput').value; if(!name || !code) return alert("Заполните поля!"); if(!name.endsWith('Bot') && !name.endsWith('bot')) name += 'Bot'; send({action: 'create_bot', name: name, code: code}); document.getElementById('botEditor').style.display='none'; }
 
-// ЗВОНКИ
 function declineIncomingMsg() {
   document.getElementById('incomingScreen').style.display = 'none';
   send({action:'call_decline', to: callTarget});
@@ -640,7 +707,63 @@ function declineIncomingMsg() {
 }
 function private_id(a, b) { return "p_" + [a,b].sort().join("_"); }
 
-// ВСПОМОГАТЕЛЬНЫЕ
+var CALL_HISTORY = JSON.parse(localStorage.getItem('mc_calls') || '[]');
+function startCall(video) {
+  var target = document.getElementById('contactProfileModal').style.display === 'flex' ? document.getElementById('contactProfileModal').dataset.user : (cc ? getOtherUser(cc) : null);
+  if (!target || target === cu) return;
+  if (USERS[target] && USERS[target].bot) { alert('Ботам звонить нельзя!'); return; }
+  document.getElementById('contactProfileModal').style.display = 'none';
+  isVideoCall = !!video; isCaller = true; callTarget = target;
+  document.getElementById('callName').innerText = target; document.getElementById('callSt').innerText = 'Вызов...';
+  document.getElementById('callScreen').style.display = 'flex';
+  send({action:'call_offer', to: target, data: {video: isVideoCall}});
+}
+function showIncomingCall(from, data) {
+  isVideoCall = data && data.video; callTarget = from;
+  document.getElementById('incName').innerText = from;
+  document.getElementById('incType').innerText = isVideoCall ? '📹 Видеозвонок' : '📞 Аудиозвонок';
+  document.getElementById('incomingScreen').style.display = 'flex';
+}
+function acceptIncoming() { document.getElementById('incomingScreen').style.display = 'none'; isCaller = false; document.getElementById('callName').innerText = callTarget; document.getElementById('callSt').innerText = 'Соединение...'; document.getElementById('callScreen').style.display = 'flex'; send({action:'call_answer', to: callTarget}); startWebRTC(); }
+function declineIncoming() { document.getElementById('incomingScreen').style.display = 'none'; send({action:'call_decline', to: callTarget}); logCall(callTarget, 'missed', isVideoCall); callTarget = null; }
+
+async function startWebRTC() {
+  try { localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: isVideoCall ? {width:640, height:480, facingMode:'user'} : false}); } catch(e) { alert('Нет доступа к камере'); endCall(); return; }
+  document.getElementById('localVideo').srcObject = localStream;
+  
+  pc = new RTCPeerConnection({
+      iceServers: [
+          {urls:'stun:stun.l.google.com:19302'},
+          {urls:'stun:stun1.l.google.com:19302'},
+          {urls:'stun:stun.yandex.ru'},
+          {urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject'},
+          {urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject'}
+      ]
+  });
+  
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  pc.onicecandidate = e => { if (e.candidate) send({action:'webrtc', to: callTarget, data:{type:'candidate', candidate:e.candidate}}); };
+  pc.ontrack = e => { document.getElementById('remoteVideo').srcObject = e.streams[0]; };
+}
+async function createOffer() { if (!pc) await startWebRTC(); var offer = await pc.createOffer(); await pc.setLocalDescription(offer); send({action:'webrtc', to: callTarget, data:{type:'offer', sdp: offer}}); logCall(callTarget, 'outgoing', isVideoCall); }
+async function handleWebRTC(from, data) {
+  if (!pc) await startWebRTC();
+  if (data.type === 'offer') { await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); var answer = await pc.createAnswer(); await pc.setLocalDescription(answer); send({action:'webrtc', to: from, data:{type:'answer', sdp: answer}}); document.getElementById('callSt').innerText = 'Разговор'; logCall(from, 'incoming', isVideoCall); }
+  else if (data.type === 'answer') { await pc.setRemoteDescription(new RTCSessionDescription(data.sdp)); document.getElementById('callSt').innerText = 'Разговор'; }
+  else if (data.type === 'candidate') { try { await pc.addIceCandidate(new RTCIceCandidate(data.candidate)); } catch(e) {} }
+}
+function endCall(silent) {
+  if (!silent && callTarget) send({action:'call_end', to: callTarget});
+  if (callTarget && isCaller && !silent) logCall(callTarget, 'outgoing', isVideoCall);
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  callTarget = null;
+  document.getElementById('callScreen').style.display = 'none';
+}
+function logCall(name, type, video) { if (!name) return; var d = new Date(); CALL_HISTORY.push({name: name, type: type, video: video, time: 'Сегодня, ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0')}); if (CALL_HISTORY.length > 50) CALL_HISTORY.shift(); localStorage.setItem('mc_calls', JSON.stringify(CALL_HISTORY)); renderCalls(); }
+function toggleMute() { if(localStream) { var a = localStream.getAudioTracks()[0]; a.enabled = !a.enabled; document.getElementById('muteBtn').style.background = a.enabled ? '#3a3a3a' : 'var(--blue)'; } }
+function toggleCam() { if(localStream) { var v = localStream.getVideoTracks()[0]; if (v) { v.enabled = !v.enabled; document.getElementById('camBtn').style.background = v.enabled ? '#3a3a3a' : 'var(--blue)'; } } }
+
 function openProfile() { 
     var my = USERS[cu] || {}; 
     var big = document.getElementById('myBigAvatar'); 
@@ -681,7 +804,6 @@ function regNext(step) {
     }
 }
 
-// ПРОВЕРКА ВОЗРАСТА (РЕГИСТРАЦИЯ)
 var ageHistory = [];
 async function startAgeVerification() {
     document.getElementById('startAgeBtn').style.display = 'none'; document.getElementById('ageVerifyStatus').innerText = "Загрузка...";
@@ -709,7 +831,6 @@ async function startAgeVerification() {
     }, 400);
 }
 
-// ПРОВЕРКА ВОЗРАСТА (В ПРОФИЛЕ)
 var profileAgeHistory = [];
 async function startProfileAgeVerification() {
     document.getElementById('profileModal').style.display='none';
