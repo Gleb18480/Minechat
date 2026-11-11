@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, json, hashlib, time, random
+import os, json, hashlib, time, random, asyncio
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -14,6 +14,8 @@ MAIN_ID = "main_channel"
 
 USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}, {}
 GAME_ROOMS = {}
+
+CITIES_DB = ["Москва", "Астрахань", "Новгород", "Днепр", "Рига", "Анкара", "Архангельск", "Курск", "Казань", "Новосибирск", "Кемерово", "Омск", "Киев", "Волгоград", "Дубай", "Йошкар-Ола", "Абакан", "Нальчик", "Калининград", "Донецк", "Краснодар", "Ростов", "Тула", "Анапа", "Алматы", "Ыссык-Куль", "Львов", "Воронеж", "Женева", "Амстердам", "Минск", "Красноярск", "Кишинев", "Владивосток", "Курган", "Норильск", "Киров", "Винница", "Ашхабад", "Душанбе", "Ереван", "Нижний Новгород", "Копенгаген", "Нью-Йорк", "Канберра", "Аделаида", "Алжир", "Рим", "Милан", "Неаполь", "Лондон", "Ньюкасл", "Лиссабон", "Нарва", "Афины", "Никосия", "Ялта", "Алушта", "Ярославль", "Липецк"]
 
 def new_id(p="c"): COUNTER[0] += 1; return p + str(COUNTER[0])
 def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
@@ -93,66 +95,58 @@ def init_uno():
     random.shuffle(deck)
     return {"deck": deck, "p1_hand": [deck.pop() for _ in range(5)], "p2_hand": [deck.pop() for _ in range(5)], "top": deck.pop()}
 
-# --- ЛОГИКА БОТА ---
-def get_bot_move(room):
-    g = room["game"]
-    b = room["board"]
+def get_bot_checkers_move(b):
+    moves = []
+    # Ищем, кого можно побить (бот играет за 2 и 4)
+    for r in range(8):
+        for c in range(8):
+            if b[r][c] in [2, 4]:
+                for dr, dc in [(1,1), (1,-1), (-1,1), (-1,-1)]: # Проверяем все направления
+                    nr, nc = r+dr, c+dc
+                    jr, jc = r+2*dr, c+2*dc
+                    if 0 <= jr < 8 and 0 <= jc < 8:
+                        if b[nr][nc] in [1, 3] and b[jr][jc] == 0:
+                            moves.append({"from": [r,c], "to": [jr,jc]})
+    if moves: return random.choice(moves)
     
-    if g == "tictactoe":
-        # Ищем победу для бота ('O')
-        for i in range(9):
-            if b[i] == "":
-                b[i] = "O"
-                if check_ttt_winner(b) == "O": return i
-                b[i] = ""
-        # Блокируем игрока ('X')
-        for i in range(9):
-            if b[i] == "":
-                b[i] = "X"
-                if check_ttt_winner(b) == "X": b[i] = ""; return i
-                b[i] = ""
-        # Центр
-        if b[4] == "": return 4
-        # Любая свободная
-        empty = [i for i in range(9) if b[i] == ""]
-        return random.choice(empty) if empty else None
-        
-    elif g == "checkers":
-        # Просто ищем случайный валидный ход для бота (2 или 4)
-        moves = []
-        for r in range(8):
-            for c in range(8):
-                if b[r][c] in [2, 4]:
-                    for dr, dc in [(1,1), (1,-1), (2,2), (2,-2)]:
-                        nr, nc = r+dr, c+dc
-                        if 0 <= nr < 8 and 0 <= nc < 8 and b[nr][nc] == 0:
-                            moves.append({"from": [r,c], "to": [nr,nc]})
-        return random.choice(moves) if moves else None
-        
-    elif g == "chess":
-        # Случайный ход для пешки или коня бота
-        moves = []
-        for r in range(8):
-            for c in range(8):
-                if b[r][c].islower():
-                    # Просто пробуем ходить на 1 клетку
-                    for dr, dc in [(1,0), (1,1), (2,1)]:
-                        nr, nc = r+dr, c+dc
-                        if 0 <= nr < 8 and 0 <= nc < 8 and (b[nr][nc] == "" or b[nr][nc].isupper()):
-                            moves.append({"from": [r,c], "to": [nr,nc]})
-        return random.choice(moves) if moves else None
+    # Если бить некого, ищем обычный ход
+    for r in range(8):
+        for c in range(8):
+            if b[r][c] in [2, 4]:
+                for dr, dc in [(1,1), (1,-1)]:
+                    nr, nc = r+dr, c+dc
+                    if 0 <= nr < 8 and 0 <= nc < 8 and b[nr][nc] == 0:
+                        moves.append({"from": [r,c], "to": [nr,nc]})
+    return random.choice(moves) if moves else None
 
-    elif g == "uno":
-        hand = room["board"]["p2_hand"] # Бот играет 2-м
-        top = room["board"]["top"]
-        for card in hand:
-            if card[0] == top[0] or card[1:] == top[1:]:
-                return card
-        return None
+def get_bot_chess_move(b):
+    moves = []
+    # Бот играет за строчные буквы (черные)
+    for r in range(8):
+        for c in range(8):
+            p = b[r][c]
+            if p.islower():
+                for dr, dc in [(1,0), (2,0), (1,1), (1,-1), (2,1), (2,-1), (0,1), (0,-1), (-1,1), (-1,-1), (-1,0), (-2,1), (-2,-1)]:
+                    nr, nc = r+dr, c+dc
+                    if 0 <= nr < 8 and 0 <= nc < 8:
+                        target = b[nr][nc]
+                        if target.isupper(): # Приоритет: бить фигуру
+                            return {"from": [r,c], "to": [nr,nc]}
+                        elif target == "":
+                            moves.append({"from": [r,c], "to": [nr,nc]})
+    return random.choice(moves) if moves else None
 
-    elif g == "cities":
-        return random.choice(["Москва", "Питер", "Казань", "Сочи", "Омск"])
-    return None
+def get_bot_city(b):
+    if not b: return "Москва"
+    last_word = b[-1]["word"]
+    last_char = last_word[-1].lower()
+    if last_char in ['ь', 'ы', 'й']: last_char = last_word[-2].lower()
+    
+    used_words = [x["word"].lower() for x in b]
+    for city in CITIES_DB:
+        if city[0].lower() == last_char and city.lower() not in used_words:
+            return city
+    return None # Бот сдался
 
 @app.get("/")
 def root():
@@ -183,37 +177,19 @@ async def ws(websocket: WebSocket):
 
             if not u: continue
 
-            # --- С БОТОМ ---
             if a == "start_bot_game":
-                g = m.get("game")
-                room_id = new_id("room_")
-                board = []
-                if g == "tictactoe": board = [""]*9
-                elif g == "cities": board = []
-                elif g == "checkers": board = init_checkers()
-                elif g == "chess": board = init_chess()
-                elif g == "uno": board = init_uno()
-                
+                g = m.get("game"); room_id = new_id("room_")
+                board = init_checkers() if g == "checkers" else init_chess() if g == "chess" else init_uno() if g == "uno" else [""]*9 if g == "tictactoe" else []
                 GAME_ROOMS[room_id] = {"game": g, "players": [u, "BOT"], "turn": u, "bet": 0, "state": "playing", "board": board}
                 await websocket.send_text(json.dumps({"action": "game_started", "room_id": room_id, "game": g, "board": board, "turn": u, "players": [u, "BOT"]}))
                 continue
 
-            # --- С ДРУГОМ ---
             elif a == "create_room":
-                target = m.get("target")
-                bet = int(m.get("bet", 0)); g = m.get("game")
+                target = m.get("target"); bet = int(m.get("bet", 0)); g = m.get("game")
                 if USERS[u].get("coins", 0) < bet: continue
-                
                 room_id = new_id("room_")
                 USERS[u]["coins"] -= bet
-                board = []
-                if g == "tictactoe": board = [""]*9
-                elif g == "cities": board = []
-                elif g == "football": board = {"step": "shoot", "p1_choice": ""}
-                elif g == "checkers": board = init_checkers()
-                elif g == "chess": board = init_chess()
-                elif g == "uno": board = init_uno()
-                
+                board = init_checkers() if g == "checkers" else init_chess() if g == "chess" else init_uno() if g == "uno" else [""]*9 if g == "tictactoe" else []
                 GAME_ROOMS[room_id] = {"game": g, "players": [u], "turn": u, "bet": bet, "state": "waiting", "board": board}
                 save_data()
                 
@@ -224,10 +200,9 @@ async def ws(websocket: WebSocket):
                     for member in CHATS[cid]["members"]:
                         if member in ACTIVE: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
                 await websocket.send_text(json.dumps({"action": "balance_update", "coins": USERS[u]["coins"]}))
-                await websocket.send_text(json.dumps({"action": "error", "text": "Приглашение отправлено!"}))
 
             elif a == "join_room":
-                room_id = m.get("room_id"); cid = m.get("chat_id")
+                room_id = m.get("room_id")
                 if room_id in GAME_ROOMS and GAME_ROOMS[room_id]["state"] == "waiting":
                     room = GAME_ROOMS[room_id]
                     if u != room["players"][0]:
@@ -246,7 +221,6 @@ async def ws(websocket: WebSocket):
                         valid = False
                         g = room["game"]; mv = m.get("move")
                         
-                        # ХОД ИГРОКА
                         if g == "tictactoe":
                             idx = int(mv); sym = "X" if u == room["players"][0] else "O"
                             if room["board"][idx] == "": room["board"][idx] = sym; valid = True
@@ -269,7 +243,7 @@ async def ws(websocket: WebSocket):
                                     room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = 0; valid = True
                                 elif abs(dr) == 2 and abs(dc) == 2:
                                     mr, mc = (fr[0]+to[0])//2, (fr[1]+to[1])//2
-                                    if room["board"][mr][mc] != 0 and (room["board"][mr][mc] + p) in [3, 7]:
+                                    if room["board"][mr][mc] != 0 and ((room["board"][mr][mc] in [1,3] and p in [2,4]) or (room["board"][mr][mc] in [2,4] and p in [1,3])):
                                         room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = 0; room["board"][mr][mc] = 0; valid = True
                         elif g == "chess":
                             fr, to = mv["from"], mv["to"]; p = room["board"][fr[0]][fr[1]]; t = room["board"][to[0]][to[1]]
@@ -291,39 +265,35 @@ async def ws(websocket: WebSocket):
                                 valid = True
 
                         if valid:
-                            # ПРОВЕРКА НА ПОБЕДУ ИГРОКА
-                            if g == "tictactoe":
-                                if check_ttt_winner(room["board"]) or "" not in room["board"]:
-                                    w = "X" if check_ttt_winner(room["board"]) == "X" else ("O" if check_ttt_winner(room["board"]) == "O" else "draw")
-                                    wu = room["players"][0] if w == "X" else (room["players"][1] if w == "O" else "draw")
-                                    if "BOT" not in room["players"] and wu != "draw": USERS[wu]["coins"] += room["bet"] * 2
-                                    save_data()
-                                    for p in room["players"]:
-                                        if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": wu, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
-                                    del GAME_ROOMS[room_id]; continue
+                            if g == "tictactoe" and check_ttt_winner(room["board"]):
+                                w = "X" if check_ttt_winner(room["board"]) == "X" else "O"; wu = room["players"][0] if w == "X" else room["players"][1]
+                                for p in room["players"]:
+                                    if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": wu, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
+                                del GAME_ROOMS[room_id]; continue
                             
-                            # ХОД БОТА
+                            # Ход БОТА
                             if "BOT" in room["players"]:
-                                time.sleep(0.5) # Задержка для реализма
-                                bmv = get_bot_move(room)
-                                if bmv is not None:
-                                    if g == "tictactoe": room["board"][bmv] = "O"
-                                    elif g == "checkers": 
-                                        p = room["board"][bmv["from"][0]][bmv["from"][1]]
-                                        room["board"][bmv["to"][0]][bmv["to"][1]] = p; room["board"][bmv["from"][0]][bmv["from"][1]] = 0
-                                    elif g == "chess":
-                                        p = room["board"][bmv["from"][0]][bmv["from"][1]]
-                                        room["board"][bmv["to"][0]][bmv["to"][1]] = p; room["board"][bmv["from"][0]][bmv["from"][1]] = ""
-                                    elif g == "uno":
-                                        room["board"]["p2_hand"].remove(bmv); room["board"]["top"] = bmv
-                                    elif g == "cities":
-                                        room["board"].append({"user": "BOT", "word": bmv})
+                                await asyncio.sleep(0.5)
+                                bmv = None
+                                if g == "tictactoe":
+                                    for i in range(9):
+                                        if room["board"][i] == "": room["board"][i] = "O"; break
+                                elif g == "checkers":
+                                    bmv = get_bot_checkers_move(room["board"])
+                                elif g == "chess":
+                                    bmv = get_bot_chess_move(room["board"])
+                                elif g == "cities":
+                                    bmv = get_bot_city(room["board"])
+                                    if bmv: room["board"].append({"user": "BOT", "word": bmv})
+                                elif g == "uno":
+                                    hand = room["board"]["p2_hand"]; top = room["board"]["top"]
+                                    for card in hand:
+                                        if card[0] == top[0] or card[1:] == top[1:]:
+                                            hand.remove(card); room["board"]["top"] = card; break
                                 
-                                # Проверка победы бота (для крестиков)
-                                if g == "tictactoe" and check_ttt_winner(room["board"]) == "O":
-                                    for p in room["players"]:
-                                        if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": "BOT", "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
-                                    del GAME_ROOMS[room_id]; continue
+                                if g in ["checkers", "chess"] and bmv:
+                                    p = room["board"][bmv["from"][0]][bmv["from"][1]]
+                                    room["board"][bmv["to"][0]][bmv["to"][1]] = p; room["board"][bmv["from"][0]][bmv["from"][1]] = 0 if g=="checkers" else ""
                             else:
                                 room["turn"] = room["players"][1] if room["turn"] == room["players"][0] else room["players"][0]
                             
