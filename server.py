@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, json, hashlib, time
+import os, json, hashlib, time, random
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -39,11 +39,11 @@ def load_data():
 def init_default():
     USERS.clear()
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
     })
     
     CHATS.clear()
@@ -97,7 +97,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name in USERS: await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}, "pinned": []}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#2AABEE", "avatar": "", "status": "", "last_seen": 0, "phone": m.get("phone",""), "email": m.get("email",""), "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000}
                     CHATS[MAIN_ID]["members"].append(name)
                     save_data()
                     await websocket.send_text(json.dumps({"action": "register_ok"}))
@@ -127,6 +127,7 @@ async def ws(websocket: WebSocket):
                         "phones": {n: d.get("phone", "") for n, d in USERS.items()},
                         "emails": {n: d.get("email", "") for n, d in USERS.items()},
                         "devices": {n: d.get("device", {}) for n, d in USERS.items()},
+                        "coins": {n: d.get("coins", 0) for n, d in USERS.items()},
                         "pinned": USERS[u].get("pinned", []),
                         "my_bots": my_bots_list,
                         "stories": STORIES
@@ -136,7 +137,6 @@ async def ws(websocket: WebSocket):
 
             if not u: continue
 
-            # ВОССТАНОВЛЕННЫЕ ОБРАБОТЧИКИ ПРОФИЛЯ
             if a == "set_phone":
                 USERS[u]["phone"] = (m.get("phone", "") or "").strip()[:30]; save_data()
                 for w in ACTIVE.values():
@@ -166,13 +166,12 @@ async def ws(websocket: WebSocket):
                     try: await w.send_text(json.dumps({"action": "avatar_update", "username": u, "avatar": USERS[u]["avatar"]}))
                     except: pass
             
-            # ОСТАЛЬНОЕ
             elif a == "create_bot":
                 bot_name = normalize_name(m.get("name", ""))
                 code = m.get("code", "")
                 if bot_name in USERS: await websocket.send_text(json.dumps({"action": "error", "message": "Имя занято"}))
                 else:
-                    USERS[bot_name] = {"password": "bot", "color": "#9c27b0", "bot": True, "owner": u, "code": code, "verified": False}
+                    USERS[bot_name] = {"password": "bot", "color": "#9c27b0", "bot": True, "owner": u, "code": code, "verified": False, "coins": 0}
                     save_data()
                     await websocket.send_text(json.dumps({"action": "bot_created", "bot": {"name": bot_name, "owner": u}}))
 
@@ -254,6 +253,57 @@ async def ws(websocket: WebSocket):
                                     try: await ACTIVE[u].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": bot_msg}))
                                     except: pass
 
+            # --- НОВОЕ: ПОДАРКИ ---
+            elif a == "send_gift":
+                cid = m["chat_id"]
+                gift_cost = int(m.get("cost", 0))
+                gift_name = m.get("name", "Подарок")
+                gift_icon = m.get("icon", "🎁")
+                
+                if USERS[u].get("coins", 0) >= gift_cost:
+                    USERS[u]["coins"] -= gift_cost
+                    
+                    # Получатель (если личный чат)
+                    receiver = None
+                    if CHATS[cid]["type"] == "private":
+                        receiver = [x for x in CHATS[cid]["members"] if x != u][0]
+                        if receiver in USERS:
+                            USERS[receiver]["coins"] = USERS[receiver].get("coins", 0) + (gift_cost // 2)
+                    
+                    save_data()
+                    
+                    msg = {"id": new_id("m"), "from": u, "type": "gift", "text": gift_name, "data": gift_icon, "time": datetime.now().strftime("%H:%M")}
+                    MESSAGES[cid].append(msg)
+                    save_data()
+                    
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
+                            except: pass
+                    
+                    # Обновляем балансы
+                    await websocket.send_text(json.dumps({"action": "balance_update", "coins": USERS[u]["coins"]}))
+                    if receiver and receiver in ACTIVE:
+                        try: await ACTIVE[receiver].send_text(json.dumps({"action": "balance_update", "coins": USERS[receiver]["coins"]}))
+                        except: pass
+                else:
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "Недостаточно монет!"}))
+
+            # --- НОВОЕ: ИГРА В КУБИК ---
+            elif a == "play_dice":
+                bet = int(m.get("bet", 0))
+                if USERS[u].get("coins", 0) >= bet and bet > 0:
+                    roll = random.randint(1, 6)
+                    win = roll >= 4
+                    if win: USERS[u]["coins"] += bet
+                    else: USERS[u]["coins"] -= bet
+                    save_data()
+                    await websocket.send_text(json.dumps({
+                        "action": "dice_result", "roll": roll, "win": win, "coins": USERS[u]["coins"], "bet": bet
+                    }))
+                else:
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "Недостаточно монет для ставки!"}))
+
             elif a == "get_doc":
                 doc_id = m.get("doc_id")
                 if doc_id in DOCUMENTS:
@@ -268,6 +318,15 @@ async def ws(websocket: WebSocket):
             elif a == "search_users":
                 query = m.get("query", "").lower()
                 await websocket.send_text(json.dumps({"action": "search_results", "results": [name for name in USERS.keys() if query in name.lower() and name != u]}))
+
+            elif a in ("call_offer", "call_answer", "call_decline", "call_end", "webrtc"):
+                to = m["to"]
+                if USERS.get(to, {}).get("bot"):
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "Ботам звонить нельзя!"}))
+                    continue
+                if to in ACTIVE:
+                    action_map = {"call_offer": "incoming_call", "call_answer": "call_accepted", "call_decline": "call_declined", "call_end": "call_ended", "webrtc": "webrtc"}
+                    await ACTIVE[to].send_text(json.dumps({"action": action_map[a], "from": u, "data": m.get("data")}))
 
     except WebSocketDisconnect:
         if u: ACTIVE.pop(u, None)
