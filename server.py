@@ -9,7 +9,7 @@ app = FastAPI()
 BASE = os.path.dirname(os.path.abspath(__file__))
 DATA_FILE = os.path.join(BASE, "minechat_data.json")
 INDEX_FILE = os.path.join(BASE, "index.html")
-BOT_NAME = "Игровой Бот"
+BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
 
 USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}, {}
@@ -17,13 +17,17 @@ GAME_ROOMS = {}
 
 CITIES_DB = ["Москва","Астрахань","Новгород","Рига","Анкара","Архангельск","Курск","Казань","Новосибирск","Кемерово","Омск","Киев","Волгоград","Дубай","Йошкар-Ола","Абакан","Нальчик","Калининград","Донецк","Краснодар","Ростов","Тула","Анапа","Алматы","Львов","Воронеж","Женева","Амстердам","Минск","Красноярск","Кишинев","Владивосток","Курган","Норильск","Киров","Винница","Ашхабад","Душанбе","Ереван","Нижний Новгород","Копенгаген","Нью-Йорк","Канберра","Аделаида","Алжир","Рим","Милан","Неаполь","Лондон","Лиссабон","Нарва","Афины","Никосия","Ялта","Алушта","Ярославль","Липецк"]
 
-def new_id(p="c"): COUNTER[0] += 1; return p + str(COUNTER[0])
-def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
+def new_id(p="c"):
+    COUNTER[0] += 1
+    return p + str(COUNTER[0])
+
+def private_id(a, b): 
+    return "p_" + "_".join(sorted([a, b]))
 
 def save_data():
     try:
         with open(DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "stickers": STICKERS, "unread": UNREAD, "stories": STORIES}, f, ensure_ascii=False)
+            json.dump({"users": USERS, "chats": CHATS, "messages": MESSAGES, "documents": DOCUMENTS, "counter": COUNTER[0], "banned": BANNED, "muted": MUTED, "stickers": STICKERS, "unread": UNREAD}, f, ensure_ascii=False)
     except Exception as e: print("Save error:", e)
 
 def load_data():
@@ -31,41 +35,55 @@ def load_data():
     try:
         with open(DATA_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
-        USERS.clear(); USERS.update(data.get("users", {})); CHATS.clear(); CHATS.update(data.get("chats", {}))
-        MESSAGES.clear(); MESSAGES.update(data.get("messages", {})); DOCUMENTS.clear(); DOCUMENTS.update(data.get("documents", {}))
-        COUNTER[0] = data.get("counter", 0); BANNED.clear(); BANNED.extend(data.get("banned", []))
-        MUTED.clear(); MUTED.update(data.get("muted", {})); STICKERS.clear(); STICKERS.update(data.get("stickers", {}))
-        UNREAD.clear(); UNREAD.update(data.get("unread", {})); STORIES.clear(); STORIES.update(data.get("stories", {}))
+        USERS.clear(); USERS.update(data.get("users", {}))
+        CHATS.clear(); CHATS.update(data.get("chats", {}))
+        MESSAGES.clear(); MESSAGES.update(data.get("messages", {}))
+        DOCUMENTS.clear(); DOCUMENTS.update(data.get("documents", {}))
+        COUNTER[0] = data.get("counter", 0)
+        BANNED.clear(); BANNED.extend(data.get("banned", []))
+        MUTED.clear(); MUTED.update(data.get("muted", {}))
+        STICKERS.clear(); STICKERS.update(data.get("stickers", {}))
+        UNREAD.clear(); UNREAD.update(data.get("unread", {}))
         return True
-    except: return False
+    except Exception as e: return False
 
 def init_default():
     USERS.clear()
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "pinned": [], "coins": 5000},
-        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "pinned": [], "coins": 1000},
-        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "pinned": [], "coins": 1000},
-        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "pinned": [], "coins": 1000},
-        "Александр (kiberone)": {"password": hashlib.md5("k1b4r076§¶".encode()).hexdigest(), "color": "#f44336", "pinned": [], "coins": 1000},
-        BOT_NAME: {"password": "bot", "color": "#ff9800", "bot": True, "verified": True, "pinned": [], "coins": 0},
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 5000},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        "Александр (kiberone)": {"password": hashlib.md5("k1b4r076§¶".encode()).hexdigest(), "color": "#f44336", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 0},
     })
-    CHATS.clear(); MESSAGES.clear()
+    CHATS.clear()
+    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
+    MESSAGES.clear()
+    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
+    
     for m in ["Носова Наталья", "Носов Даниил", "Носов Виталий"]:
         cid = private_id("Носов Глеб", m)
-        CHATS[cid] = {"type": "private", "name": "", "members": ["Носов Глеб", m]}
-        MESSAGES[cid] = [{"id": "m_fam", "from": m, "type": "text", "text": "Привет!", "time": datetime.now().strftime("%H:%M")}]
+        CHATS[cid] = {"type": "private", "name": "", "members": ["Носов Глеб", m], "owner": "", "banned": []}
+        MESSAGES[cid] = [{"id": "m_fam", "from": m, "type": "text", "text": "Привет!", "data": "", "time": datetime.now().strftime("%H:%M")}]
         USERS["Носов Глеб"]["pinned"].append(cid)
+        
     cid_alex = private_id("Носов Глеб", "Александр (kiberone)")
-    CHATS[cid_alex] = {"type": "private", "name": "", "members": ["Носов Глеб", "Александр (kiberone)"]}
-    MESSAGES[cid_alex] = [{"id": "m_alex", "from": "Александр (kiberone)", "type": "text", "text": "Привет!", "time": datetime.now().strftime("%H:%M")}]
-    CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat Общий", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True}
-    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "time": datetime.now().strftime("%H:%M")}]
+    CHATS[cid_alex] = {"type": "private", "name": "", "members": ["Носов Глеб", "Александр (kiberone)"], "owner": "", "banned": []}
+    MESSAGES[cid_alex] = [{"id": "m_alex", "from": "Александр (kiberone)", "type": "text", "text": "Привет!", "data": "", "time": datetime.now().strftime("%H:%M")}]
+
+    for uname in list(USERS.keys()):
+        if uname == BOT_NAME: continue
+        cid_bot = private_id(uname, BOT_NAME)
+        CHATS[cid_bot] = {"type": "private", "name": "", "members": [uname, BOT_NAME], "owner": "", "banned": []}
+        MESSAGES[cid_bot] = [{"id": "m_bot_hello_" + uname, "from": BOT_NAME, "type": "text", "text": "Привет! /help", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
     save_data()
 
 if not load_data(): init_default()
 
 def normalize_name(raw): return " ".join(w.capitalize() for w in raw.strip().split())
 
+# --- ЛОГИКА ИГР ---
 def check_ttt_winner(b):
     lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
     for l in lines:
@@ -179,11 +197,12 @@ async def ws(websocket: WebSocket):
                         "verified_users": [n for n, d in USERS.items() if d.get("verified")],
                         "pinned": USERS[u].get("pinned", []), "coins": {n: d.get("coins", 0) for n, d in USERS.items()}
                     }))
-                else: await websocket.send_text(json.dumps({"action": "login_fail", "reason": "Неверный пароль"}))
+                else: await websocket.send_text(json.dumps({"action": "login_fail"}))
                 continue
 
             if not u: continue
 
+            # ИГРЫ
             if a == "start_bot_game":
                 g = m.get("game"); room_id = new_id("room_")
                 board = init_checkers() if g == "checkers" else init_chess() if g == "chess" else init_uno() if g == "uno" else [""]*9 if g == "tictactoe" else []
@@ -292,16 +311,15 @@ async def ws(websocket: WebSocket):
                                     bmv = get_bot_checkers_move(room["board"])
                                     if bmv:
                                         fr, to = bmv["from"], bmv["to"]; p = room["board"][fr[0]][fr[1]]
-                                        dr = to[0] - fr[0]
-                                        if abs(dr) == 2:
+                                        if abs(to[0]-fr[0]) == 2:
                                             mr, mc = (fr[0]+to[0])//2, (fr[1]+to[1])//2
-                                            room["board"][mr][mc] = 0
+                                            room["board"][mr][mc] = 0 # БОТ РУБИТ
                                         room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = 0
                                 elif g == "chess":
                                     bmv = get_bot_chess_move(room["board"])
                                     if bmv:
                                         fr, to = bmv["from"], bmv["to"]; p = room["board"][fr[0]][fr[1]]
-                                        room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = ""
+                                        room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = "" # БОТ РУБИТ
                                 elif g == "cities":
                                     bmv = get_bot_city(room["board"])
                                     if bmv: room["board"].append({"user": "BOT", "word": bmv})
