@@ -28,6 +28,7 @@ h2{font-size:24px;margin-bottom:6px;}
 .hdr .title{flex:1;font-weight:600;font-size:17px;}
 .dot{width:9px;height:9px;border-radius:50%;background:#4caf50;} .dot.off{background:#e74c3c;}
 .hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
+.coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
 
 #content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -61,6 +62,8 @@ h2{font-size:24px;margin-bottom:6px;}
 .mi .nm2{font-weight:600;font-size:12px;color:var(--blue);display:block;margin-bottom:2px;}
 .mo{align-self:flex-end;background:var(--blue);border-top-right-radius:4px;color:#fff;}
 .m img,.m video{max-width:100%;border-radius:10px;margin-top:4px;display:block;}
+.m .gift-msg { background: linear-gradient(45deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); }
+.m .gift-msg span { font-size: 40px; display: block; margin-bottom: 5px; }
 
 #inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:max(10px, env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
 #mi{flex:1;padding:12px 16px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;min-width:0;}
@@ -76,9 +79,19 @@ h2{font-size:24px;margin-bottom:6px;}
 .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--blue); }
 input:checked + .slider:before { transform: translateX(22px); }
+
+.snowflake {
+    color: #fff; font-size: 1em; font-family: Arial, sans-serif; text-shadow: 0 0 5px #000;
+    position: fixed; top: -10%; z-index: 9999; user-select: none; pointer-events: none;
+    animation-name: fall; animation-duration: 5s; animation-timing-function: linear; animation-iteration-count: infinite;
+}
+@keyframes fall { 0% { transform: translateY(-10vh) translateX(0); } 100% { transform: translateY(110vh) translateX(20px); } }
+
+.ny-banner { background: linear-gradient(90deg, #b92b27, #1565C0); color: white; padding: 10px; text-align: center; font-weight: bold; cursor: pointer; border-radius: 8px; margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
 </style>
 </head>
 <body>
+<div id="snow-container"></div>
 
 <div id="app">
 <div id="auth">
@@ -95,12 +108,14 @@ input:checked + .slider:before { transform: translateX(22px); }
 
 <div id="main">
   <div class="hdr">
-    <div class="title">Minechat</div>
+    <div class="title">Minechat 🎄</div>
+    <div class="coin-badge" id="coinDisplay">🪙 0</div>
     <div class="dot" id="wsDot" style="margin-left:10px;"></div>
   </div>
 
   <div id="content-area">
     <div id="view-chats" class="view active">
+      <div class="ny-banner" id="nyBanner" onclick="openNYModal()">🎁 Новогодний подарок: 1000 монет!</div>
       <div class="srch-wrap"><input class="srch" id="sr" placeholder="Поиск чатов" oninput="renderChats(this.value)"></div>
       <div class="lst" id="cl"></div>
     </div>
@@ -113,6 +128,7 @@ input:checked + .slider:before { transform: translateX(22px); }
     <div id="view-settings" class="view">
       <div class="lst" style="padding:0;">
         <div class="settings-item" onclick="openProfile()"><span>👤 Мой профиль</span><span>➔</span></div>
+        <div class="settings-item" onclick="promptPromo()"><span>🏷️ Ввести промокод</span><span>➔</span></div>
         <div class="settings-item" onclick="toggleTheme()"><span>🎨 Светлая тема</span><label class="switch"><input type="checkbox" id="themeToggle" onchange="toggleTheme()"><span class="slider"></span></label></div>
         <div class="settings-item" onclick="logout()" style="color:#e74c3c;"><span>🚪 Выйти</span></div>
       </div>
@@ -140,8 +156,31 @@ input:checked + .slider:before { transform: translateX(22px); }
   <div id="msgs"></div>
   <div id="inp">
     <button class="ib" onclick="showAttachMenu(event)">📎</button>
+    <button class="ib" onclick="openGifts()" style="color:#ff9800;">🎁</button>
     <input id="mi" placeholder="Сообщение..." autocomplete="off">
     <button class="sb" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<div class="modal" id="giftsModal">
+  <div class="modal-box">
+    <h3>🎁 Выберите подарок</h3>
+    <div class="game-grid" style="grid-template-columns: 1fr 1fr;">
+      <div class="game-card" onclick="sendGift('Ёлка', '🎄', 1000)"><div class="game-icon">🎄</div><div>Ёлка</div><small>1000 🪙</small></div>
+      <div class="game-card" onclick="sendGift('Снеговик', '⛄', 500)"><div class="game-icon">⛄</div><div>Снеговик</div><small>500 🪙</small></div>
+      <div class="game-card" onclick="sendGift('Подарок', '🎁', 200)"><div class="game-icon">🎁</div><div>Подарок</div><small>200 🪙</small></div>
+      <div class="game-card" onclick="sendGift('Роза', '🌹', 50)"><div class="game-icon">🌹</div><div>Роза</div><small>50 🪙</small></div>
+    </div>
+    <button class="btn gray" style="margin-top:15px;" onclick="document.getElementById('giftsModal').style.display='none'">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal" id="nyModal">
+  <div class="modal-box" style="background: linear-gradient(135deg, #b92b27, #1565C0); color: white; border: 2px solid gold;">
+    <h2 style="font-size: 30px; margin-bottom: 10px;">🎄 С Новым Годом! 🎄</h2>
+    <p style="margin-bottom: 20px;">Команда Minechat поздравляет вас! Заберите праздничный бонус в 1000 монет и отправьте подарки друзьям!</p>
+    <button class="btn" style="background: #ffd700; color: #000;" onclick="claimNYBonus()">Забрать 1000 🪙</button>
+    <button class="btn gray" style="margin-top:10px;" onclick="document.getElementById('nyModal').style.display='none'">Позже</button>
   </div>
 </div>
 
@@ -151,7 +190,23 @@ input:checked + .slider:before { transform: translateX(22px); }
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var SERVER_URL = location.host;
 var ws = null, cu = null, cc = null, ctype = "private";
-var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, PINNED = [];
+var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = [];
+var nyBonusClaimed = false;
+
+function createSnow() {
+    const container = document.getElementById('snow-container');
+    for(let i=0; i<50; i++) {
+        let flake = document.createElement('div');
+        flake.classList.add('snowflake');
+        flake.innerText = '❄';
+        flake.style.left = Math.random() * 100 + 'vw';
+        flake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        flake.style.opacity = Math.random();
+        flake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+        container.appendChild(flake);
+    }
+}
+createSnow();
 
 function connect() {
   ws = new WebSocket(wsProto + SERVER_URL + "/ws");
@@ -160,17 +215,30 @@ function connect() {
   ws.onclose = () => document.getElementById('wsDot').classList.add('off');
 }
 function send(d) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(d)); }
+function updateCoinUI() { document.getElementById('coinDisplay').innerText = '🪙 ' + (COINS[cu] || 0); }
+
+if (window.location.href.includes('newyear') || window.location.hash === '#newyear') {
+    setTimeout(() => { if(!nyBonusClaimed) openNYModal(); }, 2000);
+}
 
 function handleMessage(m) {
   switch (m.action) {
     case 'login_ok':
       USERS = {}; VERIFIED = {}; (m.verified_users || []).forEach(u => VERIFIED[u] = true);
       cu = m.username; USERS = m.users; CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
-      PINNED = m.pinned || []; STATUSES = m.statuses || {};
+      COINS = m.coins || {}; PINNED = m.pinned || []; STATUSES = m.statuses || {};
+      nyBonusClaimed = m.ny_bonus || false;
       
       document.getElementById('auth').style.display='none'; document.getElementById('main').style.display='flex';
-      renderChats(); renderContacts(); switchTab('chats');
+      updateCoinUI(); renderChats(); renderContacts(); switchTab('chats');
+      
+      if(!nyBonusClaimed) {
+          document.getElementById('nyBanner').style.display = 'block';
+      } else {
+          document.getElementById('nyBanner').style.display = 'none';
+      }
       break;
+    case 'balance_update': COINS[cu] = m.coins; updateCoinUI(); break;
     case 'new_message':
       if (!MESSAGES[m.chat_id]) MESSAGES[m.chat_id] = [];
       MESSAGES[m.chat_id].push(m.msg);
@@ -182,17 +250,28 @@ function handleMessage(m) {
   }
 }
 
-function renderChats(filter) {
-  filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
-  PINNED.forEach(cid => {
-    if(CHATS[cid]) { var it = document.createElement('div'); it.className='it'; it.innerHTML = `<div class="av" style="background:var(--blue);"><div class="av-inner">📌</div></div><div style="flex:1;"><div class="nm">${CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu)}</div></div>`; it.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(it); }
-  });
-  Object.keys(CHATS).forEach(cid => {
-    if(PINNED.includes(cid) || CHATS[cid].type === 'private') return;
-    var it = document.createElement('div'); it.className='it'; it.innerHTML = `<div class="av" style="background:var(--blue);"><div class="av-inner">💬</div></div><div style="flex:1;"><div class="nm">${CHATS[cid].name || CHATS[cid].members.find(x=>x!==cu)}</div></div>`; it.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(it);
-  });
+function promptPromo() {
+    var code = prompt("Введите промокод:");
+    if (code) send({action: 'activate_promo', code: code});
+}
+function openNYModal() { document.getElementById('nyModal').style.display = 'flex'; }
+function claimNYBonus() {
+    send({action: 'claim_ny_bonus'});
+    document.getElementById('nyModal').style.display = 'none';
+    document.getElementById('nyBanner').style.display = 'none';
+    nyBonusClaimed = true;
 }
 
+function renderChats(filter) {
+  filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
+  Object.keys(CHATS).forEach(cid => {
+    var ch = CHATS[cid]; if (filter && ch.name && ch.name.toLowerCase().indexOf(filter) < 0) return;
+    if (ch.type === 'private') return;
+    var item = document.createElement('div'); item.className = 'it';
+    item.innerHTML = '<div class="av" style="background:var(--blue);"><div class="av-inner">' + (ch.type==='channel'?'📢':'👥') + '</div></div><div style="flex:1;min-width:0"><div class="nm"><span>' + ch.name + '</span></div><div class="pv">' + (ch.type==='channel'?'канал':'группа') + '</div></div>';
+    item.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(item);
+  });
+}
 function renderContacts(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('contacts-list'); l.innerHTML = '';
   Object.keys(USERS).forEach(u => {
@@ -203,26 +282,28 @@ function renderContacts(filter) {
     item.onclick = () => openContactProfile(u); l.appendChild(item);
   });
 }
-
 function renderMessages() { var c = document.getElementById('msgs'); c.innerHTML = ''; (MESSAGES[cc] || []).forEach(m => appendMessage(m, true)); }
 function appendMessage(m, skipScroll) {
     var c = document.getElementById('msgs'); var d = document.createElement('div');
     var mine = m.from === cu; d.className = 'm '+(mine?'mo':'mi');
     var html = '';
     if(!mine && ctype !== 'private') html += `<div class="nm2" style="color:var(--blue);">${m.from}</div>`;
-    if (m.type === 'image') html += `<img src="${m.data}">`;
+    if(m.type === 'game_invite') html += `<div>${m.text}</div><div class="msg-invite" onclick="joinGame('${m.data}')">🎮 Присоединиться</div>`;
+    else if (m.type === 'gift') html += `<div class="gift-msg"><span>${m.data}</span>${esc(m.text)}</div>`;
     else html += m.text || '';
     html += `<div class="t">${m.time}</div>`;
     d.innerHTML = html; c.appendChild(d);
     if(!skipScroll) c.scrollTop = c.scrollHeight;
 }
-
 function sendMessage() { var i = document.getElementById('mi'); var t = i.value.trim(); if (!t || !cc) return; send({action:'message', chat_id: cc, type:'text', text: t}); i.value = ''; }
 function switchTab(tab) { document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); document.getElementById('view-'+tab).classList.add('active'); document.getElementById('nav-'+tab).classList.add('active'); if(tab==='chats') renderChats(); if(tab==='contacts') renderContacts(); }
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function doLogin() { var u=document.getElementById('au').value.trim(); if(!u) return; cu = u; connect(); }
 function logout() { location.reload(); }
-function toggleTheme() { document.body.classList.toggle('light-theme'); }
+
+function openGifts() { if(!cc) return alert("Зайди в чат!"); document.getElementById('giftsModal').style.display = 'flex'; }
+function sendGift(n, i, c) { if((COINS[cu]||0)<c) return alert("Мало монет!"); send({action:'send_gift', chat_id: cc, name:n, icon:i, cost:c}); document.getElementById('giftsModal').style.display='none'; }
+function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
 </script>
 </body>
 </html>
