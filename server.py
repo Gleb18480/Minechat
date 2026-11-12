@@ -15,7 +15,7 @@ MAIN_ID = "main_channel"
 USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE, STORIES = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}, {}
 GAME_ROOMS = {}
 
-CITIES_DB = ["Москва", "Астрахань", "Новгород", "Днепр", "Рига", "Анкара", "Архангельск", "Курск", "Казань", "Новосибирск", "Кемерово", "Омск", "Киев", "Волгоград", "Дубай", "Йошкар-Ола", "Абакан", "Нальчик", "Калининград", "Донецк", "Краснодар", "Ростов", "Тула", "Анапа", "Алматы", "Ыссык-Куль", "Львов", "Воронеж", "Женева", "Амстердам", "Минск", "Красноярск", "Кишинев", "Владивосток", "Курган", "Норильск", "Киров", "Винница", "Ашхабад", "Душанбе", "Ереван", "Нижний Новгород", "Копенгаген", "Нью-Йорк", "Канберра", "Аделаида", "Алжир", "Рим", "Милан", "Неаполь", "Лондон", "Ньюкасл", "Лиссабон", "Нарва", "Афины", "Никосия", "Ялта", "Алушта", "Ярославль", "Липецк"]
+CITIES_DB = ["Москва","Астрахань","Новгород","Рига","Анкара","Архангельск","Курск","Казань","Новосибирск","Кемерово","Омск","Киев","Волгоград","Дубай","Йошкар-Ола","Абакан","Нальчик","Калининград","Донецк","Краснодар","Ростов","Тула","Анапа","Алматы","Львов","Воронеж","Женева","Амстердам","Минск","Красноярск","Кишинев","Владивосток","Курган","Норильск","Киров","Винница","Ашхабад","Душанбе","Ереван","Нижний Новгород","Копенгаген","Нью-Йорк","Канберра","Аделаида","Алжир","Рим","Милан","Неаполь","Лондон","Лиссабон","Нарва","Афины","Никосия","Ялта","Алушта","Ярославль","Липецк"]
 
 def new_id(p="c"): COUNTER[0] += 1; return p + str(COUNTER[0])
 def private_id(a, b): return "p_" + "_".join(sorted([a, b]))
@@ -55,11 +55,9 @@ def init_default():
         CHATS[cid] = {"type": "private", "name": "", "members": ["Носов Глеб", m]}
         MESSAGES[cid] = [{"id": "m_fam", "from": m, "type": "text", "text": "Привет!", "time": datetime.now().strftime("%H:%M")}]
         USERS["Носов Глеб"]["pinned"].append(cid)
-    
     cid_alex = private_id("Носов Глеб", "Александр (kiberone)")
     CHATS[cid_alex] = {"type": "private", "name": "", "members": ["Носов Глеб", "Александр (kiberone)"]}
-    MESSAGES[cid_alex] = [{"id": "m_alex", "from": "Александр (kiberone)", "type": "text", "text": "Привет, я в сети!", "time": datetime.now().strftime("%H:%M")}]
-
+    MESSAGES[cid_alex] = [{"id": "m_alex", "from": "Александр (kiberone)", "type": "text", "text": "Привет!", "time": datetime.now().strftime("%H:%M")}]
     CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat Общий", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True}
     MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "time": datetime.now().strftime("%H:%M")}]
     save_data()
@@ -95,21 +93,32 @@ def init_uno():
     random.shuffle(deck)
     return {"deck": deck, "p1_hand": [deck.pop() for _ in range(5)], "p2_hand": [deck.pop() for _ in range(5)], "top": deck.pop()}
 
+def check_no_pieces(b, side):
+    for r in range(8):
+        for c in range(8):
+            if side == 'bot' and b[r][c] in [2, 4]: return False
+            if side == 'player' and b[r][c] in [1, 3]: return False
+    return True
+
+def check_no_king(b, side):
+    for r in range(8):
+        for c in range(8):
+            if side == 'bot' and b[r][c] == 'k': return False
+            if side == 'player' and b[r][c] == 'K': return False
+    return True
+
 def get_bot_checkers_move(b):
-    moves = []
-    # Ищем, кого можно побить (бот играет за 2 и 4)
+    captures = []
     for r in range(8):
         for c in range(8):
             if b[r][c] in [2, 4]:
-                for dr, dc in [(1,1), (1,-1), (-1,1), (-1,-1)]: # Проверяем все направления
-                    nr, nc = r+dr, c+dc
+                for dr, dc in [(1,1), (1,-1), (-1,1), (-1,-1)]:
                     jr, jc = r+2*dr, c+2*dc
                     if 0 <= jr < 8 and 0 <= jc < 8:
-                        if b[nr][nc] in [1, 3] and b[jr][jc] == 0:
-                            moves.append({"from": [r,c], "to": [jr,jc]})
-    if moves: return random.choice(moves)
-    
-    # Если бить некого, ищем обычный ход
+                        if b[r+dr][c+dc] in [1, 3] and b[jr][jc] == 0:
+                            captures.append({"from": [r,c], "to": [jr,jc]})
+    if captures: return random.choice(captures)
+    moves = []
     for r in range(8):
         for c in range(8):
             if b[r][c] in [2, 4]:
@@ -120,33 +129,31 @@ def get_bot_checkers_move(b):
     return random.choice(moves) if moves else None
 
 def get_bot_chess_move(b):
+    captures = []
     moves = []
-    # Бот играет за строчные буквы (черные)
     for r in range(8):
         for c in range(8):
             p = b[r][c]
             if p.islower():
-                for dr, dc in [(1,0), (2,0), (1,1), (1,-1), (2,1), (2,-1), (0,1), (0,-1), (-1,1), (-1,-1), (-1,0), (-2,1), (-2,-1)]:
+                for dr, dc in [(1,0),(2,0),(1,1),(1,-1),(2,1),(2,-1),(0,1),(0,-1),(-1,1),(-1,-1),(-1,0),(-2,1),(-2,-1),(-2,0)]:
                     nr, nc = r+dr, c+dc
                     if 0 <= nr < 8 and 0 <= nc < 8:
-                        target = b[nr][nc]
-                        if target.isupper(): # Приоритет: бить фигуру
-                            return {"from": [r,c], "to": [nr,nc]}
-                        elif target == "":
-                            moves.append({"from": [r,c], "to": [nr,nc]})
+                        t = b[nr][nc]
+                        if t.isupper(): captures.append({"from": [r,c], "to": [nr,nc]})
+                        elif t == "": moves.append({"from": [r,c], "to": [nr,nc]})
+    if captures: return random.choice(captures)
     return random.choice(moves) if moves else None
 
 def get_bot_city(b):
     if not b: return "Москва"
-    last_word = b[-1]["word"]
-    last_char = last_word[-1].lower()
-    if last_char in ['ь', 'ы', 'й']: last_char = last_word[-2].lower()
-    
-    used_words = [x["word"].lower() for x in b]
+    last_word = b[-1]["word"].lower()
+    last_char = last_word[-1]
+    if last_char in ['ь', 'ы', 'й']: last_char = last_word[-2]
+    used = [x["word"].lower() for x in b]
     for city in CITIES_DB:
-        if city[0].lower() == last_char and city.lower() not in used_words:
+        if city[0].lower() == last_char and city.lower() not in used:
             return city
-    return None # Бот сдался
+    return None
 
 @app.get("/")
 def root():
@@ -187,12 +194,10 @@ async def ws(websocket: WebSocket):
             elif a == "create_room":
                 target = m.get("target"); bet = int(m.get("bet", 0)); g = m.get("game")
                 if USERS[u].get("coins", 0) < bet: continue
-                room_id = new_id("room_")
-                USERS[u]["coins"] -= bet
+                room_id = new_id("room_"); USERS[u]["coins"] -= bet
                 board = init_checkers() if g == "checkers" else init_chess() if g == "chess" else init_uno() if g == "uno" else [""]*9 if g == "tictactoe" else []
                 GAME_ROOMS[room_id] = {"game": g, "players": [u], "turn": u, "bet": bet, "state": "waiting", "board": board}
                 save_data()
-                
                 cid = private_id(u, target)
                 msg = {"id": new_id("m"), "from": BOT_NAME, "type": "game_invite", "text": f"Игра: {g.upper()}. Ставка: {bet}🪙.", "data": room_id, "time": datetime.now().strftime("%H:%M")}
                 if cid in CHATS:
@@ -218,8 +223,7 @@ async def ws(websocket: WebSocket):
                 if room_id in GAME_ROOMS:
                     room = GAME_ROOMS[room_id]
                     if room["state"] == "playing" and u == room["turn"]:
-                        valid = False
-                        g = room["game"]; mv = m.get("move")
+                        valid = False; g = room["game"]; mv = m.get("move")
                         
                         if g == "tictactoe":
                             idx = int(mv); sym = "X" if u == room["players"][0] else "O"
@@ -265,23 +269,41 @@ async def ws(websocket: WebSocket):
                                 valid = True
 
                         if valid:
+                            # ПРОВЕРКА НА КОНЕЦ ИГРЫ
                             if g == "tictactoe" and check_ttt_winner(room["board"]):
                                 w = "X" if check_ttt_winner(room["board"]) == "X" else "O"; wu = room["players"][0] if w == "X" else room["players"][1]
                                 for p in room["players"]:
                                     if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": wu, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
                                 del GAME_ROOMS[room_id]; continue
+                            if g == "checkers" and check_no_pieces(room["board"], "bot"):
+                                for p in room["players"]:
+                                    if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": u, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
+                                del GAME_ROOMS[room_id]; continue
+                            if g == "chess" and check_no_king(room["board"], "bot"):
+                                for p in room["players"]:
+                                    if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": u, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
+                                del GAME_ROOMS[room_id]; continue
                             
-                            # Ход БОТА
+                            # ХОД БОТА
                             if "BOT" in room["players"]:
                                 await asyncio.sleep(0.5)
-                                bmv = None
                                 if g == "tictactoe":
                                     for i in range(9):
                                         if room["board"][i] == "": room["board"][i] = "O"; break
                                 elif g == "checkers":
                                     bmv = get_bot_checkers_move(room["board"])
+                                    if bmv:
+                                        fr, to = bmv["from"], bmv["to"]; p = room["board"][fr[0]][fr[1]]
+                                        dr = to[0] - fr[0]
+                                        if abs(dr) == 2: # РУБКА - УДАЛЯЕМ ФИГУРУ
+                                            mr, mc = (fr[0]+to[0])//2, (fr[1]+to[1])//2
+                                            room["board"][mr][mc] = 0
+                                        room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = 0
                                 elif g == "chess":
                                     bmv = get_bot_chess_move(room["board"])
+                                    if bmv:
+                                        fr, to = bmv["from"], bmv["to"]; p = room["board"][fr[0]][fr[1]]
+                                        room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = ""
                                 elif g == "cities":
                                     bmv = get_bot_city(room["board"])
                                     if bmv: room["board"].append({"user": "BOT", "word": bmv})
@@ -291,9 +313,15 @@ async def ws(websocket: WebSocket):
                                         if card[0] == top[0] or card[1:] == top[1:]:
                                             hand.remove(card); room["board"]["top"] = card; break
                                 
-                                if g in ["checkers", "chess"] and bmv:
-                                    p = room["board"][bmv["from"][0]][bmv["from"][1]]
-                                    room["board"][bmv["to"][0]][bmv["to"][1]] = p; room["board"][bmv["from"][0]][bmv["from"][1]] = 0 if g=="checkers" else ""
+                                # ПРОВЕРКА ПОБЕДЫ БОТА
+                                if g == "tictactoe" and check_ttt_winner(room["board"]) == "O":
+                                    for p in room["players"]:
+                                        if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": "BOT", "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
+                                    del GAME_ROOMS[room_id]; continue
+                                if g == "checkers" and check_no_pieces(room["board"], "player"):
+                                    for p in room["players"]:
+                                        if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": "BOT", "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
+                                    del GAME_ROOMS[room_id]; continue
                             else:
                                 room["turn"] = room["players"][1] if room["turn"] == room["players"][0] else room["players"][0]
                             
