@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import os, json, hashlib, time
+import os, json, hashlib, time, random
 from datetime import datetime
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
@@ -11,6 +11,13 @@ DATA_FILE = os.path.join(BASE, "minechat_data.json")
 INDEX_FILE = os.path.join(BASE, "index.html")
 BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
+
+# ПРОМОКОДЫ
+PROMO_CODES = {
+    "MINE2025": 500,
+    "NEWYEAR": 1000,
+    "KIBERONE": 2000
+}
 
 USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}
 
@@ -47,28 +54,17 @@ def load_data():
 def init_default():
     USERS.clear()
     USERS.update({
-        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "На связи", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        "Александр (kiberone)": {"password": hashlib.md5("k1b4r076§¶".encode()).hexdigest(), "color": "#f44336", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
-        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🤖 Я бот", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []},
+        "Носов Глеб": {"password": hashlib.md5("310315".encode()).hexdigest(), "color": "#2196f3", "creator": True, "verified": True, "avatar": "", "status": "С наступающим!", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 5000, "ny_bonus": False, "used_promos": []},
+        "Носова Наталья": {"password": hashlib.md5("262524".encode()).hexdigest(), "color": "#e91e63", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000, "ny_bonus": False, "used_promos": []},
+        "Носов Даниил": {"password": hashlib.md5("260817".encode()).hexdigest(), "color": "#ff9800", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000, "ny_bonus": False, "used_promos": []},
+        "Носов Виталий": {"password": hashlib.md5("120479".encode()).hexdigest(), "color": "#4caf50", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000, "ny_bonus": False, "used_promos": []},
+        "Александр (kiberone)": {"password": hashlib.md5("k1b4r076§¶".encode()).hexdigest(), "color": "#f44336", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000, "ny_bonus": False, "used_promos": []},
+        BOT_NAME: {"password": "bot", "color": "#9c27b0", "avatar": "", "bot": True, "verified": True, "status": "🎅 Эльф", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 0, "ny_bonus": True, "used_promos": []},
     })
     CHATS.clear()
     CHATS[MAIN_ID] = {"type": "channel", "name": "Minechat (Russia) News", "members": list(USERS.keys()), "owner": "Носов Глеб", "verified": True, "official": True, "avatar": "", "desc": "Официальный канал", "admins": {"Носов Глеб": "Владелец"}, "banned": [], "pinned": ""}
     MESSAGES.clear()
-    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "Добро пожаловать! 🎉", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
-    
-    for m in ["Носова Наталья", "Носов Даниил", "Носов Виталий"]:
-        cid = private_id("Носов Глеб", m)
-        CHATS[cid] = {"type": "private", "name": "", "members": ["Носов Глеб", m], "owner": "", "banned": []}
-        MESSAGES[cid] = [{"id": "m_fam", "from": m, "type": "text", "text": "Привет!", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
-        USERS["Носов Глеб"]["pinned"].append(cid)
-        
-    cid_alex = private_id("Носов Глеб", "Александр (kiberone)")
-    CHATS[cid_alex] = {"type": "private", "name": "", "members": ["Носов Глеб", "Александр (kiberone)"], "owner": "", "banned": []}
-    MESSAGES[cid_alex] = [{"id": "m_alex", "from": "Александр (kiberone)", "type": "text", "text": "Привет!", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
-
+    MESSAGES[MAIN_ID] = [{"id": "m_welcome", "from": "Носов Глеб", "type": "text", "text": "🎄 С Наступающим Новым Годом! 🎄", "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}]
     for uname in list(USERS.keys()):
         if uname == BOT_NAME: continue
         cid_bot = private_id(uname, BOT_NAME)
@@ -118,7 +114,7 @@ def clear_unread(u, cid):
 def bot_reply(user, text):
     cid = private_id(user, BOT_NAME)
     cmd = text.strip(); low = cmd.lower(); reply = ""
-    if low.startswith("/start") or low.startswith("/help"): reply = "🤖 /newpack Имя — пак\n/addsticker — фото\n/packs — паки\n/usepack N — выбрать"
+    if low.startswith("/start") or low.startswith("/help"): reply = "🎅 С Новым Годом! /newpack Имя — пак\n/addsticker — фото\n/packs — паки\n/usepack N — выбрать"
     elif low.startswith("/newpack"):
         name = cmd[8:].strip()
         if not name: reply = "❌ /newpack Кошки"
@@ -144,7 +140,7 @@ def bot_reply(user, text):
         if not active: reply = "❌ Сначала /newpack"
         else: USERS[user]["await_sticker"] = True; save_data(); reply = "📷 Пришли фото"
     elif low == "/_sticker_saved": reply = "✅ Стикер добавлен!"
-    else: reply = "🤖 /help"
+    else: reply = "🎅 /help"
     
     msg = {"id": new_id("m"), "from": BOT_NAME, "type": "text", "text": reply, "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}
     MESSAGES[cid].append(msg); save_data()
@@ -173,7 +169,7 @@ async def ws(websocket: WebSocket):
                 name = normalize_name(m.get("username", ""))
                 if name_exists(name): await websocket.send_text(json.dumps({"action": "register_fail", "reason": "Имя занято"}))
                 else:
-                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#9c27b0", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": []}
+                    USERS[name] = {"password": hashlib.md5(m["password"].encode()).hexdigest(), "color": "#9c27b0", "avatar": "", "status": "", "last_seen": 0, "phone": "", "email": "", "age": 0, "age_group": "", "device": {}, "pinned": [], "coins": 1000, "ny_bonus": False, "used_promos": []}
                     if MAIN_ID in CHATS: CHATS[MAIN_ID]["members"].append(name)
                     cid_bot = private_id(name, BOT_NAME)
                     if cid_bot not in CHATS:
@@ -198,7 +194,8 @@ async def ws(websocket: WebSocket):
                         "last_seen": {n: d.get("last_seen", 0) for n, d in USERS.items()}, "ages": {n: d.get("age", 0) for n, d in USERS.items()},
                         "age_groups": {n: d.get("age_group", "") for n, d in USERS.items()}, "phones": {n: d.get("phone", "") for n, d in USERS.items()},
                         "emails": {n: d.get("email", "") for n, d in USERS.items()}, "devices": {n: d.get("device", {}) for n, d in USERS.items()},
-                        "banned": BANNED, "muted": MUTED, "my_muted": is_muted(u),
+                        "banned": BANNED, "muted": MUTED, "my_muted": is_muted(u), "coins": {n: d.get("coins", 0) for n, d in USERS.items()},
+                        "ny_bonus": USERS[u].get("ny_bonus", False),
                         "stickers": {p: {"owner": STICKERS[p]["owner"], "count": len(STICKERS[p]["stickers"])} for p in STICKERS},
                         "verify_req": VERIFY_REQ, "unread": UNREAD.get(u, {})
                     }))
@@ -208,7 +205,32 @@ async def ws(websocket: WebSocket):
 
             if not u: continue
 
-            if a == "set_device":
+            # --- НОВОГОДНИЙ БОНУС И ПРОМОКОДЫ ---
+            if a == "claim_ny_bonus":
+                if not USERS[u].get("ny_bonus", False):
+                    USERS[u]["coins"] += 1000
+                    USERS[u]["ny_bonus"] = True
+                    save_data()
+                    await websocket.send_text(json.dumps({"action": "balance_update", "coins": USERS[u]["coins"]}))
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "🎉 Вы получили 1000 монет на Новогодние подарки!"}))
+                else:
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "Вы уже забирали новогодний бонус!"}))
+
+            elif a == "activate_promo":
+                code = m.get("code", "").strip().upper()
+                if code in PROMO_CODES:
+                    if code in USERS[u].get("used_promos", []):
+                        await websocket.send_text(json.dumps({"action": "error_msg", "text": "Вы уже использовали этот промокод!"}))
+                    else:
+                        USERS[u].setdefault("used_promos", []).append(code)
+                        USERS[u]["coins"] += PROMO_CODES[code]
+                        save_data()
+                        await websocket.send_text(json.dumps({"action": "balance_update", "coins": USERS[u]["coins"]}))
+                        await websocket.send_text(json.dumps({"action": "error_msg", "text": f"✅ Промокод активирован! Вы получили {PROMO_CODES[code]} монет!"}))
+                else:
+                    await websocket.send_text(json.dumps({"action": "error_msg", "text": "❌ Неверный промокод!"}))
+
+            elif a == "set_device":
                 USERS[u]["device"] = m.get("device", {}); save_data()
                 for w in ACTIVE.values():
                     try: await w.send_text(json.dumps({"action": "device_update", "username": u, "device": USERS[u]["device"]}))
@@ -484,6 +506,26 @@ async def ws(websocket: WebSocket):
                     continue
                 if to in ACTIVE:
                     await ACTIVE[to].send_text(json.dumps({"action": {"call_offer": "incoming_call", "call_answer": "call_accepted", "call_decline": "call_declined", "call_end": "call_ended", "webrtc": "webrtc"}[a], "from": u, "data": m.get("data")}))
+
+            # ПОДАРКИ
+            elif a == "send_gift":
+                cid = m["chat_id"]; cost = int(m.get("cost", 0))
+                if USERS[u].get("coins", 0) >= cost:
+                    USERS[u]["coins"] -= cost
+                    receiver = [x for x in CHATS[cid]["members"] if x != u][0]
+                    if receiver in USERS: USERS[receiver]["coins"] = USERS[receiver].get("coins", 0) + (cost // 2)
+                    save_data()
+                    msg = {"id": new_id("m"), "from": u, "type": "gift", "text": m.get("name"), "data": m.get("icon"), "time": datetime.now().strftime("%H:%M")}
+                    MESSAGES[cid].append(msg); save_data()
+                    for member in CHATS[cid]["members"]:
+                        if member in ACTIVE:
+                            try: await ACTIVE[member].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
+                            except: pass
+                    await websocket.send_text(json.dumps({"action": "balance_update", "coins": USERS[u]["coins"]}))
+                    if receiver in ACTIVE:
+                        try: await ACTIVE[receiver].send_text(json.dumps({"action": "balance_update", "coins": USERS[receiver]["coins"]}))
+                        except: pass
+                else: await websocket.send_text(json.dumps({"action": "error_msg", "text": "Недостаточно монет!"}))
 
     except WebSocketDisconnect:
         if u:
