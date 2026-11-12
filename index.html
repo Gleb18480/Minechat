@@ -8,7 +8,7 @@
 :root { --bg: #0e1621; --panel: #17212b; --text: #ffffff; --text-muted: #8b9aab; --blue: #2AABEE; --border: #0e1621; --input-bg: #242f3d; }
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
 html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position:fixed;overflow:hidden;}
-#app{height:100vh;display:flex;flex-direction:column;max-width:900px;margin:0 auto;background:var(--bg);}
+#app{height:100vh;height:100dvh;display:flex;flex-direction:column;max-width:900px;margin:0 auto;background:var(--bg);}
 
 #auth{flex:1;display:flex;align-items:center;justify-content:center;padding:30px;background:linear-gradient(135deg,var(--panel),var(--bg));}
 .auth-box{width:100%;max-width:400px;text-align:center;}
@@ -22,26 +22,52 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 .hdr .title{flex:1;font-weight:600;font-size:17px;}
 .coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
 
-#content-area { flex: 1; overflow-y: auto; position: relative; padding-bottom: 10px; }
+#content-area { flex: 1; overflow-y: auto; position: relative; }
 .view { display: none; height: 100%; }
 .view.active { display: block; }
 
 .lst{padding:6px;}
 .it{padding:15px; margin-bottom:5px; border-radius:9px; cursor:pointer; background:var(--panel); display:flex; align-items:center; gap:12px;}
 
-/* ЖЕСТКО ФИКСИРУЕМ МЕНЮ ВНИЗУ */
-#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); height: 65px; min-height: 65px; flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); z-index: 100;}
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; font-size: 11px; }
+/* НИЖНЕЕ МЕНЮ - ВСЕГДА ВЫШЕ ЖЕСТОВ */
+#bottom-nav { 
+    display: flex; 
+    background: var(--panel); 
+    border-top: 1px solid var(--border); 
+    flex-shrink: 0; 
+    padding-bottom: max(8px, env(safe-area-inset-bottom)); 
+    z-index: 100;
+}
+.nav-item { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 8px 0; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+    font-size: 11px; 
+    min-height: 52px;
+}
 .nav-item.active { color: var(--blue); font-weight: 600; }
-.nav-icon { font-size: 24px; margin-bottom: 2px; }
+.nav-icon { font-size: 22px; margin-bottom: 2px; }
 
 #chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
-.ch{padding:12px;background:var(--panel);display:flex;align-items:center;border-bottom:1px solid var(--border);}
+.ch{padding:12px;background:var(--panel);display:flex;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
 #msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;}
 .m{max-width:80%;padding:10px;border-radius:14px;font-size:15px;}
 .mi{align-self:flex-start;background:var(--input-bg);}
 .mo{align-self:flex-end;background:var(--blue);}
-#inp{padding:10px;background:var(--panel);display:flex;gap:6px;}
+/* ПОЛЕ ВВОДА В ЧАТЕ - ВЫШЕ ЖЕСТОВ */
+#inp{
+    padding:10px; 
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+    background:var(--panel); 
+    display:flex; 
+    gap:6px;
+    flex-shrink: 0;
+}
 #mi{flex:1;padding:12px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);}
 .sb{background:var(--blue);border:none;color:#fff;width:44px;height:44px;border-radius:50%;}
 
@@ -49,7 +75,17 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 .game-card { background: var(--panel); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; border: 1px solid var(--border); }
 .game-icon { font-size: 40px; margin-bottom: 8px; }
 
-#gameScreen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: none; flex-direction: column; padding: 10px; align-items: center; }
+#gameScreen { 
+    position: fixed; 
+    inset: 0; 
+    background: var(--bg); 
+    z-index: 5000; 
+    display: none; 
+    flex-direction: column; 
+    padding: 10px; 
+    padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+    align-items: center; 
+}
 .board { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: 100%; max-width: 320px; background: #333; padding: 2px; border-radius: 4px; margin-top: 10px; }
 .cell { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
 .cell.white { background: #f0d9b5; }
@@ -82,7 +118,6 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 
   <div id="content-area">
     <div id="view-chats" class="view active"><div class="lst" id="cl"></div></div>
-    
     <div id="view-games" class="view">
       <h3 style="padding: 15px;">Выберите игру:</h3>
       <div class="game-grid">
@@ -94,11 +129,8 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
         <div class="game-card" onclick="selectGame('uno', '🃏 Уно')"><div class="game-icon">🃏</div><div>Уно</div></div>
       </div>
     </div>
-
     <div id="view-settings" class="view">
-      <div class="lst">
-        <div class="it" onclick="logout()" style="color:#e74c3c;">🚪 Выйти</div>
-      </div>
+      <div class="lst"><div class="it" onclick="logout()" style="color:#e74c3c;">🚪 Выйти</div></div>
     </div>
   </div>
 
@@ -143,7 +175,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
     </div>
     <div id="footballBoard" style="display:none; text-align:center;">
         <h1 style="font-size:60px;">⚽</h1>
-        <p id="footballText" style="margin:10px 0;">Выберите зону (1, 2 или 3)</p>
+        <p id="footballText" style="margin:10px 0;">Выберите зону</p>
         <div style="display:flex; gap:10px; justify-content:center;">
             <button class="btn" onclick="sendFootball('1')">1</button>
             <button class="btn" onclick="sendFootball('2')">2</button>
@@ -151,7 +183,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
         </div>
     </div>
     <div id="unoBoard" style="display:none; text-align:center; width:100%;">
-        <h3>Верхняя карта: <span id="unoTop" style="font-size:30px;"></span></h3>
+        <h3>Верхняя: <span id="unoTop" style="font-size:30px;"></span></h3>
         <div id="unoHand" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:20px;"></div>
     </div>
     <button class="btn gray" style="margin-top:auto;" onclick="leaveGame()">Выйти в меню</button>
@@ -159,7 +191,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 
 <div class="modal" id="gameMenuModal">
     <div class="modal-box">
-        <h3>Выберите игру</h3>
+        <h3>Играть в чате</h3>
         <button class="btn" onclick="openGameOptions('tictactoe')" style="margin-top:10px;">❌⭕ Крестики-нолики</button>
         <button class="btn" onclick="openGameOptions('checkers')" style="margin-top:10px;">⚫⚪ Шашки</button>
         <button class="btn" onclick="openGameOptions('chess')" style="margin-top:10px;">♟️ Шахматы</button>
@@ -176,8 +208,7 @@ html,body{background:var(--bg);color:var(--text);height:100%;width:100%;position
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var ws = null, cu = null, cc = null;
 var USERS = {}, CHATS = {}, MESSAGES = {}, COINS = {}, PINNED = [];
-var activeRoom = null, selectedPiece = null;
-var selectedGameType = "";
+var activeRoom = null, selectedPiece = null, selectedGameType = "";
 
 function connect() {
   ws = new WebSocket(wsProto + location.host + "/ws");
@@ -209,7 +240,7 @@ function handleMessage(m) {
     case 'game_update':
       if(activeRoom) { activeRoom.board = m.board; activeRoom.turn = m.turn; renderGame(); } break;
     case 'game_over':
-      alert("Игра окончена! " + (m.winner === "draw" ? "Ничья" : "Победил: " + m.winner));
+      alert("Конец! " + (m.winner === "draw" ? "Ничья" : "Победил: " + m.winner));
       COINS[cu] = m.coins; updateCoinUI(); leaveGame(); break;
     case 'error': alert(m.text); break;
   }
@@ -270,13 +301,12 @@ function startBotGame() { send({action: 'start_bot_game', game: selectedGameType
 function startFriendGame() {
     var target = prompt("Введите имя друга:", "");
     if(target && USERS[target]) {
-        var bet = parseInt(prompt("Ставка (монеты):", "100")); if(!bet) return;
+        var bet = parseInt(prompt("Ставка:", "100")); if(!bet) return;
         send({action: 'create_room', game: selectedGameType, target: target, bet: bet});
         document.getElementById('modeModal').style.display='none';
-        alert("Приглашение отправлено в личный чат!");
+        alert("Приглашение отправлено!");
     } else if(target) alert("Пользователь не найден!");
 }
-
 function openGameMenu() { if(!cc) return; document.getElementById('gameMenuModal').style.display = 'flex'; }
 function openGameOptions(type) {
     var target = prompt("Введите имя друга:", "");
