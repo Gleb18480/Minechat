@@ -269,7 +269,6 @@ async def ws(websocket: WebSocket):
                                 valid = True
 
                         if valid:
-                            # ПРОВЕРКА НА КОНЕЦ ИГРЫ
                             if g == "tictactoe" and check_ttt_winner(room["board"]):
                                 w = "X" if check_ttt_winner(room["board"]) == "X" else "O"; wu = room["players"][0] if w == "X" else room["players"][1]
                                 for p in room["players"]:
@@ -284,7 +283,6 @@ async def ws(websocket: WebSocket):
                                     if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": u, "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
                                 del GAME_ROOMS[room_id]; continue
                             
-                            # ХОД БОТА
                             if "BOT" in room["players"]:
                                 await asyncio.sleep(0.5)
                                 if g == "tictactoe":
@@ -295,7 +293,7 @@ async def ws(websocket: WebSocket):
                                     if bmv:
                                         fr, to = bmv["from"], bmv["to"]; p = room["board"][fr[0]][fr[1]]
                                         dr = to[0] - fr[0]
-                                        if abs(dr) == 2: # РУБКА - УДАЛЯЕМ ФИГУРУ
+                                        if abs(dr) == 2:
                                             mr, mc = (fr[0]+to[0])//2, (fr[1]+to[1])//2
                                             room["board"][mr][mc] = 0
                                         room["board"][to[0]][to[1]] = p; room["board"][fr[0]][fr[1]] = 0
@@ -313,7 +311,6 @@ async def ws(websocket: WebSocket):
                                         if card[0] == top[0] or card[1:] == top[1:]:
                                             hand.remove(card); room["board"]["top"] = card; break
                                 
-                                # ПРОВЕРКА ПОБЕДЫ БОТА
                                 if g == "tictactoe" and check_ttt_winner(room["board"]) == "O":
                                     for p in room["players"]:
                                         if p in ACTIVE: await ACTIVE[p].send_text(json.dumps({"action": "game_over", "winner": "BOT", "board": room["board"], "coins": USERS.get(p, 0)["coins"] if p in USERS else 0}))
