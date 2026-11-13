@@ -100,6 +100,8 @@ input:checked + .slider:before { transform: translateX(22px); }
 @keyframes fall { 0% { transform: translateY(-10vh) translateX(0); } 100% { transform: translateY(110vh) translateX(20px); } }
 
 .ny-banner { background: linear-gradient(90deg, #b92b27, #1565C0); color: white; padding: 10px; text-align: center; font-weight: bold; cursor: pointer; border-radius: 8px; margin: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
+.bot-row { display: flex; justify-content: space-between; align-items: center; background: var(--input-bg); padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
+.bot-del-btn { background: #e74c3c; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -264,10 +266,7 @@ input:checked + .slider:before { transform: translateX(22px); }
     <button class="btn purple" onclick="startProfileAgeVerification()">🔞 Возраст (FaceID)</button>
     <button class="btn" onclick="createChannel()">📢 Создать канал</button>
     <button class="btn" onclick="createGroup()">👥 Создать группу</button>
-    
-    <!-- ВОТ ОНА, КНОПКА БОТОВ! -->
     <button class="btn" style="background:#9c27b0; margin-top:8px;" onclick="openMyBots()">🤖 Мои боты</button>
-
     <div class="row" style="margin-top:10px;"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
   </div>
 </div>
@@ -287,9 +286,15 @@ input:checked + .slider:before { transform: translateX(22px); }
 var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var SERVER_URL = location.host;
 var ws = null, cu = null, cc = null, ctype = "private";
-var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = [];
+var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = {};
 var activeRoom = null, selectedPiece = null, selectedGameType = "";
 var nyBonusClaimed = false, myBots = [];
+
+// Функция для получения цвета пользователя
+function getColor(n) {
+    var colors = {'Носов Глеб':'#2196f3','Носова Наталья':'#e91e63','Носов Даниил':'#ff9800','Носов Виталий':'#4caf50','Александр (kiberone)':'#f44336','Minechat Бот':'#9c27b0'};
+    return colors[n] || '#9c27b0';
+}
 
 function createSnow() {
     const container = document.getElementById('snow-container');
@@ -322,8 +327,20 @@ if (window.location.href.includes('newyear') || window.location.hash === '#newye
 function handleMessage(m) {
   switch (m.action) {
     case 'login_ok':
-      USERS = {}; VERIFIED = {}; (m.verified_users || []).forEach(u => VERIFIED[u] = true);
-      cu = m.username; USERS = m.users; CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
+      USERS = {}; VERIFIED = {}; 
+      (m.verified_users || []).forEach(u => VERIFIED[u] = true);
+      cu = m.username; 
+      
+      // ИСПРАВЛЕНИЕ БАГА С КОНТАКТАМИ
+      m.users.forEach(u => {
+          USERS[u] = {
+              color: getColor(u),
+              avatar: (m.avatars && m.avatars[u]) ? m.avatars[u] : "",
+              verified: !!VERIFIED[u]
+          };
+      });
+      
+      CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
       COINS = m.coins || {}; PINNED = m.pinned || []; STATUSES = m.statuses || {};
       myBots = m.my_bots || []; nyBonusClaimed = m.ny_bonus || false;
       
@@ -367,6 +384,15 @@ function claimNYBonus() {
     nyBonusClaimed = true;
 }
 
+// ИСПРАВЛЕННЫЙ ПРОФИЛЬ
+function openProfile() {
+    var my = USERS[cu] || { color: '#2AABEE' };
+    var big = document.getElementById('myBigAvatar');
+    if (my.avatar) { big.innerHTML = '<img src="' + my.avatar + '">'; big.style.background = '#000'; }
+    else { big.innerHTML = ''; big.innerText = cu.charAt(0); big.style.background = my.color; }
+    document.getElementById('profileModal').style.display = 'flex';
+}
+
 // БОТЫ
 function openMyBots() { document.getElementById('profileModal').style.display='none'; send({action: 'get_my_bots'}); document.getElementById('botsModal').style.display='flex'; document.getElementById('botEditor').style.display='none'; }
 function renderMyBots() {
@@ -394,16 +420,20 @@ function renderChats(filter) {
     item.onclick = () => send({action:'open_chat', chat_id: cid}); l.appendChild(item);
   });
 }
+
+// ИСПРАВЛЕННЫЕ КОНТАКТЫ
 function renderContacts(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('contacts-list'); l.innerHTML = '';
   Object.keys(USERS).forEach(u => {
     if (u === cu || (filter && u.toLowerCase().indexOf(filter) < 0)) return;
     var isOn = ONLINE.indexOf(u) >= 0;
+    var user = USERS[u];
     var item = document.createElement('div'); item.className = 'it';
-    item.innerHTML = '<div class="av" style="background:' + USERS[u].color + ';"><div class="av-inner">' + (USERS[u].avatar ? '<img src="'+USERS[u].avatar+'">' : u.charAt(0)) + '</div>' + (isOn ? '<span class="on"></span>' : '') + '</div><div style="flex:1;min-width:0"><div class="nm"><span>' + u + '</span>' + (USERS[u].verified ? ' <span class="badge-verified">✔</span>' : '') + '</div><div class="pv">' + (STATUSES[u] || (isOn ? 'онлайн' : 'офлайн')) + '</div></div>';
+    item.innerHTML = '<div class="av" style="background:' + user.color + ';"><div class="av-inner">' + (user.avatar ? '<img src="'+user.avatar+'">' : u.charAt(0)) + '</div>' + (isOn ? '<span class="on"></span>' : '') + '</div><div style="flex:1;min-width:0"><div class="nm"><span>' + u + '</span>' + (user.verified ? ' <span class="badge-verified">✔</span>' : '') + '</div><div class="pv">' + (STATUSES[u] || (isOn ? 'онлайн' : 'офлайн')) + '</div></div>';
     item.onclick = () => openContactProfile(u); l.appendChild(item);
   });
 }
+
 function renderMessages() { var c = document.getElementById('msgs'); c.innerHTML = ''; (MESSAGES[cc] || []).forEach(m => appendMessage(m, true)); }
 function appendMessage(m, skipScroll) {
     var c = document.getElementById('msgs'); var d = document.createElement('div');
@@ -500,6 +530,8 @@ function renderGame() {
 function openGifts() { if(!cc) return alert("Зайди в чат!"); document.getElementById('giftsModal').style.display = 'flex'; }
 function sendGift(n, i, c) { if((COINS[cu]||0)<c) return alert("Мало монет!"); send({action:'send_gift', chat_id: cc, name:n, icon:i, cost:c}); document.getElementById('giftsModal').style.display='none'; }
 function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
+
+function toggleTheme() { document.body.classList.toggle('light-theme'); }
 </script>
 </body>
-    </html>
+</html>
