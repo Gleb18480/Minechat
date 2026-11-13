@@ -3,7 +3,7 @@ name: Build PC App (Windows)
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Позволяет запускать сборку вручную
+  workflow_dispatch:
 
 jobs:
   build-windows:
@@ -25,7 +25,7 @@ jobs:
 
     - name: Build EXE with PyInstaller
       run: |
-        pyinstaller --noconfirm --windowed --add-data "index.html;." --name "Minechat" app.py
+        pyinstaller --noconfirm --windowed --add-data "index.html;." --hidden-import=clr --hidden-import=clr_loader --collect-all pythonnet --collect-all webview --collect-all clr_loader --name "Minechat" app.py
 
     - name: Upload EXE Artifact
       uses: actions/upload-artifact@v4
