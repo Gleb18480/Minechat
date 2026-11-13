@@ -12,6 +12,7 @@ INDEX_FILE = os.path.join(BASE, "index.html")
 BOT_NAME = "Minechat Бот"
 MAIN_ID = "main_channel"
 
+# Список промокодов
 PROMO_CODES = {"MINE2025": 500, "NEWYEAR": 1000, "KIBERONE": 2000}
 
 USERS, CHATS, MESSAGES, DOCUMENTS, COUNTER, BANNED, MUTED, STICKERS, VERIFY_REQ, UNREAD, ACTIVE = {}, {}, {}, {}, [0], [], {}, {}, {}, {}, {}
@@ -119,6 +120,7 @@ def clear_unread(u, cid):
     if u in UNREAD and cid in UNREAD[u]:
         del UNREAD[u][cid]; save_data()
 
+# ===== ЛОГИКА ДЛЯ БОТОВ =====
 def run_bot_code(code, text):
     try:
         safe_globals = {"__builtins__": {"len": len, "str": str, "int": int, "float": float, "range": range, "list": list, "dict": dict}}
@@ -169,6 +171,7 @@ async def send_bot(user, text):
         try: await ACTIVE[user].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": msg}))
         except: pass
 
+# ===== ЛОГИКА ДЛЯ ИГР =====
 def check_ttt_winner(b):
     lines = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
     for l in lines:
@@ -356,42 +359,22 @@ async def ws(websocket: WebSocket):
                 else:
                     await websocket.send_text(json.dumps({"action": "error_msg", "text": "❌ Неверный промокод!"}))
 
+            # ПРОЧЕЕ
             elif a == "set_device":
                 USERS[u]["device"] = m.get("device", {}); save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "device_update", "username": u, "device": USERS[u]["device"]}))
-                    except: pass
             elif a == "set_email":
                 USERS[u]["email"] = (m.get("email", "") or "").strip()[:50]; save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "email_update", "username": u, "email": USERS[u]["email"]}))
-                    except: pass
             elif a == "set_phone":
                 USERS[u]["phone"] = (m.get("phone", "") or "").strip()[:30]; save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "phone_update", "username": u, "phone": USERS[u]["phone"]}))
-                    except: pass
             elif a == "set_age_group":
                 try: age = int(m.get("age", 0))
                 except: age = 0
                 group = m.get("group", "")
                 USERS[u]["age"] = age; USERS[u]["age_group"] = group; save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "age_update", "username": u, "age": age, "age_group": group}))
-                    except: pass
             elif a == "set_status":
                 USERS[u]["status"] = (m.get("status", "") or "").strip()[:100]; save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "status_update", "username": u, "status": USERS[u]["status"]}))
-                    except: pass
-            elif a == "clear_history":
-                cid = m.get("chat_id", "")
-                if cid in CHATS and (is_chat_admin(cid, u) or CHATS[cid]["type"] == "private"):
-                    MESSAGES[cid] = []; save_data()
-                    for member in CHATS[cid]["members"]:
-                        if member in ACTIVE:
-                            try: await ACTIVE[member].send_text(json.dumps({"action": "history_cleared", "chat_id": cid}))
-                            except: pass
+            elif a == "set_avatar":
+                USERS[u]["avatar"] = m.get("avatar", ""); save_data()
             elif a == "request_verify":
                 VERIFY_REQ[u] = {"from": u, "status": "pending"}; save_data()
                 admin = "Носов Глеб"
@@ -399,37 +382,6 @@ async def ws(websocket: WebSocket):
                     try: await ACTIVE[admin].send_text(json.dumps({"action": "incoming_verify_call", "from": u}))
                     except: pass
                 await websocket.send_text(json.dumps({"action": "verify_sent"}))
-            elif a == "set_avatar":
-                USERS[u]["avatar"] = m.get("avatar", ""); save_data()
-                for w in ACTIVE.values():
-                    try: await w.send_text(json.dumps({"action": "avatar_update", "username": u, "avatar": USERS[u]["avatar"]}))
-                    except: pass
-            elif a == "set_chat_avatar":
-                cid = m.get("chat_id", "")
-                if cid in CHATS and is_chat_admin(cid, u):
-                    CHATS[cid]["avatar"] = m.get("avatar", ""); save_data()
-                    for member in CHATS[cid]["members"]:
-                        if member in ACTIVE:
-                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
-                            except: pass
-            elif a == "rename_chat":
-                cid = m.get("chat_id", ""); new_name = (m.get("name", "") or "").strip()
-                if cid in CHATS and new_name and is_chat_admin(cid, u):
-                    CHATS[cid]["name"] = new_name; save_data()
-                    for member in CHATS[cid]["members"]:
-                        if member in ACTIVE:
-                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
-                            except: pass
-            elif a == "add_member":
-                cid = m.get("chat_id", ""); target = m.get("target", "")
-                if cid in CHATS and target in USERS and is_chat_admin(cid, u) and target not in CHATS[cid]["members"]:
-                    CHATS[cid]["members"].append(target)
-                    if "banned" in CHATS[cid] and target in CHATS[cid]["banned"]: CHATS[cid]["banned"].remove(target)
-                    save_data()
-                    for member in CHATS[cid]["members"]:
-                        if member in ACTIVE:
-                            try: await ACTIVE[member].send_text(json.dumps({"action": "chat_update", "chat_id": cid, "chat": CHATS[cid]}))
-                            except: pass
 
             elif a == "mark_read":
                 cid = m.get("chat_id")
@@ -479,9 +431,6 @@ async def ws(websocket: WebSocket):
                                 try: await ACTIVE[u].send_text(json.dumps({"action": "new_message", "chat_id": cid, "msg": echo}))
                                 except: pass
                             await send_bot(u, "/_sticker_saved")
-                            for w in ACTIVE.values():
-                                try: await w.send_text(json.dumps({"action": "stickers_update", "stickers": {p: {"owner": STICKERS[p]["owner"], "count": len(STICKERS[p]["stickers"])} for p in STICKERS}}))
-                                except: pass
                             continue
                     if mtype == "text":
                         msg = {"id": new_id("m"), "from": u, "type": "text", "text": m.get("text", ""), "data": "", "mime": "", "fname": "", "reply_to": "", "reactions": {}, "edited": False, "time": datetime.now().strftime("%H:%M"), "read_by": []}
