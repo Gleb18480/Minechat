@@ -24,15 +24,7 @@ jobs:
         pip install -r requirements-pc.txt
 
     - name: Build EXE with PyInstaller
-      run: |
-        pyinstaller --noconfirm --windowed --onedir ^
-          --hidden-import=clr_loader ^
-          --hidden-import=pythonnet ^
-          --collect-all pythonnet ^
-          --collect-all clr_loader ^
-          --collect-all webview ^
-          --add-data "index.html;." ^
-          --name "Minechat" app.py
+      run: pyinstaller --noconfirm --windowed --onedir --hidden-import=clr_loader --hidden-import=pythonnet --collect-all pythonnet --collect-all clr_loader --collect-all webview --add-data "index.html;." --name "Minechat" app.py
 
     - name: Upload EXE Artifact
       uses: actions/upload-artifact@v4
