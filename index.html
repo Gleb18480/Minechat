@@ -236,6 +236,42 @@ input:checked + .slider:before { transform: translateX(22px); }
   </div>
 </div>
 
+<div class="modal" id="botsModal">
+  <div class="modal-box">
+    <h3>🤖 Мои боты</h3>
+    <div id="myBotsList" style="margin-bottom: 15px;"></div>
+    <button class="btn" onclick="createBotUI()">➕ Создать бота</button>
+    <div style="display:none; margin-top:15px; padding-top:15px; border-top:1px solid var(--border);" id="botEditor">
+        <input class="inp" id="botNameInput" placeholder="Имя бота (например: WeatherBot)">
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:5px;">Код Python 3 (должен возвращать строку):</p>
+        <textarea id="botCodeInput" style="width:100%; height:150px; background:var(--bg); color:#4caf50; font-family:monospace; padding:10px; border:1px solid var(--border); border-radius:8px; resize:none;">def handle_message(text):
+    if text.lower() == "привет":
+        return "Привет, я твой бот!"
+    return "Я не понимаю."</textarea>
+        <button class="btn" style="background:#4caf50; margin-top:10px;" onclick="saveBot()">Сохранить и запустить</button>
+    </div>
+    <button class="btn gray" style="margin-top:15px;" onclick="document.getElementById('botsModal').style.display='none'">Закрыть</button>
+  </div>
+</div>
+
+<div class="modal" id="profileModal">
+  <div class="modal-box" style="text-align:center;">
+    <h3>👤 Мой профиль</h3>
+    <div class="big-av" id="myBigAvatar" style="background:#2AABEE;">?</div>
+    <button class="btn gray" onclick="requestAllPermissions()">Разрешения</button>
+    <button class="btn" onclick="openPhoneModal()">📱 Номер</button>
+    <button class="btn" onclick="openEmailModal()">📧 Почта</button>
+    <button class="btn purple" onclick="startProfileAgeVerification()">🔞 Возраст (FaceID)</button>
+    <button class="btn" onclick="createChannel()">📢 Создать канал</button>
+    <button class="btn" onclick="createGroup()">👥 Создать группу</button>
+    
+    <!-- ВОТ ОНА, КНОПКА БОТОВ! -->
+    <button class="btn" style="background:#9c27b0; margin-top:8px;" onclick="openMyBots()">🤖 Мои боты</button>
+
+    <div class="row" style="margin-top:10px;"><button class="btn gray" onclick="document.getElementById('profileModal').style.display='none'">Закрыть</button></div>
+  </div>
+</div>
+
 <div class="modal" id="nyModal">
   <div class="modal-box" style="background: linear-gradient(135deg, #b92b27, #1565C0); color: white; border: 2px solid gold;">
     <h2 style="font-size: 30px; margin-bottom: 10px;">🎄 С Новым Годом! 🎄</h2>
@@ -253,7 +289,7 @@ var SERVER_URL = location.host;
 var ws = null, cu = null, cc = null, ctype = "private";
 var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = [];
 var activeRoom = null, selectedPiece = null, selectedGameType = "";
-var nyBonusClaimed = false;
+var nyBonusClaimed = false, myBots = [];
 
 function createSnow() {
     const container = document.getElementById('snow-container');
@@ -289,16 +325,13 @@ function handleMessage(m) {
       USERS = {}; VERIFIED = {}; (m.verified_users || []).forEach(u => VERIFIED[u] = true);
       cu = m.username; USERS = m.users; CHATS = {}; m.chats.forEach(c=>CHATS[c.id]=c);
       COINS = m.coins || {}; PINNED = m.pinned || []; STATUSES = m.statuses || {};
-      nyBonusClaimed = m.ny_bonus || false;
+      myBots = m.my_bots || []; nyBonusClaimed = m.ny_bonus || false;
       
       document.getElementById('auth').style.display='none'; document.getElementById('main').style.display='flex';
       updateCoinUI(); renderChats(); renderContacts(); switchTab('chats');
       
-      if(!nyBonusClaimed) {
-          document.getElementById('nyBanner').style.display = 'block';
-      } else {
-          document.getElementById('nyBanner').style.display = 'none';
-      }
+      if(!nyBonusClaimed) document.getElementById('nyBanner').style.display = 'block';
+      else document.getElementById('nyBanner').style.display = 'none';
       break;
     case 'balance_update': COINS[cu] = m.coins; updateCoinUI(); break;
     case 'new_message':
@@ -316,6 +349,9 @@ function handleMessage(m) {
       alert("Конец! " + (m.winner === "draw" ? "Ничья" : "Победил: " + m.winner));
       COINS[cu] = m.coins; updateCoinUI(); leaveGame(); break;
     case 'error_msg': alert(m.text); break;
+    case 'bot_created': myBots.push(m.bot); renderMyBots(); alert("Бот создан!"); break;
+    case 'bot_deleted': myBots = myBots.filter(b => b.name !== m.name); renderMyBots(); break;
+    case 'bots_list': myBots = m.bots; renderMyBots(); break;
   }
 }
 
@@ -330,6 +366,23 @@ function claimNYBonus() {
     document.getElementById('nyBanner').style.display = 'none';
     nyBonusClaimed = true;
 }
+
+// БОТЫ
+function openMyBots() { document.getElementById('profileModal').style.display='none'; send({action: 'get_my_bots'}); document.getElementById('botsModal').style.display='flex'; document.getElementById('botEditor').style.display='none'; }
+function renderMyBots() {
+    var box = document.getElementById('myBotsList'); if(!box) return; box.innerHTML = '';
+    if(myBots.length === 0) box.innerHTML = '<div style="color:var(--text-muted)">У вас пока нет ботов.</div>';
+    myBots.forEach(b => {
+        var div = document.createElement('div'); div.className = 'bot-row';
+        div.innerHTML = `<div style="display:flex;align-items:center;gap:10px;" onclick="openBotChat('${b.name}')"><span style="font-size:20px;">🤖</span><b>${b.name}</b></div>
+                         <button class="bot-del-btn" onclick="event.stopPropagation(); deleteBot('${b.name}')">🗑 Удалить</button>`;
+        box.appendChild(div);
+    });
+}
+function openBotChat(name) { send({action:'open_private', with: name}); document.getElementById('botsModal').style.display='none'; }
+function deleteBot(name) { if(!confirm('Удалить бота ' + name + '?')) return; send({action: 'delete_bot', name: name}); }
+function createBotUI() { document.getElementById('botEditor').style.display='block'; }
+function saveBot() { var name = document.getElementById('botNameInput').value.trim(); var code = document.getElementById('botCodeInput').value; if(!name || !code) return alert("Заполните поля!"); if(!name.endsWith('Bot') && !name.endsWith('bot')) name += 'Bot'; send({action: 'create_bot', name: name, code: code}); document.getElementById('botEditor').style.display='none'; }
 
 function renderChats(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
@@ -449,4 +502,4 @@ function sendGift(n, i, c) { if((COINS[cu]||0)<c) return alert("Мало мон�
 function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
 </script>
 </body>
-</html>
+    </html>
