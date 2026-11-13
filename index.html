@@ -70,6 +70,18 @@ h2{font-size:24px;margin-bottom:6px;}
 .ib{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px;flex-shrink:0;}
 .sb{background:var(--blue);border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
+.game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 15px; }
+.game-card { background: var(--panel); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; border: 1px solid var(--border); }
+.game-icon { font-size: 40px; margin-bottom: 8px; }
+#gameScreen { position: fixed; inset: 0; background: var(--bg); z-index: 5000; display: none; flex-direction: column; padding: 10px; align-items: center; padding-bottom:max(10px, env(safe-area-inset-bottom)); }
+.board { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; width: 100%; max-width: 320px; background: #333; padding: 2px; border-radius: 4px; margin-top: 10px; }
+.cell { width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; }
+.cell.white { background: #f0d9b5; }
+.cell.black { background: #b58863; }
+.ttt-board { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; width: 100%; max-width: 300px; margin: 20px auto; }
+.ttt-cell { background: var(--panel); height: 80px; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; border-radius: 8px; cursor: pointer; }
+.msg-invite { background: #1e3a8a; color: white; padding: 10px; border-radius: 8px; margin-top: 5px; cursor: pointer; text-align: center; font-weight: bold; }
+
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:6000;display:none;align-items:center;justify-content:center;padding:20px;}
 .modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:400px;text-align:center;}
 .settings-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 16px;}
@@ -120,6 +132,18 @@ input:checked + .slider:before { transform: translateX(22px); }
       <div class="lst" id="cl"></div>
     </div>
     
+    <div id="view-games" class="view">
+      <h3 style="padding: 15px;">Выберите игру:</h3>
+      <div class="game-grid">
+        <div class="game-card" onclick="selectGame('tictactoe', '❌⭕ Крестики-нолики')"><div class="game-icon">❌⭕</div><div>Крестики-нолики</div></div>
+        <div class="game-card" onclick="selectGame('cities', '🏙️ Города')"><div class="game-icon">🏙️</div><div>Города</div></div>
+        <div class="game-card" onclick="selectGame('football', '⚽ Футбол')"><div class="game-icon">⚽</div><div>Футбол</div></div>
+        <div class="game-card" onclick="selectGame('checkers', '⚫⚪ Шашки')"><div class="game-icon">⚫⚪</div><div>Шашки</div></div>
+        <div class="game-card" onclick="selectGame('chess', '♟️ Шахматы')"><div class="game-icon">♟️</div><div>Шахматы</div></div>
+        <div class="game-card" onclick="selectGame('uno', '🃏 Уно')"><div class="game-icon">🃏</div><div>Уно</div></div>
+      </div>
+    </div>
+
     <div id="view-calls" class="view"><div class="lst" id="call-list"></div></div>
     <div id="view-contacts" class="view">
       <div class="srch-wrap"><input class="srch" id="sr-contacts" placeholder="Найти контакт" oninput="renderContacts(this.value)"></div>
@@ -137,6 +161,7 @@ input:checked + .slider:before { transform: translateX(22px); }
 
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
+    <div class="nav-item" onclick="switchTab('games')" id="nav-games"><div class="nav-icon">🎮</div><div>Игры</div></div>
     <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
     <div class="nav-item" onclick="switchTab('contacts')" id="nav-contacts"><div class="nav-icon">👥</div><div>Контакты</div></div>
     <div class="nav-item" onclick="switchTab('settings')" id="nav-settings"><div class="nav-icon">⚙️</div><div>Настройки</div></div>
@@ -150,6 +175,7 @@ input:checked + .slider:before { transform: translateX(22px); }
     <div style="flex:1;min-width:0" onclick="openContactProfile(getOtherUser(cc))">
       <div class="nm" id="hn">-</div>
     </div>
+    <button class="hb" onclick="openGameMenu()">🎮</button>
     <button class="hb" id="callVidBtn" onclick="startCall(true)">📹</button>
     <button class="hb" id="callAudBtn" onclick="startCall(false)">📞</button>
   </div>
@@ -160,6 +186,41 @@ input:checked + .slider:before { transform: translateX(22px); }
     <input id="mi" placeholder="Сообщение..." autocomplete="off">
     <button class="sb" onclick="sendMessage()">➤</button>
   </div>
+</div>
+
+<div class="modal" id="modeModal">
+    <div class="modal-box">
+        <h3 id="modeTitle">Игра</h3>
+        <button class="btn" onclick="startBotGame()" style="margin-top:15px;">🤖 Играть с ботом</button>
+        <button class="btn" onclick="startFriendGame()" style="margin-top:10px;">👤 Играть с другом</button>
+        <button class="btn gray" onclick="document.getElementById('modeModal').style.display='none'" style="margin-top:15px;">Отмена</button>
+    </div>
+</div>
+
+<div id="gameScreen">
+    <h3 id="gameTitle" style="text-align:center;">Игра</h3>
+    <div id="gameStatus" style="text-align:center; color:var(--text-muted); margin:10px 0;"></div>
+    <div id="tttBoard" class="ttt-board" style="display:none;"></div>
+    <div id="board" class="board" style="display:none;"></div>
+    <div id="citiesBoard" style="display:none; text-align:center; width:100%;">
+        <div id="citiesHistory" style="height:200px; overflow-y:auto; margin-bottom:10px; background:var(--panel); padding:10px; border-radius:10px;"></div>
+        <input class="inp" id="cityInput" placeholder="Введите город...">
+        <button class="btn" onclick="sendCity()">Отправить</button>
+    </div>
+    <div id="footballBoard" style="display:none; text-align:center;">
+        <h1 style="font-size:60px;">⚽</h1>
+        <p id="footballText" style="margin:10px 0;">Выберите зону (1, 2 или 3)</p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="btn" onclick="sendFootball('1')">1</button>
+            <button class="btn" onclick="sendFootball('2')">2</button>
+            <button class="btn" onclick="sendFootball('3')">3</button>
+        </div>
+    </div>
+    <div id="unoBoard" style="display:none; text-align:center; width:100%;">
+        <h3>Верхняя карта: <span id="unoTop" style="font-size:30px;"></span></h3>
+        <div id="unoHand" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-top:20px;"></div>
+    </div>
+    <button class="btn gray" style="margin-top:auto;" onclick="leaveGame()">Выйти в меню</button>
 </div>
 
 <div class="modal" id="giftsModal">
@@ -191,6 +252,7 @@ var wsProto = location.protocol === 'https:' ? 'wss://' : 'ws://';
 var SERVER_URL = location.host;
 var ws = null, cu = null, cc = null, ctype = "private";
 var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = [];
+var activeRoom = null, selectedPiece = null, selectedGameType = "";
 var nyBonusClaimed = false;
 
 function createSnow() {
@@ -246,6 +308,13 @@ function handleMessage(m) {
       renderChats(); break;
     case 'chat_opened':
       cc=m.chat_id; ctype=m.chat.type; MESSAGES[cc]=m.messages; document.getElementById('main').style.display='none'; document.getElementById('chat').style.display='flex'; document.getElementById('hn').innerText = m.chat.name || m.chat.members.find(x=>x!==cu); renderMessages(); break;
+    case 'game_started':
+      activeRoom = m; document.getElementById('modeModal').style.display='none'; document.getElementById('gameScreen').style.display = 'flex'; document.getElementById('gameTitle').innerText = m.game.toUpperCase(); renderGame(); break;
+    case 'game_update':
+      if(activeRoom) { activeRoom.board = m.board; activeRoom.turn = m.turn; renderGame(); } break;
+    case 'game_over':
+      alert("Конец! " + (m.winner === "draw" ? "Ничья" : "Победил: " + m.winner));
+      COINS[cu] = m.coins; updateCoinUI(); leaveGame(); break;
     case 'error_msg': alert(m.text); break;
   }
 }
@@ -300,6 +369,80 @@ function switchTab(tab) { document.querySelectorAll('.view').forEach(v=>v.classL
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function doLogin() { var u=document.getElementById('au').value.trim(); if(!u) return; cu = u; connect(); }
 function logout() { location.reload(); }
+
+function selectGame(type, title) { selectedGameType = type; document.getElementById('modeTitle').innerText = title; document.getElementById('modeModal').style.display = 'flex'; }
+function startBotGame() { send({action: 'start_bot_game', game: selectedGameType}); document.getElementById('modeModal').style.display='none'; }
+function startFriendGame() {
+    var target = prompt("Введите имя друга:", "");
+    if(target && USERS[target]) {
+        var bet = parseInt(prompt("Ставка:", "100")); if(!bet) return;
+        send({action: 'create_room', game: selectedGameType, target: target, bet: bet});
+        document.getElementById('modeModal').style.display='none'; alert("Приглашение отправлено!");
+    } else if(target) alert("Пользователь не найден!");
+}
+function openGameMenu() { if(!cc) return alert("Зайди в чат!"); document.getElementById('gameMenuModal').style.display='flex'; }
+function openGameOptions(type) {
+    var target = prompt("Введите имя друга:", "");
+    if(target && USERS[target]) {
+        var bet = parseInt(prompt("Ставка:", "100")); if(!bet) return;
+        send({action: 'create_room', game: type, target: target, bet: bet});
+        document.getElementById('gameMenuModal').style.display='none';
+    }
+}
+function joinGame(id) { send({action: 'join_room', room_id: id, chat_id: cc}); }
+function leaveGame() { document.getElementById('gameScreen').style.display = 'none'; activeRoom = null; selectedPiece = null; }
+function sendCity() { var w = document.getElementById('cityInput').value.trim(); if(w) send({action:'game_move', room_id: activeRoom.room_id, move: w}); document.getElementById('cityInput').value=''; }
+function sendFootball(z) { send({action:'game_move', room_id: activeRoom.room_id, move: z}); }
+
+function renderGame() {
+    document.getElementById('gameStatus').innerText = activeRoom.turn === cu ? "ВАШ ХОД" : "Ход: " + activeRoom.turn;
+    document.getElementById('tttBoard').style.display = 'none'; document.getElementById('board').style.display = 'none';
+    document.getElementById('citiesBoard').style.display = 'none'; document.getElementById('footballBoard').style.display = 'none'; document.getElementById('unoBoard').style.display = 'none';
+
+    if(activeRoom.game === 'tictactoe') {
+        document.getElementById('tttBoard').style.display = 'grid';
+        var b = document.getElementById('tttBoard'); b.innerHTML = '';
+        activeRoom.board.forEach((c, i) => {
+            var d = document.createElement('div'); d.className = 'ttt-cell'; d.innerText = c;
+            d.onclick = () => { if(c === "" && activeRoom.turn === cu) send({action: 'game_move', room_id: activeRoom.room_id, move: i}); };
+            b.appendChild(d);
+        });
+    } else if(activeRoom.game === 'checkers' || activeRoom.game === 'chess') {
+        document.getElementById('board').style.display = 'grid';
+        var b = document.getElementById('board'); b.innerHTML = '';
+        activeRoom.board.forEach((row, r) => {
+            row.forEach((cell, c) => {
+                var d = document.createElement('div'); d.className = 'cell ' + ((r+c)%2===0 ? 'white' : 'black');
+                if(activeRoom.game === 'checkers') d.innerText = cell===1?'⚪':cell===2?'⚫':cell===3?'👑':cell===4?'🎩':'';
+                else { var pc = {'p':'♟','r':'♜','n':'♞','b':'♝','q':'♛','k':'♚','P':'♙','R':'♖','N':'♘','B':'♗','Q':'♕','K':'♔'}; d.innerText = pc[cell] || ''; }
+                d.onclick = () => {
+                    if(activeRoom.turn !== cu) return;
+                    if(selectedPiece) { send({action: 'game_move', room_id: activeRoom.room_id, move: {from: selectedPiece, to: [r, c]}}); selectedPiece = null; }
+                    else if (cell !== 0 && cell !== "") selectedPiece = [r, c];
+                };
+                b.appendChild(d);
+            });
+        });
+    } else if(activeRoom.game === 'cities') {
+        document.getElementById('citiesBoard').style.display = 'block';
+        var h = document.getElementById('citiesHistory'); h.innerHTML = '';
+        activeRoom.board.forEach(x => h.innerHTML += `<div><b>${x.user}:</b> ${x.word}</div>`);
+        h.scrollTop = h.scrollHeight;
+    } else if(activeRoom.game === 'football') {
+        document.getElementById('footballBoard').style.display = 'block';
+        document.getElementById('footballText').innerText = activeRoom.board.step === 'shoot' ? "Вы бьете! (1-3)" : "Вы вратарь! (1-3)";
+    } else if(activeRoom.game === 'uno') {
+        document.getElementById('unoBoard').style.display = 'block';
+        document.getElementById('unoTop').innerText = activeRoom.board.top;
+        var hand = cu === activeRoom.players[0] ? activeRoom.board.p1_hand : activeRoom.board.p2_hand;
+        var h = document.getElementById('unoHand'); h.innerHTML = '';
+        hand.forEach(card => {
+            var b = document.createElement('button'); b.className = 'btn'; b.style.width = '60px'; b.style.margin = '5px'; b.innerText = card;
+            b.onclick = () => { if(activeRoom.turn === cu) send({action: 'game_move', room_id: activeRoom.room_id, move: card}); };
+            h.appendChild(b);
+        });
+    }
+}
 
 function openGifts() { if(!cc) return alert("Зайди в чат!"); document.getElementById('giftsModal').style.display = 'flex'; }
 function sendGift(n, i, c) { if((COINS[cu]||0)<c) return alert("Мало монет!"); send({action:'send_gift', chat_id: cc, name:n, icon:i, cost:c}); document.getElementById('giftsModal').style.display='none'; }
