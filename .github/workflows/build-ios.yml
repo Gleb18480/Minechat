@@ -22,6 +22,7 @@ jobs:
       run: |
         npm install
         sudo gem install cocoapods
+        cd ios/App && pod install || echo "Pod install skipped/failed, continuing..." && cd ..
 
     - name: Setup Web Directory (Required by Capacitor)
       run: |
@@ -37,38 +38,32 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ВЫВОДИМ ВСЕ СХЕМЫ В ОТДЕЛЬНЫЙ ФАЙЛ И ЗАГРУЖАЕМ ЕГО
-    - name: List Xcode Schemes and Workspaces (Upload to Artifact)
+    # ДЕЛАЕМ СХЕМУ "ОБЩЕЙ" (SHARED)
+    - name: Make Scheme Shared
       run: |
         cd ios/App
-        echo "=== Available Workspaces ===" > xcode_info.txt
-        ls -la *.xcworkspace 2>/dev/null >> xcode_info.txt || echo "No workspace found" >> xcode_info.txt
-        echo "=== Available Projects ===" >> xcode_info.txt
-        ls -la *.xcodeproj 2>/dev/null >> xcode_info.txt || echo "No project found" >> xcode_info.txt
-        echo "=== Schemes from Workspace ===" >> xcode_info.txt
-        xcodebuild -list -workspace App.xcworkspace 2>&1 >> xcode_info.txt || echo "Workspace list failed" >> xcode_info.txt
-        echo "=== Schemes from Project ===" >> xcode_info.txt
-        xcodebuild -list -project App.xcodeproj 2>&1 >> xcode_info.txt || echo "Project list failed" >> xcode_info.txt
+        SCHEME_FILE=$(find . -name "App.xcscheme" | head -n 1)
+        if [ -n "$SCHEME_FILE" ]; then
+          echo "Found scheme file: $SCHEME_FILE"
+          # Добавляем атрибут shared="YES" в XML
+          sed -i '' 's/<Scheme/<Scheme shared="YES"/' "$SCHEME_FILE"
+          echo "Scheme has been made shared."
+        else
+          echo "Warning: App.xcscheme not found. Build might fail."
+        fi
 
-    - name: Upload Xcode Info
-      uses: actions/upload-artifact@v4
-      with:
-        name: Xcode-Info
-        path: ios/App/xcode_info.txt
-
-    # ОЧИСТКА ПЕРЕД СБОРКОЙ
-    - name: Clean Project
+    # ВЫВОДИМ СПИСОК СХЕМ (ДЛЯ ОТЛАДКИ)
+    - name: List Xcode Schemes
       run: |
         cd ios/App
-        xcodebuild clean -workspace App.xcworkspace -scheme App || true
-        xcodebuild clean -project App.xcodeproj -scheme App || true
+        echo "=== Available Schemes ==="
+        xcodebuild -list -workspace App.xcworkspace
 
     # СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1 || \
-        xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
     - name: Zip Archive
       run: |
