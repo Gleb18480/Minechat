@@ -38,32 +38,43 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ДЕЛАЕМ СХЕМУ "ОБЩЕЙ" (SHARED)
+    # ДЕЛАЕМ СХЕМУ "ОБЩЕЙ" (SHARED) ДЛЯ CI
     - name: Make Scheme Shared
       run: |
         cd ios/App
         SCHEME_FILE=$(find . -name "App.xcscheme" | head -n 1)
         if [ -n "$SCHEME_FILE" ]; then
           echo "Found scheme file: $SCHEME_FILE"
-          # Добавляем атрибут shared="YES" в XML
           sed -i '' 's/<Scheme/<Scheme shared="YES"/' "$SCHEME_FILE"
           echo "Scheme has been made shared."
         else
           echo "Warning: App.xcscheme not found. Build might fail."
         fi
 
-    # ВЫВОДИМ СПИСОК СХЕМ (ДЛЯ ОТЛАДКИ)
-    - name: List Xcode Schemes
+    # ВЫВОДИМ ИНФОРМАЦИЮ О ПРОЕКТЕ ДЛЯ ОТЛАДКИ
+    - name: List Xcode Schemes and Workspaces
       run: |
         cd ios/App
-        echo "=== Available Schemes ==="
-        xcodebuild -list -workspace App.xcworkspace
+        echo "=== Available Workspaces ==="
+        ls -la *.xcworkspace 2>/dev/null || echo "No workspace found"
+        echo "=== Available Projects ==="
+        ls -la *.xcodeproj 2>/dev/null || echo "No project found"
+        echo "=== Schemes from Workspace ==="
+        xcodebuild -list -workspace App.xcworkspace 2>&1 || true
+        echo "=== Schemes from Project ==="
+        xcodebuild -list -project App.xcodeproj 2>&1 || true
 
-    # СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
+    # СБОРКА С АВТООПРЕДЕЛЕНИЕМ ФАЙЛА (WORKSPACE ИЛИ PROJECT)
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+        if [ -d "App.xcworkspace" ]; then
+          echo "Building using App.xcworkspace..."
+          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+        else
+          echo "No .xcworkspace found, building using App.xcodeproj..."
+          xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+        fi
 
     - name: Zip Archive
       run: |
