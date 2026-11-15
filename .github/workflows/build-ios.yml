@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
     - name: Checkout code
@@ -22,7 +22,6 @@ jobs:
       run: |
         npm install
         sudo gem install cocoapods
-        cd ios/App && pod install || echo "Pod install skipped/failed, continuing..." && cd ..
 
     - name: Setup Web Directory (Required by Capacitor)
       run: |
@@ -38,7 +37,7 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ДЕЛАЕМ СХЕМУ "ОБЩЕЙ" (SHARED) ДЛЯ CI
+    # ПРИНУДИТЕЛЬНО ДЕЛАЕМ СХЕМУ "ОБЩЕЙ" (SHARED)
     - name: Make Scheme Shared
       run: |
         cd ios/App
@@ -51,30 +50,18 @@ jobs:
           echo "Warning: App.xcscheme not found. Build might fail."
         fi
 
-    # ВЫВОДИМ ИНФОРМАЦИЮ О ПРОЕКТЕ ДЛЯ ОТЛАДКИ
-    - name: List Xcode Schemes and Workspaces
+    # ВЫВОДИМ СПИСОК СХЕМ (ДЛЯ ОТЛАДКИ)
+    - name: List Xcode Schemes
       run: |
         cd ios/App
-        echo "=== Available Workspaces ==="
-        ls -la *.xcworkspace 2>/dev/null || echo "No workspace found"
-        echo "=== Available Projects ==="
-        ls -la *.xcodeproj 2>/dev/null || echo "No project found"
-        echo "=== Schemes from Workspace ==="
-        xcodebuild -list -workspace App.xcworkspace 2>&1 || true
-        echo "=== Schemes from Project ==="
-        xcodebuild -list -project App.xcodeproj 2>&1 || true
+        echo "=== Available Schemes ==="
+        xcodebuild -list -workspace App.xcworkspace
 
-    # СБОРКА С АВТООПРЕДЕЛЕНИЕМ ФАЙЛА (WORKSPACE ИЛИ PROJECT)
+    # СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
-        if [ -d "App.xcworkspace" ]; then
-          echo "Building using App.xcworkspace..."
-          xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-        else
-          echo "No .xcworkspace found, building using App.xcodeproj..."
-          xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-        fi
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
     - name: Zip Archive
       run: |
