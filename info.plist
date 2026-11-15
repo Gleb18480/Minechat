@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSCameraUsageDescription</key>
+    <string>Minechat использует камеру для проверки возраста (FaceID) и видеозвонков.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Minechat использует микрофон для отправки голосовых сообщений и звонков.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Minechat нуждается в доступе к вашим фото для отправки их в чат.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Minechat сохраняет фотографии в вашу галерею.</string>
+</dict>
+</plist>
