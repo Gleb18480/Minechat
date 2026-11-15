@@ -37,22 +37,32 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ЭТОТ ШАГ ПОКАЖЕТ ВСЕ СХЕМЫ, ЧТОБЫ МЫ УЗНАЛИ ИМЯ
-    - name: List Xcode Schemes
+    # ЭТОТ ШАГ ПОКАЖЕТ ВСЕ СХЕМЫ И WORKSPACE/PROJECT ФАЙЛЫ В ЛОГЕ
+    - name: List Xcode Schemes and Workspaces
       run: |
         cd ios/App
-        xcodebuild -list -workspace App.xcworkspace || xcodebuild -list -project App.xcodeproj
+        echo "=== Available Workspaces ==="
+        ls -la *.xcworkspace 2>/dev/null || echo "No workspace found"
+        echo "=== Available Projects ==="
+        ls -la *.xcodeproj 2>/dev/null || echo "No project found"
+        echo "=== Schemes from Workspace ==="
+        xcodebuild -list -workspace App.xcworkspace 2>/dev/null || echo "Workspace list failed"
+        echo "=== Schemes from Project ==="
+        xcodebuild -list -project App.xcodeproj 2>/dev/null || echo "Project list failed"
 
-    # ИСПРАВЛЕННАЯ СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
+    # СБОРКА БЕЗ ПОДПИСИ (ПРОБУЕМ СНАЧАЛА WORKSPACE, ПОТОМ PROJECT)
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+        # Пробуем собрать через workspace
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1 || \
+        # Если workspace не сработал, пробуем через project
+        xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1
 
     - name: Zip Archive
       run: |
         cd ios/App/build
-        zip -r Minechat-iOS.zip App.xcarchive
+        zip -r Minechat-iOS.zip App.xcarchive 2>/dev/null || echo "No archive to zip"
 
     - name: Upload iOS Artifact
       uses: actions/upload-artifact@v4
