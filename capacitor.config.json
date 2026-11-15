@@ -1,0 +1,13 @@
+{
+  "appId": "ru.minechat.app",
+  "appName": "Minechat",
+  "webDir": "www",
+  "server": {
+    "url": "https://Minechat.de2.netrun.io",
+    "cleartext": true
+  },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}
