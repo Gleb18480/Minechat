@@ -1,0 +1,54 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Позволяет запустить вручную
+
+jobs:
+  build-ios:
+    runs-on: macos-latest # GitHub дает виртуальный Mac
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Dependencies & CocoaPods
+      run: |
+        npm install
+        sudo gem install cocoapods
+
+    - name: Setup Web Directory (Required by Capacitor)
+      run: |
+        mkdir -p www
+        touch www/index.html
+
+    - name: Setup Capacitor iOS
+      run: |
+        npx cap add ios
+        npx cap sync ios
+
+    - name: Inject Permissions (Info.plist)
+      run: |
+        cp Info.plist ios/App/App/Info.plist
+
+    - name: Build iOS Archive (Unsigned)
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+
+    - name: Zip Archive
+      run: |
+        cd ios/App/build
+        zip -r Minechat-iOS.zip App.xcarchive
+
+    - name: Upload iOS Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Minechat-iOS-Unsigned
+        path: ios/App/build/Minechat-iOS.zip
