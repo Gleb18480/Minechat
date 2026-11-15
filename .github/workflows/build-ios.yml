@@ -37,13 +37,13 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ЭТОТ ШАГ ПОКАЖЕТ НАМ ВСЕ СХЕМЫ И WORKSPACE-ФАЙЛЫ
-    - name: List Xcode Schemes and Workspaces
+    # ЭТОТ ШАГ ПОКАЖЕТ ВСЕ СХЕМЫ, ЧТОБЫ МЫ УЗНАЛИ ИМЯ
+    - name: List Xcode Schemes
       run: |
         cd ios/App
         xcodebuild -list -workspace App.xcworkspace || xcodebuild -list -project App.xcodeproj
 
-    # СБОРКА БЕЗ ПОДПИСИ
+    # ИСПРАВЛЕННАЯ СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
