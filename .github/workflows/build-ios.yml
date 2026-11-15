@@ -37,26 +37,37 @@ jobs:
       run: |
         cp Info.plist ios/App/App/Info.plist
 
-    # ЭТОТ ШАГ ПОКАЖЕТ ВСЕ СХЕМЫ И WORKSPACE/PROJECT ФАЙЛЫ В ЛОГЕ
-    - name: List Xcode Schemes and Workspaces
+    # ВЫВОДИМ ВСЕ СХЕМЫ В ОТДЕЛЬНЫЙ ФАЙЛ И ЗАГРУЖАЕМ ЕГО
+    - name: List Xcode Schemes and Workspaces (Upload to Artifact)
       run: |
         cd ios/App
-        echo "=== Available Workspaces ==="
-        ls -la *.xcworkspace 2>/dev/null || echo "No workspace found"
-        echo "=== Available Projects ==="
-        ls -la *.xcodeproj 2>/dev/null || echo "No project found"
-        echo "=== Schemes from Workspace ==="
-        xcodebuild -list -workspace App.xcworkspace 2>/dev/null || echo "Workspace list failed"
-        echo "=== Schemes from Project ==="
-        xcodebuild -list -project App.xcodeproj 2>/dev/null || echo "Project list failed"
+        echo "=== Available Workspaces ===" > xcode_info.txt
+        ls -la *.xcworkspace 2>/dev/null >> xcode_info.txt || echo "No workspace found" >> xcode_info.txt
+        echo "=== Available Projects ===" >> xcode_info.txt
+        ls -la *.xcodeproj 2>/dev/null >> xcode_info.txt || echo "No project found" >> xcode_info.txt
+        echo "=== Schemes from Workspace ===" >> xcode_info.txt
+        xcodebuild -list -workspace App.xcworkspace 2>&1 >> xcode_info.txt || echo "Workspace list failed" >> xcode_info.txt
+        echo "=== Schemes from Project ===" >> xcode_info.txt
+        xcodebuild -list -project App.xcodeproj 2>&1 >> xcode_info.txt || echo "Project list failed" >> xcode_info.txt
 
-    # СБОРКА БЕЗ ПОДПИСИ (ПРОБУЕМ СНАЧАЛА WORKSPACE, ПОТОМ PROJECT)
+    - name: Upload Xcode Info
+      uses: actions/upload-artifact@v4
+      with:
+        name: Xcode-Info
+        path: ios/App/xcode_info.txt
+
+    # ОЧИСТКА ПЕРЕД СБОРКОЙ
+    - name: Clean Project
+      run: |
+        cd ios/App
+        xcodebuild clean -workspace App.xcworkspace -scheme App || true
+        xcodebuild clean -project App.xcodeproj -scheme App || true
+
+    # СБОРКА С ЯВНЫМ УКАЗАНИЕМ ПЛАТФОРМЫ
     - name: Build iOS Archive (Unsigned)
       run: |
         cd ios/App
-        # Пробуем собрать через workspace
         xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1 || \
-        # Если workspace не сработал, пробуем через project
         xcodebuild -project App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -archivePath $PWD/build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO 2>&1
 
     - name: Zip Archive
