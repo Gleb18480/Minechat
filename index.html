@@ -25,37 +25,38 @@ h2{font-size:24px;margin-bottom:6px;}
 .lnk{display:block;margin-top:16px;color:var(--blue);font-size:13px;cursor:pointer;}
 
 #main{display:none;flex-direction:column;height:100%;}
-.hdr{padding:12px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
-.hdr .title{flex:1;font-weight:600;font-size:17px;}
+.hdr{padding:10px 14px;background:var(--panel);display:flex;gap:6px;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;}
+.hdr .title{flex:1;font-weight:600;font-size:16px;}
 .dot{width:9px;height:9px;border-radius:50%;background:#4caf50;} .dot.off{background:#e74c3c;}
 .hb{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px 10px;border-radius:50%;}
-.coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; }
+.coin-badge { background: #2e7d32; color: white; padding: 4px 10px; border-radius: 20px; font-weight: bold; font-size: 13px;}
 
 #content-area { flex: 1; overflow: hidden; position: relative; display: flex; flex-direction: column; }
 .view { display: none; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .view.active { display: block; }
 
-.srch-wrap{padding:10px 14px;background:var(--panel); display: flex; gap: 5px;}
-.srch{width:100%;padding:10px 16px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);font-size:15px;outline:none;}
-.lst{padding:6px;}
-.it{padding:11px;margin-bottom:2px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:12px;}
+.srch-wrap{padding:8px 14px;background:var(--panel); display: flex; gap: 5px;}
+.srch{width:100%;padding:8px 14px;border-radius:20px;border:none;background:var(--input-bg);color:var(--text);font-size:14px;outline:none;}
+.lst{padding:4px;}
+.it{padding:8px 11px;margin-bottom:2px;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:10px;}
 .it:active{background:var(--input-bg);}
-.av{width:50px;height:50px;min-width:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px;color:#fff;position:relative;overflow:visible;}
+.av{width:46px;height:46px;min-width:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:18px;color:#fff;position:relative;overflow:visible;}
 .av-inner{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;}
 .av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
-.av .on{position:absolute;bottom:2px;right:2px;width:12px;height:12px;border-radius:50%;background:#4caf50;border:2px solid var(--panel);z-index:2;}
-.nm{font-size:15px;font-weight:600;margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
-.pv{font-size:13px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.badge-verified { color: var(--blue); font-size: 14px; }
-.custom-emoji { font-size: 16px; margin-left: 4px; }
+.av .on{position:absolute;bottom:2px;right:2px;width:10px;height:10px;border-radius:50%;background:#4caf50;border:2px solid var(--panel);z-index:2;}
+.nm{font-size:14px;font-weight:600;margin-bottom:2px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+.pv{font-size:12px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.badge-verified { color: var(--blue); font-size: 13px; }
+.custom-emoji { font-size: 14px; margin-left: 4px; }
 
-#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); flex-shrink: 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); z-index: 100;}
-.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 8px 0; color: var(--text-muted); cursor: pointer; font-size: 12px; min-height: 52px;}
+/* КОМПАКТНОЕ МЕНЮ */
+#bottom-nav { display: flex; background: var(--panel); border-top: 1px solid var(--border); flex-shrink: 0; padding-bottom: max(4px, env(safe-area-inset-bottom)); z-index: 100;}
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 5px 0; color: var(--text-muted); cursor: pointer; font-size: 10px; min-height: 44px; justify-content: center;}
 .nav-item.active { color: var(--blue); font-weight: 600; }
-.nav-icon { font-size: 24px; margin-bottom: 4px; }
+.nav-icon { font-size: 20px; margin-bottom: 2px; }
 
 #chat{display:none;flex-direction:column;height:100%;background:var(--bg);}
-.ch{padding:11px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.ch{padding:10px 14px;background:var(--panel);display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);flex-shrink:0;}
 .bk{background:none;border:none;color:var(--blue);font-size:26px;cursor:pointer;padding:4px 10px;}
 #msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:4px;-webkit-overflow-scrolling:touch;}
 .m{max-width:80%;padding:8px 12px;border-radius:14px;font-size:15px;line-height:1.35;word-wrap:break-word;position:relative;}
@@ -67,21 +68,21 @@ h2{font-size:24px;margin-bottom:6px;}
 .m .gift-msg { background: linear-gradient(45deg, #ff9800, #ff5722); color: white; padding: 15px; border-radius: 12px; text-align: center; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4); }
 .m .gift-msg span { font-size: 40px; display: block; margin-bottom: 5px; }
 
-#inp{padding:10px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:max(10px, env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
-#mi{flex:1;padding:12px 16px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);font-size:16px;outline:none;min-width:0;}
+#inp{padding:8px;background:var(--panel);display:flex;align-items:center;gap:6px;padding-bottom:max(8px, env(safe-area-inset-bottom));flex-shrink:0;border-top:1px solid var(--border);}
+#mi{flex:1;padding:10px 16px;border-radius:22px;border:none;background:var(--input-bg);color:var(--text);font-size:15px;outline:none;min-width:0;}
 .ib{background:none;border:none;color:var(--text-muted);font-size:22px;cursor:pointer;padding:6px;flex-shrink:0;}
-.sb{background:var(--blue);border:none;color:#fff;width:46px;height:46px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb{background:var(--blue);border:none;color:#fff;width:42px;height:42px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:6000;display:none;align-items:center;justify-content:center;padding:20px;}
-.modal-box{background:var(--panel);border-radius:16px;padding:24px;width:100%;max-width:400px;text-align:center;}
-.settings-item { padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 16px;}
-.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.modal-box{background:var(--panel);border-radius:16px;padding:20px;width:100%;max-width:400px;text-align:center;}
+.settings-item { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-size: 15px;}
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+.slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: var(--blue); }
-input:checked + .slider:before { transform: translateX(22px); }
-.big-av{width:100px;height:100px;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:42px;font-weight:600;color:#fff;overflow:hidden;}
+input:checked + .slider:before { transform: translateX(20px); }
+.big-av{width:90px;height:90px;border-radius:50%;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:600;color:#fff;overflow:hidden;}
 .big-av img{width:100%;height:100%;object-fit:cover;}
 </style>
 </head>
@@ -128,6 +129,7 @@ input:checked + .slider:before { transform: translateX(22px); }
     </div>
   </div>
 
+  <!-- КОМПАКТНОЕ МЕНЮ -->
   <div id="bottom-nav">
     <div class="nav-item active" onclick="switchTab('chats')" id="nav-chats"><div class="nav-icon">💬</div><div>Чаты</div></div>
     <div class="nav-item" onclick="switchTab('calls')" id="nav-calls"><div class="nav-icon">📞</div><div>Звонки</div></div>
@@ -159,26 +161,27 @@ input:checked + .slider:before { transform: translateX(22px); }
 <div class="modal" id="giftsModal">
   <div class="modal-box">
     <h3>🎁 Выберите подарок</h3>
-    <div class="game-grid" style="grid-template-columns: 1fr 1fr;">
-      <div class="game-card" onclick="sendGift('Роза', '🌹', 50)"><div class="game-icon">🌹</div><div>Роза</div><small>50 🪙</small></div>
-      <div class="game-card" onclick="sendGift('Мишка', '🧸', 100)"><div class="game-icon">🧸</div><div>Мишка</div><small>100 🪙</small></div>
-      <div class="game-card" onclick="sendGift('Пицца', '🍕', 200)"><div class="game-icon">🍕</div><div>Пицца</div><small>200 🪙</small></div>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
+      <div class="it" style="background:var(--input-bg); text-align:center; flex-direction:column;" onclick="sendGift('Роза', '🌹', 50)"><div style="font-size:30px;">🌹</div><div>Роза</div><small>50 🪙</small></div>
+      <div class="it" style="background:var(--input-bg); text-align:center; flex-direction:column;" onclick="sendGift('Мишка', '🧸', 100)"><div style="font-size:30px;">🧸</div><div>Мишка</div><small>100 🪙</small></div>
+      <div class="it" style="background:var(--input-bg); text-align:center; flex-direction:column;" onclick="sendGift('Пицца', '🍕', 200)"><div style="font-size:30px;">🍕</div><div>Пицца</div><small>200 🪙</small></div>
     </div>
-    <h4 style="margin-top:20px; color:#FFD700;">Эксклюзив Premium</h4>
-    <div class="game-grid" style="grid-template-columns: 1fr 1fr;">
-      <div class="game-card" onclick="sendGift('Корона', '👑', 5000)"><div class="game-icon">👑</div><div>Корона</div><small>5000 🪙</small></div>
-      <div class="game-card" onclick="sendGift('Феррари', '🏎️', 10000)"><div class="game-icon">🏎️</div><div>Феррари</div><small>10000 🪙</small></div>
+    <h4 style="margin-top:20px; color:#FFD700;">⭐ Premium эксклюзив</h4>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+      <div class="it" style="background:var(--input-bg); text-align:center; flex-direction:column;" onclick="sendGift('Корона', '👑', 5000)"><div style="font-size:30px;">👑</div><div>Корона</div><small>5000 🪙</small></div>
+      <div class="it" style="background:var(--input-bg); text-align:center; flex-direction:column;" onclick="sendGift('Феррари', '🏎️', 10000)"><div style="font-size:30px;">🏎️</div><div>Феррари</div><small>10000 🪙</small></div>
     </div>
     <button class="btn gray" style="margin-top:15px;" onclick="document.getElementById('giftsModal').style.display='none'">Закрыть</button>
   </div>
 </div>
 
-<!-- МОДАЛКА ПРОФИЛЯ -->
+<!-- МОДАЛКА ПРОФИЛЯ (ВСЁ ВЕРНУЛ) -->
 <div class="modal" id="profileModal">
   <div class="modal-box" style="text-align:center;">
     <h3 id="myProfileTitle">👤 Мой профиль</h3>
     <div class="big-av" id="myBigAvatar" style="background:#2AABEE;">?</div>
     <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+    
     <button class="btn gray" onclick="document.getElementById('avatarInput').click()">Изменить аватар</button>
     <button class="btn purple" onclick="setMyStatus()">💬 Статус</button>
     <button class="btn" onclick="openPhoneModal()">📱 Номер</button>
@@ -204,22 +207,27 @@ input:checked + .slider:before { transform: translateX(22px); }
   </div>
 </div>
 
+<!-- МОДАЛКИ ВВОДА -->
+<div class="modal" id="phoneModal"><div class="modal-box"><h3>📱 Номер</h3><input class="inp" id="myPhoneInput"><button class="btn" onclick="savePhone()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('phoneModal').style.display='none'">Закрыть</button></div></div></div>
+<div class="modal" id="emailModal"><div class="modal-box"><h3>📧 Почта</h3><input class="inp" id="myEmailInput"><button class="btn" onclick="saveEmail()">Сохранить</button><div class="row"><button class="btn gray" onclick="document.getElementById('emailModal').style.display='none'">Закрыть</button></div></div></div>
+<div class="modal" id="ageVerifyModal"><div class="modal-box"><h3>🔞 Возраст</h3><video id="ageVerifyVideo" autoplay playsinline muted style="width:100%;border-radius:12px;transform:scaleX(-1);"></video><div id="ageVerifyStatus" style="text-align:center;margin:10px 0;"></div><button class="btn gray" onclick="cancelAgeVerification()">Отмена</button></div></div>
+
 <!-- МОДАЛКА ПОКУПКИ ПРЕМИУМА -->
 <div class="modal" id="premiumModal">
   <div class="modal-box" style="background: linear-gradient(135deg, #1a1a2e, #16213e); border: 2px solid #FFD700;">
-    <h2 style="color: #FFD700; font-size: 28px;">⭐ Minechat Premium ⭐</h2>
-    <p style="margin: 10px 0;">Смайлик у имени, VIP-подарки и цветные сообщения (для VIP).</p>
+    <h2 style="color: #FFD700; font-size: 24px;">⭐ Minechat Premium ⭐</h2>
+    <p style="margin: 10px 0; font-size: 14px;">Смайлик у имени, VIP-подарки и цветные сообщения.</p>
     
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin: 10px 0;">
         <h3 style="margin-bottom: 5px;">⭐ Premium</h3>
-        <p>1 месяц — 100 ₽</p>
-        <button class="btn gold" onclick="requestPremium('premium', '1m')" style="margin-top:5px;">Купить на 1 мес</button>
+        <p style="font-size: 14px;">1 месяц — 100 ₽</p>
+        <button class="btn gold" onclick="requestPremium('premium', '1m')" style="margin-top:5px; padding: 10px;">Купить на 1 мес</button>
     </div>
 
-    <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin: 15px 0; border: 1px solid #E040FB;">
+    <div style="background: rgba(255,255,255,0.1); padding: 12px; border-radius: 10px; margin: 10px 0; border: 1px solid #E040FB;">
         <h3 style="margin-bottom: 5px; color:#E040FB;">👑 VIP</h3>
-        <p>1 год — 900 ₽ (выгода 10%)</p>
-        <button class="btn purple" onclick="requestPremium('vip', '1y')" style="margin-top:5px;">Купить на 1 год</button>
+        <p style="font-size: 14px;">1 год — 900 ₽ (выгода 10%)</p>
+        <button class="btn purple" onclick="requestPremium('vip', '1y')" style="margin-top:5px; padding: 10px;">Купить на 1 год</button>
     </div>
 
     <button class="btn gray" style="margin-top:10px;" onclick="document.getElementById('premiumModal').style.display='none'">Закрыть</button>
@@ -243,6 +251,7 @@ var SERVER_URL = location.host;
 var ws = null, cu = null, cc = null, ctype = "private";
 var USERS = {}, ONLINE = [], CHATS = {}, MESSAGES = {}, VERIFIED = {}, STATUSES = {}, COINS = {}, PINNED = {}, TIERS = {}, PREMIUM_REQS = {};
 var isCreator = false;
+var ageVerify = { active: false, step: 'idle', age: null, stream: null, loop: null };
 
 function connect() {
   ws = new WebSocket(wsProto + SERVER_URL + "/ws");
@@ -276,17 +285,21 @@ function handleMessage(m) {
       cc=m.chat_id; ctype=m.chat.type; MESSAGES[cc]=m.messages; document.getElementById('main').style.display='none'; document.getElementById('chat').style.display='flex'; document.getElementById('hn').innerText = m.chat.name || m.chat.members.find(x=>x!==cu); renderMessages(); break;
     case 'tier_update':
       TIERS = m.tiers; PREMIUM_REQS = m.premium_reqs || PREMIUM_REQS;
-      renderChats(); renderContacts();
-      break;
+      renderChats(); renderContacts(); break;
     case 'new_premium_req':
       PREMIUM_REQS[m.from] = { tier: m.tier, duration: m.duration };
       alert(`🔔 Новая заявка на ${m.tier.toUpperCase()} (${m.duration}) от ${m.from}!`);
+      break;
+    case 'phone_update':
+      USERS[m.username].phone = m.phone;
+      break;
+    case 'email_update':
+      USERS[m.username].email = m.email;
       break;
     case 'error_msg': alert(m.text); break;
   }
 }
 
-// ФУНКЦИЯ ДЛЯ ОТОБРАЖЕНИЯ ЗНАЧКОВ И ЭМОДЗИ
 function getUserStyle(username) {
     if (!TIERS[username]) return { badge: '', emoji: '', color: '' };
     var t = TIERS[username];
@@ -294,46 +307,7 @@ function getUserStyle(username) {
     return { badge: badge, emoji: t.emoji || '', color: t.color || '' };
 }
 
-// PREMIUM
-function openPremiumMenu() {
-    var myTier = TIERS[cu] ? TIERS[cu].tier : 'free';
-    if(myTier !== 'free') return alert("У вас уже есть статус " + myTier.toUpperCase());
-    document.getElementById('premiumModal').style.display = 'flex';
-}
-function requestPremium(tier, duration) {
-    send({action: 'request_premium', tier: tier, duration: duration});
-    document.getElementById('premiumModal').style.display = 'none';
-}
-
-// АДМИНКА ЗАЯВОК
-function openAdminRequests() {
-    var box = document.getElementById('requestsList');
-    box.innerHTML = '';
-    if(Object.keys(PREMIUM_REQS).length === 0) box.innerHTML = '<p>Нет активных заявок.</p>';
-    for (var [user, data] of Object.entries(PREMIUM_REQS)) {
-        var div = document.createElement('div');
-        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--input-bg); padding:10px; border-radius:8px; margin-bottom:8px;";
-        div.innerHTML = `<b>${user}</b> (<span style="color:gold;">${data.tier.toUpperCase()} ${data.duration}</span>)
-                         <button class="btn gold" style="width:auto; margin:0; padding:5px 10px;" onclick="approvePremium('${user}', '${data.tier}', '${data.duration}')">✅ Дать</button>`;
-        box.appendChild(div);
-    }
-    document.getElementById('adminRequestsModal').style.display = 'flex';
-}
-function approvePremium(target, tier, duration) {
-    send({action: 'approve_premium', target: target, tier: tier, duration: duration});
-    delete PREMIUM_REQS[target];
-    document.getElementById('requestsList').innerHTML = '<p>Заявка одобрена!</p>';
-}
-
-// СОХРАНЕНИЕ НАСТРОЕК PREMIUM
-function savePremiumSettings() {
-    var emoji = document.getElementById('customEmojiInput').value;
-    var color = document.getElementById('customColorInput').value;
-    send({action: 'set_premium_features', emoji: emoji, color: color});
-    alert("Настройки сохранены!");
-}
-
-// ИСПРАВЛЕННЫЙ ПРОФИЛЬ
+// ПРОФИЛЬ
 function openProfile() {
     var myTier = TIERS[cu] ? TIERS[cu].tier : 'free';
     var style = getUserStyle(cu);
@@ -353,7 +327,6 @@ function openProfile() {
         document.getElementById('premiumSettings').style.display = 'none';
     }
     
-    // Отрисовка аватарки в профиле
     var my = USERS[cu] || {};
     var big = document.getElementById('myBigAvatar');
     if (my.avatar) { big.innerHTML = '<img src="' + my.avatar + '">'; big.style.background = '#000'; }
@@ -362,7 +335,60 @@ function openProfile() {
     document.getElementById('profileModal').style.display = 'flex';
 }
 
-// ОСТАЛЬНОЕ
+// СМЕНА ТЕЛЕФОНА / ПОЧТЫ
+function openPhoneModal() { document.getElementById('profileModal').style.display='none'; document.getElementById('myPhoneInput').value = USERS[cu].phone || ''; document.getElementById('phoneModal').style.display = 'flex'; }
+function savePhone() { send({action:'set_phone', phone: document.getElementById('myPhoneInput').value}); document.getElementById('phoneModal').style.display='none'; }
+function openEmailModal() { document.getElementById('profileModal').style.display='none'; document.getElementById('myEmailInput').value = USERS[cu].email || ''; document.getElementById('emailModal').style.display = 'flex'; }
+function saveEmail() { send({action:'set_email', email: document.getElementById('myEmailInput').value}); document.getElementById('emailModal').style.display='none'; }
+
+// FACE ID (Возраст)
+async function startProfileAgeVerification() {
+    document.getElementById('profileModal').style.display='none';
+    document.getElementById('ageVerifyModal').style.display='flex';
+    document.getElementById('ageVerifyStatus').innerText = 'Загрузка моделей...';
+    
+    await faceapi.nets.tinyFaceDetector.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
+    await faceapi.nets.faceLandmark68Net.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
+    await faceapi.nets.ageGenderNet.loadFromUri('https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights/');
+    
+    try { 
+        ageVerify.stream = await navigator.mediaDevices.getUserMedia({video:true}); 
+        document.getElementById('ageVerifyVideo').srcObject = ageVerify.stream; 
+    } catch(e) { 
+        alert("Нет доступа к камере"); 
+        document.getElementById('ageVerifyModal').style.display='none';
+        return; 
+    }
+    
+    var step = 'straight1';
+    var history = [];
+    ageVerify.loop = setInterval(async () => {
+        var det = await faceapi.detectSingleFace(document.getElementById('ageVerifyVideo')).withFaceLandmarks().withAgeAndGender();
+        if(!det) return document.getElementById('ageVerifyStatus').innerText = "Лицо не найдено";
+        
+        history.push(det.age); if(history.length > 20) history.shift();
+        var sorted = [...history].sort((a,b)=>a-b); var avgAge = sorted[Math.floor(sorted.length/2)];
+        
+        var pts = det.landmarks.positions; var nose = pts[30];
+        var lx = pts.slice(36,42).reduce((a,p)=>a+p.x,0)/6, rx = pts.slice(42,48).reduce((a,p)=>a+p.x,0)/6;
+        var ratio = Math.abs(nose.x-lx)/Math.abs(rx-nose.x); var pose = ratio > 1.3 ? 'left' : ratio < 0.7 ? 'right' : 'straight';
+        
+        var st = document.getElementById('ageVerifyStatus');
+        if(step === 'straight1') { st.innerText="Смотрите прямо"; if(pose==='straight' && history.length > 5) step='left'; }
+        else if(step === 'left') { st.innerText="Поверните ВЛЕВО"; if(pose==='left') step='right'; }
+        else if(step === 'right') { st.innerText="Поверните ВПРАВО"; if(pose==='right') step='straight2'; }
+        else if(step === 'straight2') { st.innerText="Посмотрите прямо"; if(pose==='straight') { 
+            clearInterval(ageVerify.loop); ageVerify.stream.getTracks().forEach(t=>t.stop());
+            var group = avgAge <= 8 ? 'child_1_8' : avgAge <= 13 ? 'teen_9_13' : avgAge <= 17 ? 'teen_14_17' : 'adult_18_plus';
+            st.innerText = "Успешно! Возраст: " + Math.round(avgAge);
+            send({action:'set_age_group', age: Math.round(avgAge), group: group});
+            setTimeout(()=>{ document.getElementById('ageVerifyModal').style.display='none'; }, 2000);
+        }}
+    }, 400);
+}
+function cancelAgeVerification() { if (ageVerify.loop) clearInterval(ageVerify.loop); if (ageVerify.stream) ageVerify.stream.getTracks().forEach(t=>t.stop()); document.getElementById('ageVerifyModal').style.display='none'; }
+
+// ОСТАЛЬНЫЕ ФУНКЦИИ
 function renderChats(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
   Object.keys(CHATS).forEach(cid => {
@@ -420,10 +446,31 @@ function sendGift(n, i, c) {
 function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
 function toggleTheme() { document.body.classList.toggle('light-theme'); }
 function setMyStatus() { var s = prompt('Статус:'); if (s) send({action:'set_status', status:s}); }
-function uploadAvatar(e) { alert("Загрузка аватара работает через base64 в базовой версии"); }
-function openPhoneModal() { alert("В разработке"); }
-function openEmailModal() { alert("В разработке"); }
-function startProfileAgeVerification() { alert("FaceID в разработке"); }
+function uploadAvatar(e) { var f = e.target.files[0]; if(!f) return; var r = new FileReader(); r.onload = ev => { send({action:'set_avatar', avatar: ev.target.result}); document.getElementById('profileModal').style.display='none'; }; r.readAsDataURL(f); }
+
+// PREMIUM / VIP
+function openPremiumMenu() {
+    var myTier = TIERS[cu] ? TIERS[cu].tier : 'free';
+    if(myTier !== 'free') return alert("У вас уже есть статус " + myTier.toUpperCase());
+    document.getElementById('premiumModal').style.display = 'flex';
+}
+function requestPremium(tier, duration) { send({action: 'request_premium', tier: tier, duration: duration}); document.getElementById('premiumModal').style.display = 'none'; }
+function savePremiumSettings() { var e = document.getElementById('customEmojiInput').value; var c = document.getElementById('customColorInput').value; send({action: 'set_premium_features', emoji: e, color: c}); alert("Настройки сохранены!"); }
+
+// АДМИНКА
+function openAdminRequests() {
+    var box = document.getElementById('requestsList'); box.innerHTML = '';
+    if(Object.keys(PREMIUM_REQS).length === 0) box.innerHTML = '<p>Нет активных заявок.</p>';
+    for (var [user, data] of Object.entries(PREMIUM_REQS)) {
+        var div = document.createElement('div');
+        div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--input-bg); padding:10px; border-radius:8px; margin-bottom:8px;";
+        div.innerHTML = `<b>${user}</b> (<span style="color:gold;">${data.tier.toUpperCase()} ${data.duration}</span>)
+                         <button class="btn gold" style="width:auto; margin:0; padding:5px 10px;" onclick="approvePremium('${user}', '${data.tier}', '${data.duration}')">✅ Дать</button>`;
+        box.appendChild(div);
+    }
+    document.getElementById('adminRequestsModal').style.display = 'flex';
+}
+function approvePremium(target, tier, duration) { send({action: 'approve_premium', target: target, tier: tier, duration: duration}); delete PREMIUM_REQS[target]; document.getElementById('requestsList').innerHTML = '<p>Заявка одобрена!</p>'; }
 function createChannel() { var name = prompt("Название канала:"); if(name) send({action:'create_channel', name:name}); }
 </script>
 </body>
