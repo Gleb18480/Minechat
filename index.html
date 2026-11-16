@@ -277,8 +277,6 @@ function handleMessage(m) {
     case 'tier_update':
       TIERS = m.tiers; PREMIUM_REQS = m.premium_reqs || PREMIUM_REQS;
       renderChats(); renderContacts();
-      if(TIERS[cu] && TIERS[cu].tier !== 'free') document.getElementById('premiumSettings').style.display = 'block';
-      else document.getElementById('premiumSettings').style.display = 'none';
       break;
     case 'new_premium_req':
       PREMIUM_REQS[m.from] = { tier: m.tier, duration: m.duration };
@@ -335,6 +333,35 @@ function savePremiumSettings() {
     alert("Настройки сохранены!");
 }
 
+// ИСПРАВЛЕННЫЙ ПРОФИЛЬ
+function openProfile() {
+    var myTier = TIERS[cu] ? TIERS[cu].tier : 'free';
+    var style = getUserStyle(cu);
+    
+    document.getElementById('myProfileTitle').innerHTML = `${style.emoji} ${style.badge} Мой профиль`;
+    
+    if(myTier !== 'free') {
+        document.getElementById('premiumSettings').style.display = 'block';
+        document.getElementById('customEmojiInput').value = style.emoji;
+        if(myTier === 'vip') {
+            document.getElementById('vipColorBox').style.display = 'block';
+            document.getElementById('customColorInput').value = style.color || '#2AABEE';
+        } else {
+            document.getElementById('vipColorBox').style.display = 'none';
+        }
+    } else {
+        document.getElementById('premiumSettings').style.display = 'none';
+    }
+    
+    // Отрисовка аватарки в профиле
+    var my = USERS[cu] || {};
+    var big = document.getElementById('myBigAvatar');
+    if (my.avatar) { big.innerHTML = '<img src="' + my.avatar + '">'; big.style.background = '#000'; }
+    else { big.innerHTML = ''; big.innerText = cu.charAt(0); big.style.background = my.color || '#2AABEE'; }
+
+    document.getElementById('profileModal').style.display = 'flex';
+}
+
 // ОСТАЛЬНОЕ
 function renderChats(filter) {
   filter = (filter || '').toLowerCase(); var l = document.getElementById('cl'); l.innerHTML = '';
@@ -382,21 +409,6 @@ function switchTab(tab) { document.querySelectorAll('.view').forEach(v=>v.classL
 function backToMain() { document.getElementById('chat').style.display='none'; document.getElementById('main').style.display='flex'; cc=null; }
 function doLogin() { var u=document.getElementById('au').value.trim(); if(!u) return; cu = u; connect(); }
 function logout() { location.reload(); }
-function openProfile() {
-    var style = getUserStyle(cu);
-    document.getElementById('myProfileTitle').innerHTML = `${style.emoji} ${style.badge} Мой профиль`;
-    if(style.tier !== 'free') {
-        document.getElementById('premiumSettings').style.display = 'block';
-        document.getElementById('customEmojiInput').value = style.emoji;
-        if(style.tier === 'vip') {
-            document.getElementById('vipColorBox').style.display = 'block';
-            document.getElementById('customColorInput').value = style.color || '#2AABEE';
-        } else {
-            document.getElementById('vipColorBox').style.display = 'none';
-        }
-    }
-    document.getElementById('profileModal').style.display = 'flex';
-}
 function openGifts() { if(!cc) return alert("Зайди в чат!"); document.getElementById('giftsModal').style.display = 'flex'; }
 function sendGift(n, i, c) {
     if((COINS[cu]||0)<c) return alert("Мало монет!");
@@ -407,6 +419,12 @@ function sendGift(n, i, c) {
 }
 function esc(s) { var d = document.createElement('div'); d.innerText = s; return d.innerHTML; }
 function toggleTheme() { document.body.classList.toggle('light-theme'); }
+function setMyStatus() { var s = prompt('Статус:'); if (s) send({action:'set_status', status:s}); }
+function uploadAvatar(e) { alert("Загрузка аватара работает через base64 в базовой версии"); }
+function openPhoneModal() { alert("В разработке"); }
+function openEmailModal() { alert("В разработке"); }
+function startProfileAgeVerification() { alert("FaceID в разработке"); }
+function createChannel() { var name = prompt("Название канала:"); if(name) send({action:'create_channel', name:name}); }
 </script>
 </body>
 </html>
